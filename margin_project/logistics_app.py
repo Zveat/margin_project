@@ -6,7 +6,6 @@ import locale
 # Этот вызов должен быть первым
 # Можно указать layout="wide", но тогда нужно явно управлять шириной .block-container
 # Или же указать layout="centered", если хотите, чтобы контент был по центру
-st.set_page_config(layout="wide")
 st.markdown("<h1 style='margin-top: 30px;'>Калькулятор логистики</h1>", unsafe_allow_html=True)
 
 # Устанавливаем локаль
