@@ -574,7 +574,6 @@ def run_margin_service():
 import streamlit as st
 from logistics_app import run_logistics_app  # Импорт функции логистического калькулятора
 
-st.set_page_config(layout="wide")
 st.title("Сервис расчета маржинальности")
 
 # Создаём вкладки
