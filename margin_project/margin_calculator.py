@@ -122,7 +122,7 @@ def generate_invoice_gos(
     tax_nds,
     net_margin,
 ):
-    invoice_date = datetime.datetime.now().strftime("%d %B %Y г.")
+    invoice_date = format_date_russian(datetime.datetime.now())
     pdf = FPDF()
     pdf.add_page()
 
