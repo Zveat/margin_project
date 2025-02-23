@@ -108,15 +108,16 @@ def generate_invoice_gos(
     tax_nds,
     net_margin,
 ):
-   invoice_date = datetime.datetime.now().strftime("%d %B %Y г.")
+    invoice_date = datetime.datetime.now().strftime("%d %B %Y г.")
     pdf = FPDF()
     pdf.add_page()
-    
+
     import os
     font_path = os.path.join(os.path.dirname(__file__), "assets", "DejaVuSans.ttf")
     bold_font_path = os.path.join(os.path.dirname(__file__), "assets", "DejaVuSans-Bold.ttf")
     pdf.add_font("DejaVu", "", font_path, uni=True)
     pdf.add_font("DejaVu", "B", bold_font_path, uni=True)
+
     pdf.set_font("DejaVu", "", 9)
     attention_text = (
         "Внимание! Оплата данного счета означает согласие с условиями поставки товара. "
@@ -126,6 +127,7 @@ def generate_invoice_gos(
     )
     pdf.multi_cell(0, 5, attention_text)
     pdf.ln(3)
+    # ... продолжение вашего кода ...
     pdf.set_font("DejaVu", "B", 9)
     pdf.cell(0, 5, "Образец платежного поручения", ln=True, align="L")
     pdf.ln(2)
