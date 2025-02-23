@@ -3,57 +3,60 @@ import math
 import datetime
 import locale
 
-# Устанавливаем локаль
-try:
-    locale.setlocale(locale.LC_TIME, 'ru_RU.UTF-8')
-except locale.Error:
-    locale.setlocale(locale.LC_TIME, '')
-
-# Переопределяем стили .block-container
-st.markdown(
-    """
-    <style>
-    /* Задаём для .block-container желаемую ширину и отступ слева */
-    .block-container {
-        max-width: 400px !important; /* Желаемая ширина */
-        margin-left: 20px !important; /* Отступ слева */
-        background-color: #fff;
-        padding: 20px;
-        border-radius: 10px;
-        box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    }
-    body {
-        background-color: #f8f9fa;
-    }
-    /* Стили для полей ввода */
-    div[data-testid="stNumberInput"] input,
-    div[data-testid="stTextInput"] input,
-    div[data-testid="stSelectbox"] select {
-         border: 1px solid #ccc !important;
-         border-radius: 5px !important;
-         padding: 8px !important;
-         font-size: 14px !important;
-    }
-    /* Стили для кнопок */
-    div.stButton > button {
-         background-color: #007bff;
-         color: #fff;
-         border: none;
-         border-radius: 5px;
-         padding: 10px 20px;
-         font-size: 16px;
-         cursor: pointer;
-         transition: background-color 0.3s ease;
-    }
-    div.stButton > button:hover {
-         background-color: #0056b3;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True
-)
-
 def run_logistics_app():
+    # Устанавливаем локаль (не вызываем set_page_config!)
+    try:
+        locale.setlocale(locale.LC_TIME, 'ru_RU.UTF-8')
+    except locale.Error:
+        locale.setlocale(locale.LC_TIME, '')
+
+    # Переопределяем стили, чтобы контейнер был узкий и с белым фоном
+    st.markdown(
+        """
+        <style>
+        /* Задаём для .block-container желаемую ширину и отступ слева */
+        .block-container {
+            max-width: 400px !important; /* Желаемая ширина */
+            margin-left: 20px !important; /* Отступ слева */
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        body {
+            background-color: #f8f9fa;
+        }
+        /* Стили для полей ввода */
+        div[data-testid="stNumberInput"] input,
+        div[data-testid="stTextInput"] input,
+        div[data-testid="stSelectbox"] select {
+            border: 1px solid #ccc !important;
+            border-radius: 5px !important;
+            padding: 8px !important;
+            font-size: 14px !important;
+        }
+        /* Стили для кнопок */
+        div.stButton > button {
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        div.stButton > button:hover {
+            background-color: #0056b3;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+
+    # Вместо st.header используем HTML-заголовок
+    st.markdown("<h1 style='font-size: 28px; margin-top: 20px;'>Калькулятор логистики</h1>", unsafe_allow_html=True)
+
     # Данные для городских перевозок
     city_data = [
         {"Вид транспорта": "Легковая машина", "Вес груза": 40, "Длинна груза": 2, "Стоимость доставки": "4000-8000"},
@@ -106,6 +109,7 @@ def run_logistics_app():
                             f"**Альтернативный вариант:**<br>**{alternative_option['Вид транспорта']}** {alternative_option['Стоимость доставки']} тг",
                             unsafe_allow_html=True
                         )
+
     elif delivery_type == "Межгород":
         direction = st.selectbox("Выберите направление", list(intercity_data.keys()))
         weight_tonn = st.number_input("Вес (тонн)", min_value=0.0, step=0.1, value=0.0)
@@ -120,5 +124,7 @@ def run_logistics_app():
                 cost = (tariff / capacity) * weight_tonn * coef
                 st.success(f"Стоимость перевозки: **{round(cost)} тг**")
 
+
+# Если хотите, чтобы при самостоятельном запуске файл показывал этот интерфейс:
 if __name__ == '__main__':
     run_logistics_app()
