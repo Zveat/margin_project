@@ -578,7 +578,7 @@ with tab_logistics:
     st.markdown(
         """
         <div style="display:flex; justify-content:center; margin-top:20px;">
-            <iframe src="https://logistics-app.streamlit.app/" height="600" width="400" style="border:none;"></iframe>
+            st.components.v1.iframe("https://logistics-app.streamlit.app/", height=600, width=400)
         </div>
         """,
         unsafe_allow_html=True
