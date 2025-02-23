@@ -1,65 +1,61 @@
+
 import streamlit as st
 import math
 import datetime
 import locale
 
+# Заголовок (при самостоятельном запуске)
+st.markdown("<h1 style='margin-top: 30px;'>Калькулятор логистики</h1>", unsafe_allow_html=True)
+
+# Устанавливаем локаль
+try:
+    locale.setlocale(locale.LC_TIME, 'ru_RU.UTF-8')
+except locale.Error:
+    locale.setlocale(locale.LC_TIME, '')
+
+# CSS для ограничения ширины контейнера и выравнивания по левому краю
+st.markdown(
+    """
+    <style>
+    /* Ограничиваем ширину основного контейнера */
+    .block-container {
+        max-width: 400px !important;
+        margin-left: 20px !important;
+    }
+    body {
+        background-color: #f8f9fa;
+    }
+    /* Стили для полей ввода */
+    div[data-testid="stNumberInput"] input,
+    div[data-testid="stTextInput"] input,
+    div[data-testid="stSelectbox"] select {
+         border: 1px solid #ccc !important;
+         border-radius: 5px !important;
+         padding: 8px !important;
+         font-size: 14px !important;
+    }
+    /* Стили для кнопок */
+    div.stButton > button {
+         background-color: #007bff;
+         color: #fff;
+         border: none;
+         border-radius: 5px;
+         padding: 10px 20px;
+         font-size: 16px;
+         cursor: pointer;
+         transition: background-color 0.3s ease;
+    }
+    div.stButton > button:hover {
+         background-color: #0056b3;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
 def run_logistics_app():
-    # Здесь не вызываем st.set_page_config, чтобы избежать ошибок
-    st.markdown("<h1 style='margin-top: 30px;'>Калькулятор логистики</h1>", unsafe_allow_html=True)
-
-    # Устанавливаем локаль
-    try:
-        locale.setlocale(locale.LC_TIME, 'ru_RU.UTF-8')
-    except locale.Error:
-        locale.setlocale(locale.LC_TIME, '')
-
-    # Переопределяем стили .block-container (это ваш рабочий дизайн)
-    st.markdown(
-        """
-        <style>
-        /* Задаём для .block-container желаемую ширину и отступ слева */
-        .block-container {
-            max-width: 400px !important; /* Желаемая ширина */
-            margin-left: 20px !important; /* Отступ слева */
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        }
-        body {
-            background-color: #f8f9fa;
-        }
-        /* Стили для полей ввода */
-        div[data-testid="stNumberInput"] input,
-        div[data-testid="stTextInput"] input,
-        div[data-testid="stSelectbox"] select {
-             border: 1px solid #ccc !important;
-             border-radius: 5px !important;
-             padding: 8px !important;
-             font-size: 14px !important;
-        }
-        /* Стили для кнопок */
-        div.stButton > button {
-             background-color: #007bff;
-             color: #fff;
-             border: none;
-             border-radius: 5px;
-             padding: 10px 20px;
-             font-size: 16px;
-             cursor: pointer;
-             transition: background-color 0.3s ease;
-        }
-        div.stButton > button:hover {
-             background-color: #0056b3;
-        }
-        </style>
-        """,
-        unsafe_allow_html=True
-    )
-
-    # Оборачиваем содержимое в контейнер .block-container
-    st.markdown("<div class='block-container'>", unsafe_allow_html=True)
-
+    st.header("Калькулятор логистики")
+    
     # Данные для городских перевозок
     city_data = [
         {"Вид транспорта": "Легковая машина", "Вес груза": 40, "Длинна груза": 2, "Стоимость доставки": "4000-8000"},
@@ -69,7 +65,7 @@ def run_logistics_app():
         {"Вид транспорта": "Бортовой грузовик", "Вес груза": 6000, "Длинна груза": 7, "Стоимость доставки": "20000-30000"},
         {"Вид транспорта": "Фура", "Вес груза": 23000, "Длинна груза": 12, "Стоимость доставки": "50000-60000"}
     ]
-
+    
     # Данные для междугородних перевозок
     intercity_data = {
         "Алматы-Астана": 500000,
@@ -80,13 +76,13 @@ def run_logistics_app():
         "Алматы-города2": 1,
         "Алматы-города3": 1
     }
-
+    
     delivery_type = st.selectbox("Тип доставки", ["По городу", "Межгород"])
-
+    
     if delivery_type == "По городу":
         weight = st.number_input("Вес (кг)", min_value=0.0, step=0.1, value=0.0)
         length = st.number_input("Длина (м) (опционально)", min_value=0.0, step=0.1, value=0.0)
-
+    
         if st.button("Рассчитать"):
             if weight <= 0:
                 st.error("Пожалуйста, введите вес груза!")
@@ -102,20 +98,19 @@ def run_logistics_app():
                     suitable_options.sort(key=lambda x: int(x["Стоимость доставки"].split('-')[0]))
                     best_option = suitable_options[0]
                     alternative_option = suitable_options[1] if len(suitable_options) > 1 else None
-
                     st.markdown(
-                        f"**Лучший вариант:**<br>**{best_option['Вид транспорта']}** {best_option['Стоимость доставки']} тг",
+                        f"**Лучший вариант:**<br><b>{best_option['Вид транспорта']}</b> {best_option['Стоимость доставки']} тг",
                         unsafe_allow_html=True
                     )
                     if alternative_option:
                         st.markdown(
-                            f"**Альтернативный вариант:**<br>**{alternative_option['Вид транспорта']}** {alternative_option['Стоимость доставки']} тг",
+                            f"**Альтернативный вариант:**<br><b>{alternative_option['Вид транспорта']}</b> {alternative_option['Стоимость доставки']} тг",
                             unsafe_allow_html=True
                         )
     elif delivery_type == "Межгород":
         direction = st.selectbox("Выберите направление", list(intercity_data.keys()))
         weight_tonn = st.number_input("Вес (тонн)", min_value=0.0, step=0.1, value=0.0)
-
+    
         if st.button("Рассчитать"):
             if weight_tonn <= 0:
                 st.error("Пожалуйста, введите вес груза!")
@@ -126,7 +121,7 @@ def run_logistics_app():
                 cost = (tariff / capacity) * weight_tonn * coef
                 st.success(f"Стоимость перевозки: **{round(cost)} тг**")
 
-    st.markdown("</div>", unsafe_allow_html=True)
-
 if __name__ == '__main__':
     run_logistics_app()
+
+
