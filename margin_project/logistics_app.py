@@ -16,8 +16,8 @@ def run_logistics_app():
         <style>
         /* Собственный контейнер для логистического калькулятора */
         .logistics-container {
-            max-width: 400px;
-            margin-left: 20px;
+            max-width: 400px !important; /* Желаемая ширина */
+            margin: 20px auto !important; /* Центрирование: 20px сверху/снизу, auto слева/справа */
             background-color: #fff;
             padding: 20px;
             border-radius: 10px;
