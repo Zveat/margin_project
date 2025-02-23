@@ -575,6 +575,7 @@ with tab_margin:
     run_margin_service()
 
 with tab_logistics:
-    # НЕ вызываем st.header, т.к. в logistics_app.py уже есть h1
+    # НЕ вызывайте st.header, чтобы не сбивать дизайн
     from logistics_app import run_logistics_app
     run_logistics_app()
+
