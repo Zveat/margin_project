@@ -564,17 +564,3 @@ def run_margin_service():
                     file_name="invoice_gos_full.pdf",
                     mime="application/pdf",
                 )
-
-###############################################
-# Объединение сервисов через вкладки
-###############################################
-tab_margin, tab_logistics = st.tabs(["Калькулятор маржинальности", "Калькулятор логистики"])
-with tab_margin:
-    st.header("Калькулятор маржинальности")
-    # Здесь вызывается функция сервиса маржинальности
-    run_margin_service()
-
-with tab_logistics:
-    st.header("Калькулятор логистики")
-    from logistics_app import run_logistics_app  # Импортируем функцию логистического калькулятора
-    run_logistics_app()
