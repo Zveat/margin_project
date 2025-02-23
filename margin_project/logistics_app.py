@@ -4,29 +4,26 @@ import datetime
 import locale
 
 def run_logistics_app():
-    # Устанавливаем локаль (не вызываем st.set_page_config!)
+    # Устанавливаем локаль
     try:
         locale.setlocale(locale.LC_TIME, 'ru_RU.UTF-8')
     except locale.Error:
         locale.setlocale(locale.LC_TIME, '')
-
-    # Подключаем стили для логистического калькулятора
+    
+    # Подключаем стили только для логистического калькулятора
     st.markdown(
         """
         <style>
         /* Собственный контейнер для логистического калькулятора */
         .logistics-container {
-            max-width: 400px; /* желаемая ширина */
+            max-width: 400px;
             margin-left: 20px;
             background-color: #fff;
             padding: 20px;
             border-radius: 10px;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
         }
-        body {
-            background-color: #f8f9fa;
-        }
-        /* Стили для полей ввода */
+        /* Стили для полей ввода внутри логистического калькулятора */
         div[data-testid="stNumberInput"] input,
         div[data-testid="stTextInput"] input,
         div[data-testid="stSelectbox"] select {
@@ -53,17 +50,14 @@ def run_logistics_app():
         """,
         unsafe_allow_html=True
     )
-
-    # Открываем div с нашим классом
+    
+    # Открываем собственный контейнер для логистического калькулятора
     st.markdown("<div class='logistics-container'>", unsafe_allow_html=True)
-
-    # Заголовок (HTML, чтобы не сбивать ваши стили)
+    
+    # Заголовок внутри контейнера (можно настроить размер и отступы)
     st.markdown("<h2 style='margin-top: 0;'>Калькулятор логистики</h2>", unsafe_allow_html=True)
-
-    # ---------------------------
-    # Ниже — ваш рабочий код логистики
-    # ---------------------------
-
+    
+    # --- Далее идёт ваш рабочий код логистического калькулятора ---
     # Данные для городских перевозок
     city_data = [
         {"Вид транспорта": "Легковая машина", "Вес груза": 40, "Длинна груза": 2, "Стоимость доставки": "4000-8000"},
@@ -73,7 +67,7 @@ def run_logistics_app():
         {"Вид транспорта": "Бортовой грузовик", "Вес груза": 6000, "Длинна груза": 7, "Стоимость доставки": "20000-30000"},
         {"Вид транспорта": "Фура", "Вес груза": 23000, "Длинна груза": 12, "Стоимость доставки": "50000-60000"}
     ]
-
+    
     # Данные для междугородних перевозок
     intercity_data = {
         "Алматы-Астана": 500000,
@@ -84,13 +78,13 @@ def run_logistics_app():
         "Алматы-города2": 1,
         "Алматы-города3": 1
     }
-
+    
     delivery_type = st.selectbox("Тип доставки", ["По городу", "Межгород"])
-
+    
     if delivery_type == "По городу":
         weight = st.number_input("Вес (кг)", min_value=0.0, step=0.1, value=0.0)
         length = st.number_input("Длина (м) (опционально)", min_value=0.0, step=0.1, value=0.0)
-
+    
         if st.button("Рассчитать"):
             if weight <= 0:
                 st.error("Пожалуйста, введите вес груза!")
@@ -116,11 +110,11 @@ def run_logistics_app():
                             f"**Альтернативный вариант:**<br>**{alternative_option['Вид транспорта']}** {alternative_option['Стоимость доставки']} тг",
                             unsafe_allow_html=True
                         )
-
+    
     elif delivery_type == "Межгород":
         direction = st.selectbox("Выберите направление", list(intercity_data.keys()))
         weight_tonn = st.number_input("Вес (тонн)", min_value=0.0, step=0.1, value=0.0)
-
+    
         if st.button("Рассчитать"):
             if weight_tonn <= 0:
                 st.error("Пожалуйста, введите вес груза!")
@@ -130,10 +124,9 @@ def run_logistics_app():
                 coef = 2       # Коэффициент догруза
                 cost = (tariff / capacity) * weight_tonn * coef
                 st.success(f"Стоимость перевозки: **{round(cost)} тг**")
-
-    # Закрываем div
+    
+    # Закрываем наш контейнер
     st.markdown("</div>", unsafe_allow_html=True)
 
-# Если хотите, чтобы при самостоятельном запуске этот файл тоже работал:
 if __name__ == '__main__':
     run_logistics_app()
