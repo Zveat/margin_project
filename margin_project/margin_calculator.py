@@ -568,18 +568,12 @@ def run_margin_service():
 ###############################################
 # Объединение сервисов через вкладки
 ###############################################
-# Настройка страницы, заголовок, и т.д.
-st.set_page_config(layout="wide")
-st.title("Сервис расчета маржинальности")
-
-# Определяем вкладки
-tab_margin, tab_logistics = st.tabs(["Калькулятор маржинальности", "Калькулятор логистики"])
+tab_margin, tab_logistics = st.tabs(["**Калькулятор маржинальности**", "**Калькулятор логистики**"])
 
 with tab_margin:
-    # Здесь ваш код сервиса маржинальности
-    run_margin_service()  # например, функция, отвечающая за маржу
+    # Запускаем сервис маржинальности
+    run_margin_service()
 
 with tab_logistics:
     from logistics_app import run_logistics_app
     run_logistics_app()
-
