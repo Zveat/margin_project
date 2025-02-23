@@ -564,21 +564,3 @@ def run_margin_service():
                     file_name="invoice_gos_full.pdf",
                     mime="application/pdf",
                 )
-
-###############################################
-# Объединение сервисов через вкладки
-###############################################
-tab_margin, tab_logistics = st.tabs(["**Калькулятор маржинальности**", "**Калькулятор логистики**"])
-
-with tab_margin:
-    # Запускаем сервис маржинальности
-    run_margin_service()
-
-with tab_logistics:
-    st.header("Калькулятор логистики")
-    html_code = """
-    <iframe src="https://logistics-app.streamlit.app/" 
-            style="width:800px; height:600px; border:none; margin:0 auto; display:block;">
-    </iframe>
-    """
-    st.components.v1.html(html_code, height=620)
