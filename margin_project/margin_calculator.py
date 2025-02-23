@@ -584,4 +584,7 @@ with tab_logistics:
         unsafe_allow_html=True
     )
 
+with tab_logistics:
+    st.header("Калькулятор логистики")
+    st.components.v1.iframe("https://logistics-app.streamlit.app", height=600, width=800)
 
