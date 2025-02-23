@@ -578,3 +578,4 @@ with tab_logistics:
     from logistics_app import run_logistics_app
     run_logistics_app()
 
+
