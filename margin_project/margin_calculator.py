@@ -251,14 +251,22 @@ def generate_invoice_gos(
     pdf.cell(60, 5, "_______", ln=True)
     y_sign = pdf.get_y()
     pdf.ln(5)
+    import os
+    
+    # Построение абсолютных путей для печати и подписи
+    stamp_path = os.path.join(os.path.dirname(__file__), "assets", "stamp.png")
+    signature_path = os.path.join(os.path.dirname(__file__), "assets", "signature.png")
+    
     try:
-        pdf.image("assets/stamp.png", x=100, y=y_sign - 10, w=50)
-    except Exception:
-        pass
+        pdf.image(stamp_path, x=100, y=y_sign - 10, w=50)
+    except Exception as e:
+        print("Ошибка загрузки печати:", e)
+        
     try:
-        pdf.image("assets/signature.png", x=40, y=y_sign - 10, w=20)
-    except Exception:
-        pass
+        pdf.image(signature_path, x=40, y=y_sign - 10, w=20)
+    except Exception as e:
+        print("Ошибка загрузки подписи:", e)
+    
     os.makedirs("output", exist_ok=True)
     pdf_path = os.path.join("output", "invoice_gos_full.pdf")
     pdf.output(pdf_path, "F")
