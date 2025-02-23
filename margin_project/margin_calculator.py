@@ -565,21 +565,15 @@ def run_margin_service():
                     mime="application/pdf",
                 )
 
-###############################################
-# Объединение сервисов через вкладки
-###############################################
-tab_margin, tab_logistics = st.tabs(["**Калькулятор маржинальности**", "**Калькулятор логистики**"])
+# Объединение сервисов через горизонтальную навигацию с помощью st.radio
+selected_service = st.radio(
+    "Выберите сервис:",
+    ["Калькулятор маржинальности", "Калькулятор логистики"],
+    horizontal=True
+)
 
-with tab_margin:
-    # Запускаем сервис маржинальности
+if selected_service == "Калькулятор маржинальности":
     run_margin_service()
-
-with tab_logistics:
-    st.markdown(
-        """
-        <div style="display:flex; justify-content:center; margin-top:20px;">
-            <iframe src="https://music.yandex.kz/" height="600" width="400" style="border:none;"></iframe>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+elif selected_service == "Калькулятор логистики":
+    from logistics_app import run_logistics_app
+    run_logistics_app()
