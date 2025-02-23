@@ -568,12 +568,20 @@ def run_margin_service():
 ###############################################
 # Объединение сервисов через вкладки
 ###############################################
-tab_margin, tab_logistics = st.tabs(["**Калькулятор маржинальности**", "**Калькулятор логистики**"])
+import streamlit as st
+from logistics_app import run_logistics_app  # Импорт функции логистического калькулятора
+
+st.set_page_config(layout="wide")
+st.title("Сервис расчета маржинальности")
+
+# Создаём вкладки
+tab_margin, tab_logistics = st.tabs(["Калькулятор маржинальности", "Калькулятор логистики"])
 
 with tab_margin:
-    # Запускаем сервис маржинальности
-    run_margin_service()
+    st.header("Калькулятор маржинальности")
+    # Здесь разместите ваш основной код сервиса расчёта маржинальности
+    st.write("Здесь находится сервис расчета маржинальности...")
 
 with tab_logistics:
-    from logistics_app import run_logistics_app
+    st.header("Калькулятор логистики")
     run_logistics_app()
