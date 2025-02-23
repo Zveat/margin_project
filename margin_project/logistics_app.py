@@ -3,59 +3,60 @@ import math
 import datetime
 import locale
 
-# Заголовок (при самостоятельном запуске)
-st.markdown("<h1 style='margin-top: 30px;'>Калькулятор логистики</h1>", unsafe_allow_html=True)
-
-# Устанавливаем локаль
-try:
-    locale.setlocale(locale.LC_TIME, 'ru_RU.UTF-8')
-except locale.Error:
-    locale.setlocale(locale.LC_TIME, '')
-
-# CSS для ограничения ширины контейнера и выравнивания по левому краю
-st.markdown(
-    """
-    <style>
-    /* Ограничиваем ширину основного контейнера */
-    .block-container {
-        max-width: 400px !important;
-        margin-left: 20px !important;
-    }
-    body {
-        background-color: #f8f9fa;
-    }
-    /* Стили для полей ввода */
-    div[data-testid="stNumberInput"] input,
-    div[data-testid="stTextInput"] input,
-    div[data-testid="stSelectbox"] select {
-         border: 1px solid #ccc !important;
-         border-radius: 5px !important;
-         padding: 8px !important;
-         font-size: 14px !important;
-    }
-    /* Стили для кнопок */
-    div.stButton > button {
-         background-color: #007bff;
-         color: #fff;
-         border: none;
-         border-radius: 5px;
-         padding: 10px 20px;
-         font-size: 16px;
-         cursor: pointer;
-         transition: background-color 0.3s ease;
-    }
-    div.stButton > button:hover {
-         background-color: #0056b3;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True
-)
-
 def run_logistics_app():
-    st.header("Калькулятор логистики")
+    # Устанавливаем локаль
+    try:
+        locale.setlocale(locale.LC_TIME, 'ru_RU.UTF-8')
+    except locale.Error:
+        locale.setlocale(locale.LC_TIME, '')
     
-    # Данные для городских перевозок
+    # Подключаем стили только для логистического калькулятора
+    st.markdown(
+        """
+        <style>
+        /* Собственный контейнер для логистического калькулятора */
+        .logistics-container {
+            max-width: 400px !important;
+            margin: 20px auto !important; /* Центрирование: авто слева/справа */
+            background-color: #fff !important;
+            padding: 20px !important;
+            border-radius: 10px !important;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1) !important;
+        }
+        /* Стили для полей ввода и кнопок внутри контейнера */
+        .logistics-container div[data-testid="stNumberInput"] input,
+        .logistics-container div[data-testid="stTextInput"] input,
+        .logistics-container div[data-testid="stSelectbox"] select {
+             border: 1px solid #ccc !important;
+             border-radius: 5px !important;
+             padding: 8px !important;
+             font-size: 14px !important;
+        }
+        .logistics-container div.stButton > button {
+             background-color: #007bff !important;
+             color: #fff !important;
+             border: none !important;
+             border-radius: 5px !important;
+             padding: 10px 20px !important;
+             font-size: 16px !important;
+             cursor: pointer !important;
+             transition: background-color 0.3s ease !important;
+        }
+        .logistics-container div.stButton > button:hover {
+             background-color: #0056b3 !important;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+    
+    # Оборачиваем только логистический калькулятор в контейнер с классом logistics-container
+    st.markdown("<div class='logistics-container'>", unsafe_allow_html=True)
+    
+    # Заголовок (как в рабочем коде)
+    st.markdown("<h1 style='margin-top: 30px; text-align: center;'>Калькулятор логистики</h1>", unsafe_allow_html=True)
+    
+    # --- Данные для городских перевозок ---
     city_data = [
         {"Вид транспорта": "Легковая машина", "Вес груза": 40, "Длинна груза": 2, "Стоимость доставки": "4000-8000"},
         {"Вид транспорта": "Газель", "Вес груза": 300, "Длинна груза": 3, "Стоимость доставки": "4000-12000"},
@@ -65,7 +66,7 @@ def run_logistics_app():
         {"Вид транспорта": "Фура", "Вес груза": 23000, "Длинна груза": 12, "Стоимость доставки": "50000-60000"}
     ]
     
-    # Данные для междугородних перевозок
+    # --- Данные для междугородних перевозок ---
     intercity_data = {
         "Алматы-Астана": 500000,
         "Алматы-Шымкент": 300000,
@@ -97,15 +98,17 @@ def run_logistics_app():
                     suitable_options.sort(key=lambda x: int(x["Стоимость доставки"].split('-')[0]))
                     best_option = suitable_options[0]
                     alternative_option = suitable_options[1] if len(suitable_options) > 1 else None
+                    
                     st.markdown(
-                        f"**Лучший вариант:**<br><b>{best_option['Вид транспорта']}</b> {best_option['Стоимость доставки']} тг",
+                        f"**Лучший вариант:**<br>**{best_option['Вид транспорта']}** {best_option['Стоимость доставки']} тг",
                         unsafe_allow_html=True
                     )
                     if alternative_option:
                         st.markdown(
-                            f"**Альтернативный вариант:**<br><b>{alternative_option['Вид транспорта']}</b> {alternative_option['Стоимость доставки']} тг",
+                            f"**Альтернативный вариант:**<br>**{alternative_option['Вид транспорта']}** {alternative_option['Стоимость доставки']} тг",
                             unsafe_allow_html=True
                         )
+    
     elif delivery_type == "Межгород":
         direction = st.selectbox("Выберите направление", list(intercity_data.keys()))
         weight_tonn = st.number_input("Вес (тонн)", min_value=0.0, step=0.1, value=0.0)
@@ -119,6 +122,9 @@ def run_logistics_app():
                 coef = 2       # Коэффициент догруза
                 cost = (tariff / capacity) * weight_tonn * coef
                 st.success(f"Стоимость перевозки: **{round(cost)} тг**")
+    
+    # Закрываем контейнер
+    st.markdown("</div>", unsafe_allow_html=True)
 
 if __name__ == '__main__':
     run_logistics_app()
