@@ -14,7 +14,10 @@ st.set_page_config(layout="wide")
 st.title("Сервис расчета логистики и маржинальности")
 
 # Устанавливаем локаль для вывода даты на русском языке
-locale.setlocale(locale.LC_TIME, 'ru_RU.UTF-8')
+try:
+    locale.setlocale(locale.LC_TIME, 'ru_RU.UTF-8')
+except locale.Error:
+    locale.setlocale(locale.LC_TIME, '')
 
 # CSS для унификации стилей (подберите нужные значения по вкусу)
 st.markdown(
