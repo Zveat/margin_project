@@ -575,6 +575,7 @@ with tab_margin:
     run_margin_service()
 
 with tab_logistics:
+    # Не добавляем st.header, так как в logistics_app.py уже задан заголовок внутри контейнера
     from logistics_app import run_logistics_app
     run_logistics_app()
 
