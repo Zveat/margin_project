@@ -1,6 +1,4 @@
 import streamlit as st
-st.set_page_config(layout="wide")
-
 import streamlit.components.v1 as components
 import pandas as pd
 import io
@@ -12,6 +10,7 @@ import datetime
 import locale
 
 # Этот вызов должен быть первым
+st.set_page_config(layout="wide")
 st.title("Сервис расчета логистики и маржинальности")
 
 # Устанавливаем локаль для вывода даты на русском языке
@@ -569,19 +568,33 @@ def run_margin_service():
 ###############################################
 # Объединение сервисов через вкладки
 ###############################################
-import streamlit as st
-from logistics_app import run_logistics_app  # Импорт функции логистического калькулятора
-
-st.title("Сервис расчета маржинальности")
-
-# Создаём вкладки
-tab_margin, tab_logistics = st.tabs(["Калькулятор маржинальности", "Калькулятор логистики"])
+tab_margin, tab_logistics = st.tabs(["**Калькулятор маржинальности**", "**Калькулятор логистики**"])
 
 with tab_margin:
-    st.header("Калькулятор маржинальности")
-    # Здесь разместите ваш основной код сервиса расчёта маржинальности
-    st.write("Здесь находится сервис расчета маржинальности...")
+    # Запускаем сервис маржинальности
+    run_margin_service()
 
 with tab_logistics:
-    st.header("Калькулятор логистики")
+    st.markdown(
+        """
+        <div style="display:flex; justify-content:center; margin-top:20px;">
+            <iframe src="https://logistics-app.streamlit.app/" height="600" width="400" style="border:none;"></iframe>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+—-
+
+
+tab_margin, tab_logistics = st.tabs(["**Калькулятор маржинальности**", "**Калькулятор логистики**"])
+
+with tab_margin:
+    # Запускаем сервис маржинальности
+    run_margin_service()
+
+with tab_logistics:
+    from logistics_app import run_logistics_app
     run_logistics_app()
+
+
