@@ -4,20 +4,20 @@ import datetime
 import locale
 
 def run_logistics_app():
-    # Устанавливаем локаль
+    # Устанавливаем локаль (не вызываем st.set_page_config!)
     try:
         locale.setlocale(locale.LC_TIME, 'ru_RU.UTF-8')
     except locale.Error:
         locale.setlocale(locale.LC_TIME, '')
 
-    # Переопределяем стили .block-container
+    # Подключаем стили для логистического калькулятора
     st.markdown(
         """
         <style>
-        /* Задаём для .block-container желаемую ширину и отступ слева */
-        .block-container {
-            max-width: 400px !important; /* Желаемая ширина */
-            margin-left: 20px !important; /* Отступ слева */
+        /* Собственный контейнер для логистического калькулятора */
+        .logistics-container {
+            max-width: 400px; /* желаемая ширина */
+            margin-left: 20px;
             background-color: #fff;
             padding: 20px;
             border-radius: 10px;
@@ -30,29 +30,39 @@ def run_logistics_app():
         div[data-testid="stNumberInput"] input,
         div[data-testid="stTextInput"] input,
         div[data-testid="stSelectbox"] select {
-             border: 1px solid #ccc !important;
-             border-radius: 5px !important;
-             padding: 8px !important;
-             font-size: 14px !important;
+            border: 1px solid #ccc !important;
+            border-radius: 5px !important;
+            padding: 8px !important;
+            font-size: 14px !important;
         }
         /* Стили для кнопок */
         div.stButton > button {
-             background-color: #007bff;
-             color: #fff;
-             border: none;
-             border-radius: 5px;
-             padding: 10px 20px;
-             font-size: 16px;
-             cursor: pointer;
-             transition: background-color 0.3s ease;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
         }
         div.stButton > button:hover {
-             background-color: #0056b3;
+            background-color: #0056b3;
         }
         </style>
         """,
         unsafe_allow_html=True
     )
+
+    # Открываем div с нашим классом
+    st.markdown("<div class='logistics-container'>", unsafe_allow_html=True)
+
+    # Заголовок (HTML, чтобы не сбивать ваши стили)
+    st.markdown("<h2 style='margin-top: 0;'>Калькулятор логистики</h2>", unsafe_allow_html=True)
+
+    # ---------------------------
+    # Ниже — ваш рабочий код логистики
+    # ---------------------------
 
     # Данные для городских перевозок
     city_data = [
@@ -96,7 +106,7 @@ def run_logistics_app():
                     suitable_options.sort(key=lambda x: int(x["Стоимость доставки"].split('-')[0]))
                     best_option = suitable_options[0]
                     alternative_option = suitable_options[1] if len(suitable_options) > 1 else None
-
+                    
                     st.markdown(
                         f"**Лучший вариант:**<br>**{best_option['Вид транспорта']}** {best_option['Стоимость доставки']} тг",
                         unsafe_allow_html=True
@@ -121,6 +131,8 @@ def run_logistics_app():
                 cost = (tariff / capacity) * weight_tonn * coef
                 st.success(f"Стоимость перевозки: **{round(cost)} тг**")
 
+    # Закрываем div
+    st.markdown("</div>", unsafe_allow_html=True)
 
 # Если хотите, чтобы при самостоятельном запуске этот файл тоже работал:
 if __name__ == '__main__':
