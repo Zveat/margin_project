@@ -9,8 +9,6 @@ import locale
 st.set_page_config(layout="wide")
 st.markdown("<h1 style='margin-top: 30px;'>Калькулятор логистики</h1>", unsafe_allow_html=True)
 
-def run_logistics_app():
-
 # Устанавливаем локаль
 try:
     locale.setlocale(locale.LC_TIME, 'ru_RU.UTF-8')
