@@ -254,7 +254,7 @@ def generate_invoice_gos(
     import os
     
     # Построение абсолютных путей для печати и подписи
-    stamp_path = os.path.join(os.path.dirname(__file__), "assets", "stamp.png")
+    stamp_path = os.path.join(os.path.dirname(__file__), "assets", "stamp.PNG")
     signature_path = os.path.join(os.path.dirname(__file__), "assets", "signature.png")
     
     try:
