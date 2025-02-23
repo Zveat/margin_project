@@ -575,16 +575,10 @@ with tab_margin:
     run_margin_service()
 
 with tab_logistics:
-    st.markdown(
-        """
-        <div style="display:flex; justify-content:center; margin-top:20px;">
-            <iframe src="https://logistics-app.streamlit.app/" height="600" width="400" style="border:none;"></iframe>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
-
-with tab_logistics:
     st.header("Калькулятор логистики")
-    st.components.v1.iframe("https://logistics-app.streamlit.app", height=600, width=800)
-
+    html_code = """
+    <iframe src="https://logistics-app.streamlit.app/" 
+            style="width:800px; height:600px; border:none; margin:0 auto; display:block;">
+    </iframe>
+    """
+    st.components.v1.html(html_code, height=620)
