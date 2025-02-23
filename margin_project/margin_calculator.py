@@ -1,4 +1,9 @@
 import streamlit as st
+
+# Вызов st.set_page_config должен быть самым первым, до любых других вызовов Streamlit!
+st.set_page_config(layout="wide")
+
+import streamlit as st
 import streamlit.components.v1 as components
 import pandas as pd
 import io
