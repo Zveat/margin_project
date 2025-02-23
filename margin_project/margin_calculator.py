@@ -19,6 +19,20 @@ try:
 except locale.Error:
     locale.setlocale(locale.LC_TIME, '')
 
+def format_date_russian(date_obj):
+    # Пример словаря для замены
+    months = {
+        "January": "Января", "February": "Февраля", "March": "Марта",
+        "April": "Апреля", "May": "Мая", "June": "Июня",
+        "July": "Июля", "August": "Августа", "September": "Сентября",
+        "October": "Октября", "November": "Ноября", "December": "Декабря"
+    }
+    # Форматируем дату как "день Month год г."
+    formatted = date_obj.strftime("%d %B %Y г.")
+    for eng, rus in months.items():
+        formatted = formatted.replace(eng, rus)
+    return formatted
+
 # CSS для унификации стилей (подберите нужные значения по вкусу)
 st.markdown(
     """
