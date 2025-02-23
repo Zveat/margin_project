@@ -566,14 +566,20 @@ def run_margin_service():
                 )
 
 # Объединение сервисов через горизонтальную навигацию с помощью st.radio
-selected_service = st.radio(
-    "Выберите сервис:",
-    ["Калькулятор маржинальности", "Калькулятор логистики"],
-    horizontal=True
-)
+import streamlit as st
+from logistics_app import run_logistics_app  # Импорт функции логистического калькулятора
 
-if selected_service == "Калькулятор маржинальности":
-    run_margin_service()
-elif selected_service == "Калькулятор логистики":
-    from logistics_app import run_logistics_app
+st.set_page_config(layout="wide")
+st.title("Сервис расчета маржинальности")
+
+# Создаем вкладки
+tab_margin, tab_logistics = st.tabs(["Калькулятор маржинальности", "Калькулятор логистики"])
+
+with tab_margin:
+    st.header("Калькулятор маржинальности")
+    # Ваш код для расчёта маржинальности
+    run_margin_service()  # Функция вашего сервиса маржинальности
+
+with tab_logistics:
+    st.header("Калькулятор логистики")
     run_logistics_app()
