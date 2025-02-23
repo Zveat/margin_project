@@ -583,18 +583,3 @@ with tab_logistics:
         """,
         unsafe_allow_html=True
     )
-
-—-
-
-
-tab_margin, tab_logistics = st.tabs(["**Калькулятор маржинальности**", "**Калькулятор логистики**"])
-
-with tab_margin:
-    # Запускаем сервис маржинальности
-    run_margin_service()
-
-with tab_logistics:
-    from logistics_app import run_logistics_app
-    run_logistics_app()
-
-
