@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import io
 import os
-from fpdf2 import FPDF
+from fpdf import FPDF  # Вернул fpdf вместо fpdf2
 from num2words import num2words
 import math
 import datetime
@@ -79,7 +79,7 @@ def run_margin_service():
         net_margin,
     ):
         invoice_date = format_date_russian(datetime.datetime.now())
-        pdf = FPDF2()
+        pdf = FPDF()
         pdf.add_page()
         font_path = os.path.join(os.path.dirname(__file__), "assets", "DejaVuSans.ttf")
         bold_font_path = os.path.join(os.path.dirname(__file__), "assets", "DejaVuSans-Bold.ttf")
@@ -462,7 +462,7 @@ def run_margin_service():
             st.download_button(
                 "📥 Скачать расчёт в Excel",
                 data=output.getvalue(),
-                file_name="margin_calculator.xlsx",
+                file_name="margin_calculation.xlsx",
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             )
     
@@ -497,3 +497,20 @@ def run_margin_service():
                     file_name="invoice_gos_full.pdf",
                     mime="application/pdf",
                 )
+
+# Объединение сервисов через вкладки
+tab_margin, tab_logistics = st.tabs(["**Калькулятор маржинальности**", "**Калькулятор логистики**"])
+
+with tab_margin:
+    # Запускаем сервис маржинальности
+    run_margin_service()
+
+with tab_logistics:
+    st.markdown(
+        """
+        <div style="display:flex; justify-content:center; margin-top:20px;">
+            <iframe src="https://logistics-app.streamlit.app/" height="600" width="400" style="border:none;"></iframe>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
