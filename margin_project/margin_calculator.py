@@ -14,10 +14,8 @@ from num2words import num2words
 st.set_page_config(layout="wide")
 
 # Заголовок приложения (можно убрать, если не нужен глобальный заголовок)
-st.markdown(
-    "<h4 style='text-align:center; font-weight:bold;'>Сервис расчета логистики и маржинальности</h3>",
-    unsafe_allow_html=True
-)
+st.write("")
+st.title("Сервис расчета логистики и маржинальности")
 
 # Устанавливаем локаль для вывода даты на русском языке
 try:
