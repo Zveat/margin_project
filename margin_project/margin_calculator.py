@@ -552,12 +552,12 @@ def run_margin_service():
             })
             st.rerun()
         else:
-            st.warning("⚠️ Введите название товара!")
+            st.warning("Введите название товара ⚠️ ")
 
     # --- Список товаров ---
     st.subheader("📦 Список товаров")
     if not st.session_state.products:
-        st.info("❗ Товары ещё не добавлены")
+        st.info("Товары ещё не добавлены❗")
     else:
         for index, product in enumerate(st.session_state.products):
             supplier_prices = [
