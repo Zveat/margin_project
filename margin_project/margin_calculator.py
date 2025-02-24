@@ -745,5 +745,16 @@ with tab_margin:
 with tab_logistics:
     run_logistics_service()
 
-
+# --- В самом конце файла вставляем JS, отключающий автозаполнение ---
+st.markdown("""
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('input').forEach(function(el) {
+    el.setAttribute('autocomplete', 'off');
+    el.setAttribute('autocorrect', 'off');
+    el.setAttribute('autocapitalize', 'off');
+  });
+});
+</script>
+""", unsafe_allow_html=True)
 
