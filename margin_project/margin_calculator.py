@@ -13,10 +13,15 @@ from num2words import num2words
 # Устанавливаем глобальные настройки страницы (делаем "wide", можно поменять при желании)
 st.set_page_config(layout="wide")
 
-st.write("")
-st.write("")
-logo_path = os.path.join(os.path.dirname(__file__), "assets", "Logo.png")
-st.image(logo_path, width=170)
+st.markdown(
+    """
+    <div style="text-align:center;">
+        <img src="assets/Logo.png" style="width:120px;">
+    </div>
+    """,
+    unsafe_allow_html=True
+)
+
 # Заголовок приложения (можно убрать, если не нужен глобальный заголовок)
 st.markdown("<h3 style='text-align:center;'>Сервис расчета логистики и маржинальности</h3>", unsafe_allow_html=True)
 
