@@ -13,6 +13,26 @@ from num2words import num2words
 # Устанавливаем глобальные настройки страницы (делаем "wide", можно поменять при желании)
 st.set_page_config(layout="wide")
 
+# --- Блок аутентификации ---
+hashed_passwords = stauth.Hasher(["123", "456"]).generate()
+credentials = {
+    "usernames": {
+        "john": {"name": "John Doe", "password": hashed_passwords[0]},
+        "jane": {"name": "Jane Doe", "password": hashed_passwords[1]}
+    }
+}
+cookie_settings = {"expiry_days": 1, "key": "some_signature_key"}
+authenticator = stauth.Authenticate(
+    credentials,
+    cookie_settings["key"],
+    cookie_settings["expiry_days"],
+    cookie_name="some_cookie_name"
+)
+name, authentication_status, username = authenticator.login("Login", "main")
+
+if authentication_status:
+    st.success(f"Добро пожаловать, {name}!")
+
 st.write("")  # Пустая строка
 import streamlit as st
 import base64
