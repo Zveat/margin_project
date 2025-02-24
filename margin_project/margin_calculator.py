@@ -29,17 +29,23 @@ def format_date_russian(date_obj):
         formatted = formatted.replace(eng, rus)
     return formatted
 
-# CSS для основного сервиса (маржинальности)
+# CSS для маржинальности (широкий дизайн)
 st.markdown(
     """
     <style>
+    /* Широкий дизайн для маржинальности */
+    .block-container {
+        max-width: 1200px !important; /* Широкий контейнер для маржинальности */
+        margin: 0 auto !important;
+        padding: 20px !important;
+    }
     /* Унифицируем шрифт и отступы для markdown-меток внутри контейнера */
     .block-container p {
         margin: 0.3rem 0 0.2rem 0 !important;
         font-size: 16px !important;
         line-height: 1.2 !important;
     }
-    /* Унифицируем высоту и шрифт полей ввода для первого сервиса */
+    /* Унифицируем высоту и шрифт полей ввода для маржинальности */
     div[data-testid="stNumberInput"] input,
     div[data-testid="stTextInput"] input {
          min-height: 35px !important;
@@ -487,7 +493,7 @@ def run_margin_service():
             st.download_button(
                 "📥 Скачать расчёт в Excel",
                 data=output.getvalue(),
-                file_name="margin_calculation.xlsx",
+                file_name="margin_calculator.xlsx",
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             )
     
@@ -523,10 +529,8 @@ def run_margin_service():
                     mime="application/pdf",
                 )
 
-# Функция для сервиса логистики (перенесена из logistics_app.py)
+# Функция для сервиса логистики
 def run_logistics_service():
-    st.markdown("<h1 style='margin-top: 30px;'>Калькулятор логистики</h1>", unsafe_allow_html=True)
-
     # Данные для городских перевозок
     city_data = [
         {"Вид транспорта": "Легковая машина", "Вес груза": 40, "Длинна груза": 2, "Стоимость доставки": "4000-8000"},
@@ -541,7 +545,7 @@ def run_logistics_service():
     intercity_data = {
         "Алматы-Астана": 500000,
         "Алматы-Шымкент": 300000,
-        "Алматы-Актау": 1200000,
+        "Алматы-Aктау": 1200000,
         "Алматы-Атырау": 800000,
         "Алматы-города1": 1,
         "Алматы-города2": 1,
@@ -601,11 +605,11 @@ with tab_margin:
     run_margin_service()
 
 with tab_logistics:
-    # Применяем стили для второго сервиса (логистики) с максимальной изоляцией
+    # Применяем стили для второго сервиса (логистики) с изоляцией
     st.markdown(
         """
         <style>
-        /* Сбрасываем ширину .block-container только для логистики */
+        /* Компактный дизайн только для логистики */
         #root > div:nth-child(1) > div > div > div > section > div.block-container {
             max-width: 400px !important;
             margin: 0 auto !important;
@@ -618,7 +622,7 @@ with tab_logistics:
         body {
             background-color: #f8f9fa !important;
         }
-        /* Стили для полей ввода, селектов и кнопок в контексте логистики */
+        /* Стили для полей ввода, селектов и кнопок в логистике */
         div[data-testid="stNumberInput"] input,
         div[data-testid="stTextInput"] input,
         div[data-testid="stSelectbox"] select {
@@ -626,6 +630,7 @@ with tab_logistics:
             border-radius: 5px !important;
             padding: 8px !important;
             font-size: 14px !important;
+            max-width: 100% !important;
         }
         div.stButton > button {
             background-color: #007bff !important;
@@ -636,6 +641,7 @@ with tab_logistics:
             font-size: 16px !important;
             cursor: pointer !important;
             transition: background-color 0.3s ease !important;
+            max-width: 100% !important;
         }
         div.stButton > button:hover {
             background-color: #0056b3 !important;
@@ -647,10 +653,17 @@ with tab_logistics:
         .stTab {
             text-align: center !important;
         }
-        /* Сброс ширины для элементов внутри логистики, чтобы избежать влияния других стилей */
+        /* Ограничиваем ширину элементов логистики */
         .st-expander, .st-selectbox, .st-number-input, .st-button {
             width: 100% !important;
             max-width: 400px !important;
+        }
+        /* Сбрасываем мобильный вид для всего приложения, если он применяется */
+        @media (min-width: 768px) {
+            .block-container {
+                width: 100% !important;
+                max-width: 1200px !important;
+            }
         }
         </style>
         """,
