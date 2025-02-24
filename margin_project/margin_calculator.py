@@ -565,7 +565,4 @@ def run_margin_service():
                     mime="application/pdf",
                 )
 
-            with tab_margin:
-                # Запускаем сервис маржинальности
-                run_margin_service()
-
+           tab_margin, tab_logistics = st.tabs(["**Калькулятор маржинальности**", "**Калькулятор логистики**"])
