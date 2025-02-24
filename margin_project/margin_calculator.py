@@ -29,34 +29,35 @@ def format_date_russian(date_obj):
         formatted = formatted.replace(eng, rus)
     return formatted
 
-# CSS для маржинальности (широкий дизайн)
+# CSS для маржинальности (широкий дизайн) с максимальной изоляцией
 st.markdown(
     """
     <style>
-    /* Широкий дизайн для маржинальности */
-    #root > div:nth-child(1) > div > div > div > section > div.block-container {
+    /* Широкий дизайн только для маржинальности */
+    #root > div:nth-child(1) > div > div > div > section > div.block-container:not(.logistics-container) {
         max-width: 1200px !important; /* Широкий контейнер для маржинальности */
+        width: 100% !important; /* Убедимся, что занимает всю доступную ширину */
         margin: 0 auto !important;
         padding: 20px !important;
     }
-    /* Унифицируем шрифт и отступы для markdown-меток внутри контейнера */
-    .block-container p {
+    /* Унифицируем шрифт и отступы для markdown-меток внутри контейнера маржинальности */
+    #root > div:nth-child(1) > div > div > div > section > div.block-container:not(.logistics-container) p {
         margin: 0.3rem 0 0.2rem 0 !important;
         font-size: 16px !important;
         line-height: 1.2 !important;
     }
     /* Унифицируем высоту и шрифт полей ввода для маржинальности */
-    div[data-testid="stNumberInput"] input,
-    div[data-testid="stTextInput"] input {
+    #root > div:nth-child(1) > div > div > div > section > div.block-container:not(.logistics-container) div[data-testid="stNumberInput"] input,
+    #root > div:nth-child(1) > div > div > div > section > div.block-container:not(.logistics-container) div[data-testid="stTextInput"] input {
          min-height: 35px !important;
          padding: 4px 6px !important;
          font-size: 14px !important;
     }
     /* Сбрасываем мобильный вид для маржинальности на десктопах */
     @media (min-width: 768px) {
-        #root > div:nth-child(1) > div > div > div > section > div.block-container {
-            width: 100% !important;
+        #root > div:nth-child(1) > div > div > div > section > div.block-container:not(.logistics-container) {
             max-width: 1200px !important;
+            width: 100% !important;
         }
     }
     </style>
@@ -612,12 +613,12 @@ with tab_margin:
     run_margin_service()
 
 with tab_logistics:
-    # Применяем стили для второго сервиса (логистики) с изоляцией
+    # Применяем стили для второго сервиса (логистики) с максимальной изоляцией
     st.markdown(
         """
         <style>
         /* Компактный дизайн только для логистики */
-        #root > div:nth-child(1) > div > div > div > section > div.block-container {
+        #root > div:nth-child(1) > div > div > div > section > div.block-container.logistics-container {
             max-width: 400px !important;
             margin: 0 auto !important;
             padding: 20px !important;
@@ -630,16 +631,16 @@ with tab_logistics:
             background-color: #f8f9fa !important;
         }
         /* Стили для полей ввода, селектов и кнопок в логистике */
-        div[data-testid="stNumberInput"] input,
-        div[data-testid="stTextInput"] input,
-        div[data-testid="stSelectbox"] select {
+        #root > div:nth-child(1) > div > div > div > section > div.block-container.logistics-container div[data-testid="stNumberInput"] input,
+        #root > div:nth-child(1) > div > div > div > section > div.block-container.logistics-container div[data-testid="stTextInput"] input,
+        #root > div:nth-child(1) > div > div > div > section > div.block-container.logistics-container div[data-testid="stSelectbox"] select {
             border: 1px solid #ccc !important;
             border-radius: 5px !important;
             padding: 8px !important;
             font-size: 14px !important;
             max-width: 100% !important;
         }
-        div.stButton > button {
+        #root > div:nth-child(1) > div > div > div > section > div.block-container.logistics-container div.stButton > button {
             background-color: #007bff !important;
             color: #fff !important;
             border: none !important;
@@ -650,7 +651,7 @@ with tab_logistics:
             transition: background-color 0.3s ease !important;
             max-width: 100% !important;
         }
-        div.stButton > button:hover {
+        #root > div:nth-child(1) > div > div > div > section > div.block-container.logistics-container div.stButton > button:hover {
             background-color: #0056b3 !important;
         }
         /* Убираем лишние отступы и центрируем всё в логистике */
@@ -661,17 +662,22 @@ with tab_logistics:
             text-align: center !important;
         }
         /* Ограничиваем ширину элементов логистики */
-        .st-expander, .st-selectbox, .st-number-input, .st-button {
+        #root > div:nth-child(1) > div > div > div > section > div.block-container.logistics-container .st-expander,
+        #root > div:nth-child(1) > div > div > div > section > div.block-container.logistics-container .st-selectbox,
+        #root > div:nth-child(1) > div > div > div > section > div.block-container.logistics-container .st-number-input,
+        #root > div:nth-child(1) > div > div > div > section > div.block-container.logistics-container .st-button {
             width: 100% !important;
             max-width: 400px !important;
         }
         /* Сбрасываем мобильный вид для всего приложения на десктопах */
         @media (min-width: 768px) {
-            #root > div:nth-child(1) > div > div > div > section > div.block-container {
+            #root > div:nth-child(1) > div > div > div > section > div.block-container:not(.logistics-container) {
+                max-width: 1200px !important;
                 width: 100% !important;
             }
-            #root > div:nth-child(1) > div > div > div > section > div.block-container:nth-child(2) {
-                max-width: 1200px !important;
+            #root > div:nth-child(1) > div > div > div > section > div.block-container.logistics-container {
+                max-width: 400px !important;
+                width: 100% !important;
             }
         }
         </style>
