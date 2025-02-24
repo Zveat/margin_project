@@ -504,13 +504,3 @@ tab_margin, tab_logistics = st.tabs(["**Калькулятор маржинал�
 with tab_margin:
     # Запускаем сервис маржинальности
     run_margin_service()
-
-with tab_logistics:
-    st.markdown(
-        """
-        <div style="display:flex; justify-content:center; margin-top:20px;">
-            <iframe src="https://logistics-app.streamlit.app/" height="600" width="400" style="border:none;"></iframe>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
