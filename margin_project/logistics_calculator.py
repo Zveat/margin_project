@@ -1,7 +1,15 @@
 import streamlit as st
 import math
+import datetime
+import locale
 
 def run_logistics_service():
+    # Устанавливаем локаль
+    try:
+        locale.setlocale(locale.LC_TIME, 'ru_RU.UTF-8')
+    except locale.Error:
+        locale.setlocale(locale.LC_TIME, '')
+
     # Данные для городских перевозок
     city_data = [
         {"Вид транспорта": "Легковая машина", "Вес груза": 40, "Длинна груза": 2, "Стоимость доставки": "4000-8000"},
@@ -16,8 +24,8 @@ def run_logistics_service():
     intercity_data = {
         "Алматы-Астана": 500000,
         "Алматы-Шымкент": 300000,
-        "Алматы-Aктау": 1200000,
-        "Алматы-Атыраu": 800000,
+        "Алматы-Актау": 1200000,
+        "Алматы-Атырау": 800000,
         "Алматы-города1": 1,
         "Алматы-города2": 1,
         "Алматы-города3": 1
