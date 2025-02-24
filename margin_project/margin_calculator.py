@@ -13,6 +13,9 @@ from num2words import num2words
 # Устанавливаем глобальные настройки страницы (делаем "wide", можно поменять при желании)
 st.set_page_config(layout="wide")
 
+st.write("")  # Пустая строка
+st.write("")  # Пустая строка
+st.write("")  # Пустая строка
 import os
 
 # Получаем абсолютный путь к логотипу из папки assets
