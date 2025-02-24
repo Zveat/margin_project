@@ -19,8 +19,6 @@ st.write("")  # Пустая строка
 import os
 import streamlit as st
 
-st.set_page_config(layout="wide")
-
 # Формируем путь к логотипу
 logo_path = os.path.join(os.path.dirname(__file__), "assets", "Logo.png")
 
