@@ -35,7 +35,7 @@ def run_logistics_service():
         /* Задаём для .block-container желаемую ширину и отступ слева 
            (можете подправить стили под себя) */
         .block-container {
-            max-width: 600px !important; /* Желаемая ширина */
+            max-width: 650px !important; /* Желаемая ширина */
             margin-left: 20px !important; /* Отступ слева */
             background-color: #fff;
             padding: 20px;
