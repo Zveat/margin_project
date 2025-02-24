@@ -16,33 +16,29 @@ st.set_page_config(layout="wide")
 st.write("")  # Пустая строка
 st.write("")  # Пустая строка
 st.write("")  # Пустая строка
-import os
 import streamlit as st
+import base64
+import os
 
-# Формируем путь к логотипу
+st.set_page_config(layout="wide")
+
 logo_path = os.path.join(os.path.dirname(__file__), "assets", "Logo.png")
 
-# Добавляем отступ сверху, если надо (уберите/уменьшите, если не хотите отступ)
-st.write("")
+# Пробуем прочитать файл и превратить в base64
+with open(logo_path, "rb") as f:
+    data = f.read()
+encoded_logo = base64.b64encode(data).decode()
 
-# Превращаем логотип в base64 или даём ссылку (но чаще достаточно относительного пути)
-# Можно применить ту же логику, что и при вставке stamp/signature в PDF
-# но если st.image() ранее работал, значит этот путь корректен.
-# Для HTML <img> пропишем абсолютный путь через Data URI ИЛИ укажем src.
-# Если src="assets/Logo.png" работает у вас, оставляем. Если нет — используйте base64.
-
+# Формируем HTML-блок: картинка + заголовок в одну строку
 html_block = f"""
 <div style="display:flex; align-items:center; margin-bottom:20px;">
-  <!-- Логотип слева -->
-  <img src="assets/Logo.png" style="width:150px; margin-right:20px;" alt="Logo" />
-
-  <!-- Заголовок справа -->
+  <!-- width=150px - меняйте на нужный размер -->
+  <img src="data:image/png;base64,{encoded_logo}" style="width:150px; margin-right:20px;" alt="Logo" />
   <h2 style="margin:0;">
     Сервис расчета логистики и маржинальности
   </h2>
 </div>
 """
-
 st.markdown(html_block, unsafe_allow_html=True)
 
 # Устанавливаем локаль для вывода даты на русском языке
