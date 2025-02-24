@@ -13,14 +13,6 @@ from num2words import num2words
 # Устанавливаем глобальные настройки страницы (делаем "wide", можно поменять при желании)
 st.set_page_config(layout="wide")
 
-st.markdown("""
-<style>
-h3 {
-    text-align: center !important;
-}
-</style>
-""", unsafe_allow_html=True)
-
 # Заголовок приложения (можно убрать, если не нужен глобальный заголовок)
 st.write("")  # Пустая строка
 st.write("")  # Пустая строка
