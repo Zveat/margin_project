@@ -1,4 +1,5 @@
 import streamlit as st
+import streamlit_authenticator as stauth
 import streamlit.components.v1 as components
 import pandas as pd
 import io
