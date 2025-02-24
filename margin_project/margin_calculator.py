@@ -60,6 +60,17 @@ st.markdown(
             width: 100% !important;
         }
     }
+    /* Восстанавливаем видимость заголовка и вкладок */
+    .stAppViewContainer {
+        margin-top: 0 !important;
+    }
+    .stTabs {
+        margin-top: 20px !important;
+    }
+    .stTab {
+        padding: 10px !important;
+        font-size: 16px !important;
+    }
     </style>
     """,
     unsafe_allow_html=True
@@ -269,6 +280,7 @@ def generate_invoice_gos(
     return pdf_path
 
 def run_margin_service():
+    st.title("Калькулятор маржинальности")  # Восстанавливаем заголовок
     # --- Блок "Данные клиента" (компактный вариант)
     with st.expander("📌 Данные клиента"):
         col1, col2 = st.columns(2)
@@ -539,6 +551,7 @@ def run_margin_service():
 
 # Функция для сервиса логистики
 def run_logistics_service():
+    st.title("Калькулятор логистики")  # Восстанавливаем заголовок
     # Данные для городских перевозок
     city_data = [
         {"Вид транспорта": "Легковая машина", "Вес груза": 40, "Длинна груза": 2, "Стоимость доставки": "4000-8000"},
@@ -654,12 +667,19 @@ with tab_logistics:
         #root > div:nth-child(1) > div > div > div > section > div.block-container.logistics-container div.stButton > button:hover {
             background-color: #0056b3 !important;
         }
+        /* Восстанавливаем видимость и позицию заголовка и вкладок в логистике */
+        #root > div:nth-child(1) > div > div > div > section > div.block-container.logistics-container .stTitle,
+        #root > div:nth-child(1) > div > div > div > section > div.block-container.logistics-container .stTabs {
+            margin-top: 20px !important;
+        }
         /* Убираем лишние отступы и центрируем всё в логистике */
         .stTabs {
             margin: 0 !important;
         }
         .stTab {
             text-align: center !important;
+            padding: 10px !important;
+            font-size: 16px !important;
         }
         /* Ограничиваем ширину элементов логистики */
         #root > div:nth-child(1) > div > div > div > section > div.block-container.logistics-container .st-expander,
