@@ -21,7 +21,6 @@ import streamlit as st
 
 # Формируем путь к логотипу
 logo_path = os.path.join(os.path.dirname(__file__), "assets", "Logo.png")
-st.image(logo_path, width=170)
 
 # Добавляем отступ сверху, если надо (уберите/уменьшите, если не хотите отступ)
 st.write("")
