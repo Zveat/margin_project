@@ -13,18 +13,12 @@ from num2words import num2words
 # Устанавливаем глобальные настройки страницы (делаем "wide", можно поменять при желании)
 st.set_page_config(layout="wide")
 
-st.markdown(
-    """
-    <div style="text-align:center;">
-        <img src="assets/Logo.png" style="width:120px;">
-    </div>
-    """,
-    unsafe_allow_html=True
-)
+col1, col2 = st.columns([1, 5])  # Можно подогнать пропорции
+with col1:
+    st.image("assets/Logo.png", use_column_width=True)
 
-# Заголовок приложения (можно убрать, если не нужен глобальный заголовок)
-st.markdown("<h3 style='text-align:center;'>Сервис расчета логистики и маржинальности</h3>", unsafe_allow_html=True)
-
+with col2:
+    st.markdown("## Сервис расчета логистики и маржинальности")
 
 # Устанавливаем локаль для вывода даты на русском языке
 try:
