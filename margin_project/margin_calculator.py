@@ -8,279 +8,228 @@ import math
 import datetime
 import locale
 
-# Этот вызов должен быть первым
-st.set_page_config(page_title="Объединённый сервис", layout="wide")
-
-# Устанавливаем локаль для вывода даты на русском языке
-try:
-    locale.setlocale(locale.LC_TIME, 'ru_RU.UTF-8')
-except locale.Error:
-    locale.setlocale(locale.LC_TIME, '')
-
-def format_date_russian(date_obj):
-    months = {
-        "January": "Января", "February": "Февраля", "March": "Марта",
-        "April": "Апреля", "May": "Мая", "June": "Июня",
-        "July": "Июля", "August": "Августа", "September": "Сентября",
-        "October": "Октября", "November": "Ноября", "December": "Декабря"
-    }
-    formatted = date_obj.strftime("%d %B %Y г.")
-    for eng, rus in months.items():
-        formatted = formatted.replace(eng, rus)
-    return formatted
-
-# CSS для маржинальности (широкий дизайн) с максимальной изоляцией
-st.markdown(
-    """
-    <style>
-    /* Широкий дизайн только для маржинальности */
-    #root > div:nth-child(1) > div > div > div > section > div.block-container:not(.logistics-container) {
-        max-width: 1200px !important; /* Широкий контейнер для маржинальности */
-        width: 100% !important; /* Убедимся, что занимает всю доступную ширину */
-        margin: 0 auto !important;
-        padding: 20px !important;
-    }
-    /* Унифицируем шрифт и отступы для markdown-меток внутри контейнера маржинальности */
-    #root > div:nth-child(1) > div > div > div > section > div.block-container:not(.logistics-container) p {
-        margin: 0.3rem 0 0.2rem 0 !important;
-        font-size: 16px !important;
-        line-height: 1.2 !important;
-    }
-    /* Унифицируем высоту и шрифт полей ввода для маржинальности */
-    #root > div:nth-child(1) > div > div > div > section > div.block-container:not(.logistics-container) div[data-testid="stNumberInput"] input,
-    #root > div:nth-child(1) > div > div > div > section > div.block-container:not(.logistics-container) div[data-testid="stTextInput"] input {
-         min-height: 35px !important;
-         padding: 4px 6px !important;
-         font-size: 14px !important;
-    }
-    /* Сбрасываем мобильный вид для маржинальности на десктопах */
-    @media (min-width: 768px) {
-        #root > div:nth-child(1) > div > div > div > section > div.block-container:not(.logistics-container) {
-            max-width: 1200px !important;
-            width: 100% !important;
-        }
-    }
-    /* Восстанавливаем видимость заголовка и вкладок */
-    .stAppViewContainer {
-        margin-top: 0 !important;
-    }
-    .stTabs {
-        margin-top: 20px !important;
-    }
-    .stTab {
-        padding: 10px !important;
-        font-size: 16px !important;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True
-)
-
-# Функции для генерации PDF и расчётов
-def get_line_count(pdf, width, text):
-    lines = text.split("\n")
-    count = 0
-    for line in lines:
-        if not line:
-            count += 1
-        else:
-            count += math.ceil(pdf.get_string_width(line) / width)
-    return count
-
-def get_next_invoice_number(prefix="INV", format_str="{:05d}"):
-    storage_file = "last_invoice.txt"
-    current_year = datetime.datetime.now().year
+def run_margin_service():
+    # Устанавливаем локаль для вывода даты на русском языке
     try:
-        with open(storage_file, "r") as f:
-            data = f.read().splitlines()
-            saved_year = int(data[0])
-            saved_number = int(data[1])
-    except Exception:
-        saved_year = current_year
-        saved_number = 0
-    if current_year != saved_year:
-        saved_number = 0
-    saved_number += 1
-    with open(storage_file, "w") as f:
-        f.write(f"{current_year}\n{saved_number}\n")
-    return f"{prefix}{current_year}{format_str.format(saved_number)}"
+        locale.setlocale(locale.LC_TIME, 'ru_RU.UTF-8')
+    except locale.Error:
+        locale.setlocale(locale.LC_TIME, '')
 
-def generate_invoice_gos(
-    invoice_number,
-    invoice_date,
-    supplier_name,
-    supplier_bin,
-    supplier_address,
-    supplier_bank_name,
-    supplier_iik,
-    supplier_bik,
-    client_name,
-    client_company,
-    client_bin,
-    client_phone,
-    client_address,
-    contract_number,
-    df,
-    total_logistics,
-    kickback,
-    tax_delivery,
-    tax_kickback,
-    tax_nds,
-    net_margin,
-):
-    invoice_date = format_date_russian(datetime.datetime.now())
-    pdf = FPDF()
-    pdf.add_page()
-    font_path = os.path.join(os.path.dirname(__file__), "assets", "DejaVuSans.ttf")
-    bold_font_path = os.path.join(os.path.dirname(__file__), "assets", "DejaVuSans-Bold.ttf")
-    pdf.add_font("DejaVu", "", font_path, uni=True)
-    pdf.add_font("DejaVu", "B", bold_font_path, uni=True)
-    pdf.set_font("DejaVu", "", 9)
-    attention_text = (
-        "Внимание! Оплата данного счета означает согласие с условиями поставки товара. "
-        "Уведомление об оплате обязательно, в противном случае не гарантируется наличие товара на складе. "
-        "Товар отпускается по факту прихода денег на р/с Поставщика, самовывозом/доставкой, "
-        "при наличии доверенности и документов, удостоверяющих личность."
-    )
-    pdf.multi_cell(0, 5, attention_text)
-    pdf.ln(3)
-    pdf.set_font("DejaVu", "B", 9)
-    pdf.cell(0, 5, "Образец платежного поручения", ln=True, align="L")
-    pdf.ln(2)
-    pdf.set_font("DejaVu", "", 9)
-    start_x = pdf.get_x()
-    start_y = pdf.get_y()
-    w1, w2, w3 = 70, 65, 50
-    line_height = 5
-    txt1 = "Бенефициар:\nТОО «OOK-STORE»\nБИН: 170740032780"
-    pdf.multi_cell(w1, line_height, txt1, border=1, align="L")
-    col1_end = pdf.get_y()
-    pdf.set_xy(start_x + w1, start_y)
-    txt2 = "ИИК\nKZ11722S000024087169\n\n"
-    pdf.multi_cell(w2, line_height, txt2, border=1, align="C")
-    col2_end = pdf.get_y()
-    pdf.set_xy(start_x + w1 + w2, start_y)
-    txt3 = "Кбе\n17\n\n"
-    pdf.multi_cell(w3, line_height, txt3, border=1, align="C")
-    col3_end = pdf.get_y()
-    row1_end = max(col1_end, col2_end, col3_end)
-    pdf.set_xy(start_x, row1_end)
-    start_x2 = pdf.get_x()
-    start_y2 = pdf.get_y()
-    txt4 = "Банк бенефициара:\nАО «Kaspi Bank»"
-    pdf.multi_cell(w1, line_height, txt4, border=1, align="L")
-    col1_end2 = pdf.get_y()
-    pdf.set_xy(start_x2 + w1, start_y2)
-    txt5 = "БИК\nCASPKZKA"
-    pdf.multi_cell(w2, line_height, txt5, border=1, align="C")
-    col2_end2 = pdf.get_y()
-    pdf.set_xy(start_x2 + w1 + w2, start_y2)
-    txt6 = "Код назначения платежа\n710"
-    pdf.multi_cell(w3, line_height, txt6, border=1, align="C")
-    col3_end2 = pdf.get_y()
-    row2_end = max(col1_end2, col2_end2, col3_end2)
-    pdf.set_xy(start_x2, row2_end)
-    pdf.ln(2)
-    pdf.set_font("DejaVu", "B", 11)
-    pdf.cell(0, 6, f"Счет на оплату № {invoice_number} от {invoice_date}", ln=True, align="C")
-    pdf.ln(2)
-    pdf.set_draw_color(0, 0, 0)
-    pdf.set_line_width(0.8)
-    current_y = pdf.get_y()
-    pdf.line(10, current_y, 200, current_y)
-    pdf.ln(4)
-    pdf.set_font("DejaVu", "", 9)
-    pdf.cell(0, 5, f"Поставщик: {supplier_name}, БИН {supplier_bin}, {supplier_address}", ln=True)
-    pdf.ln(2)
-    pdf.cell(0, 5, f"Покупатель: {client_company}, БИН: {client_bin}, Тел: {client_phone}", ln=True)
-    pdf.ln(2)
-    if contract_number:
-        contract_text = f"Договор: {contract_number}"
-    else:
-        contract_text = "Договор: Без договора"
-    pdf.cell(0, 5, contract_text, ln=True)
-    pdf.ln(2)
-    pdf.set_draw_color(0, 0, 0)
-    pdf.set_line_width(0.2)
-    pdf.set_font("DejaVu", "B", 9)
-    pdf.cell(10, 8, "№", 1, align="C")
-    pdf.cell(25, 8, "Код", 1, align="C")
-    pdf.cell(60, 8, "Наименование", 1)
-    pdf.cell(25, 8, "Кол-во", 1, align="C")
-    pdf.cell(15, 8, "Ед.", 1, align="C")
-    pdf.cell(25, 8, "Цена", 1, align="C")
-    pdf.cell(25, 8, "Сумма", 1, align="C")
-    pdf.ln()
-    pdf.set_font("DejaVu", "", 9)
-    total_sum = 0
-    row_line_height = 8
-    for idx, row in df.iterrows():
-        product_text = str(row["Товар"])
-        num_lines = get_line_count(pdf, 60, product_text)
-        cell_height = num_lines * row_line_height
+    def format_date_russian(date_obj):
+        months = {
+            "January": "Января", "February": "Февраля", "March": "Марта",
+            "April": "Апреля", "May": "Мая", "June": "Июня",
+            "July": "Июля", "August": "Августа", "September": "Сентября",
+            "October": "Октября", "November": "Ноября", "December": "Декабря"
+        }
+        formatted = date_obj.strftime("%d %B %Y г.")
+        for eng, rus in months.items():
+            formatted = formatted.replace(eng, rus)
+        return formatted
+
+    def get_line_count(pdf, width, text):
+        lines = text.split("\n")
+        count = 0
+        for line in lines:
+            if not line:
+                count += 1
+            else:
+                count += math.ceil(pdf.get_string_width(line) / width)
+        return count
+
+    def get_next_invoice_number(prefix="INV", format_str="{:05d}"):
+        storage_file = "last_invoice.txt"
+        current_year = datetime.datetime.now().year
+        try:
+            with open(storage_file, "r") as f:
+                data = f.read().splitlines()
+                saved_year = int(data[0])
+                saved_number = int(data[1])
+        except Exception:
+            saved_year = current_year
+            saved_number = 0
+        if current_year != saved_year:
+            saved_number = 0
+        saved_number += 1
+        with open(storage_file, "w") as f:
+            f.write(f"{current_year}\n{saved_number}\n")
+        return f"{prefix}{current_year}{format_str.format(saved_number)}"
+
+    def generate_invoice_gos(
+        invoice_number,
+        invoice_date,
+        supplier_name,
+        supplier_bin,
+        supplier_address,
+        supplier_bank_name,
+        supplier_iik,
+        supplier_bik,
+        client_name,
+        client_company,
+        client_bin,
+        client_phone,
+        client_address,
+        contract_number,
+        df,
+        total_logistics,
+        kickback,
+        tax_delivery,
+        tax_kickback,
+        tax_nds,
+        net_margin,
+    ):
+        invoice_date = format_date_russian(datetime.datetime.now())
+        pdf = FPDF()
+        pdf.add_page()
+        font_path = os.path.join(os.path.dirname(__file__), "assets", "DejaVuSans.ttf")
+        bold_font_path = os.path.join(os.path.dirname(__file__), "assets", "DejaVuSans-Bold.ttf")
+        pdf.add_font("DejaVu", "", font_path, uni=True)
+        pdf.add_font("DejaVu", "B", bold_font_path, uni=True)
+        pdf.set_font("DejaVu", "", 9)
+        attention_text = (
+            "Внимание! Оплата данного счета означает согласие с условиями поставки товара. "
+            "Уведомление об оплате обязательно, в противном случае не гарантируется наличие товара на складе. "
+            "Товар отпускается по факту прихода денег на р/с Поставщика, самовывозом/доставкой, "
+            "при наличии доверенности и документов, удостоверяющих личность."
+        )
+        pdf.multi_cell(0, 5, attention_text)
+        pdf.ln(3)
+        pdf.set_font("DejaVu", "B", 9)
+        pdf.cell(0, 5, "Образец платежного поручения", ln=True, align="L")
+        pdf.ln(2)
+        pdf.set_font("DejaVu", "", 9)
         start_x = pdf.get_x()
         start_y = pdf.get_y()
-        pdf.cell(10, cell_height, str(idx + 1), border=1, align="C")
-        pdf.cell(25, cell_height, "", border=1, align="C")
-        x_product = pdf.get_x()
-        y_product = pdf.get_y()
-        pdf.multi_cell(60, row_line_height, product_text, border=1)
-        pdf.set_xy(x_product + 60, start_y)
-        pdf.cell(25, cell_height, str(row["Количество"]), border=1, align="C")
-        pdf.cell(15, cell_height, str(row["Ед_измерения"]), border=1, align="C")
-        pdf.cell(25, cell_height, f"{int(row['Цена для клиента']):,}₸", border=1, align="R")
-        pdf.cell(25, cell_height, f"{int(row['Выручка']):,}₸", border=1, align="R")
-        pdf.ln(cell_height)
-        total_sum += row["Выручка"]
-    pdf.cell(185, 8, f"Итого: {int(total_sum):,}₸", 0, ln=True, align="R")
-    pdf.ln(2)
-    total_revenue_pdf = df["Выручка"].sum()
-    nds_calculated = total_revenue_pdf * 12 / 112
-    pdf.cell(185, 8, f"В том числе НДС: {int(nds_calculated):,}₸", 0, ln=True, align="R")
-    pdf.ln(2)
-    total_items = len(df)
-    pdf.cell(0, 5, f"Всего наименований {total_items}, на сумму {int(total_sum):,} тенге", ln=True)
-    pdf.ln(2)
-    sum_words = num2words(int(total_sum), lang="ru").capitalize() + " тенге 00 тиын"
-    pdf.cell(0, 5, f"Итого к оплате: {sum_words}", ln=True)
-    pdf.ln(2)
-    current_y = pdf.get_y()
-    pdf.line(10, current_y, 200, current_y)
-    pdf.ln(4)
-    pdf.ln(2)
-    pdf.set_font("DejaVu", "", 8)
-    pdf.multi_cell(
-        0,
-        4,
-        (
-            "СЧЕТ ДЕЙСТВИТЕЛЕН В ТЕЧЕНИИ 3-Х БАНКОВСКИХ ДНЕЙ.\n"
-            "ПО ИСТЕЧЕНИИ УКАЗАННОГО СРОКА Поставщик не гарантирует наличие товара.\n"
-            "ПРИ ПОКУПКЕ Б/У ТРУБ, ТОВАР ВОЗВРАТУ НЕ ПОДЛЕЖИТ."
-        ),
-    )
-    pdf.ln(5)
-    pdf.set_font("DejaVu", "", 9)
-    pdf.cell(30, 5, "Исполнитель", ln=False)
-    pdf.cell(60, 5, "_______", ln=True)
-    y_sign = pdf.get_y()
-    pdf.ln(5)
-    stamp_path = os.path.join(os.path.dirname(__file__), "assets", "stamp.PNG")
-    signature_path = os.path.join(os.path.dirname(__file__), "assets", "signature.png")
-    try:
-        pdf.image(stamp_path, x=100, y=y_sign - 10, w=50)
-    except Exception as e:
-        print("Ошибка загрузки печати:", e)
-    try:
-        pdf.image(signature_path, x=40, y=y_sign - 10, w=20)
-    except Exception as e:
-        print("Ошибка загрузки подписи:", e)
-    os.makedirs("output", exist_ok=True)
-    pdf_path = os.path.join("output", "invoice_gos_full.pdf")
-    pdf.output(pdf_path, "F")
-    return pdf_path
+        w1, w2, w3 = 70, 65, 50
+        line_height = 5
+        txt1 = "Бенефициар:\nТОО «OOK-STORE»\nБИН: 170740032780"
+        pdf.multi_cell(w1, line_height, txt1, border=1, align="L")
+        col1_end = pdf.get_y()
+        pdf.set_xy(start_x + w1, start_y)
+        txt2 = "ИИК\nKZ11722S000024087169\n\n"
+        pdf.multi_cell(w2, line_height, txt2, border=1, align="C")
+        col2_end = pdf.get_y()
+        pdf.set_xy(start_x + w1 + w2, start_y)
+        txt3 = "Кбе\n17\n\n"
+        pdf.multi_cell(w3, line_height, txt3, border=1, align="C")
+        col3_end = pdf.get_y()
+        row1_end = max(col1_end, col2_end, col3_end)
+        pdf.set_xy(start_x, row1_end)
+        start_x2 = pdf.get_x()
+        start_y2 = pdf.get_y()
+        txt4 = "Банк бенефициара:\nАО «Kaspi Bank»"
+        pdf.multi_cell(w1, line_height, txt4, border=1, align="L")
+        col1_end2 = pdf.get_y()
+        pdf.set_xy(start_x2 + w1, start_y2)
+        txt5 = "БИК\nCASPKZKA"
+        pdf.multi_cell(w2, line_height, txt5, border=1, align="C")
+        col2_end2 = pdf.get_y()
+        pdf.set_xy(start_x2 + w1 + w2, start_y2)
+        txt6 = "Код назначения платежа\n710"
+        pdf.multi_cell(w3, line_height, txt6, border=1, align="C")
+        col3_end2 = pdf.get_y()
+        row2_end = max(col1_end2, col2_end2, col3_end2)
+        pdf.set_xy(start_x2, row2_end)
+        pdf.ln(2)
+        pdf.set_font("DejaVu", "B", 11)
+        pdf.cell(0, 6, f"Счет на оплату № {invoice_number} от {invoice_date}", ln=True, align="C")
+        pdf.ln(2)
+        pdf.set_draw_color(0, 0, 0)
+        pdf.set_line_width(0.8)
+        current_y = pdf.get_y()
+        pdf.line(10, current_y, 200, current_y)
+        pdf.ln(4)
+        pdf.set_font("DejaVu", "", 9)
+        pdf.cell(0, 5, f"Поставщик: {supplier_name}, БИН {supplier_bin}, {supplier_address}", ln=True)
+        pdf.ln(2)
+        pdf.cell(0, 5, f"Покупатель: {client_company}, БИН: {client_bin}, Тел: {client_phone}", ln=True)
+        pdf.ln(2)
+        if contract_number:
+            contract_text = f"Договор: {contract_number}"
+        else:
+            contract_text = "Договор: Без договора"
+        pdf.cell(0, 5, contract_text, ln=True)
+        pdf.ln(2)
+        pdf.set_draw_color(0, 0, 0)
+        pdf.set_line_width(0.2)
+        pdf.set_font("DejaVu", "B", 9)
+        pdf.cell(10, 8, "№", 1, align="C")
+        pdf.cell(25, 8, "Код", 1, align="C")
+        pdf.cell(60, 8, "Наименование", 1)
+        pdf.cell(25, 8, "Кол-во", 1, align="C")
+        pdf.cell(15, 8, "Ед.", 1, align="C")
+        pdf.cell(25, 8, "Цена", 1, align="C")
+        pdf.cell(25, 8, "Сумма", 1, align="C")
+        pdf.ln()
+        pdf.set_font("DejaVu", "", 9)
+        total_sum = 0
+        row_line_height = 8
+        for idx, row in df.iterrows():
+            product_text = str(row["Товар"])
+            num_lines = get_line_count(pdf, 60, product_text)
+            cell_height = num_lines * row_line_height
+            start_x = pdf.get_x()
+            start_y = pdf.get_y()
+            pdf.cell(10, cell_height, str(idx + 1), border=1, align="C")
+            pdf.cell(25, cell_height, "", border=1, align="C")
+            x_product = pdf.get_x()
+            y_product = pdf.get_y()
+            pdf.multi_cell(60, row_line_height, product_text, border=1)
+            pdf.set_xy(x_product + 60, start_y)
+            pdf.cell(25, cell_height, str(row["Количество"]), border=1, align="C")
+            pdf.cell(15, cell_height, str(row["Ед_измерения"]), border=1, align="C")
+            pdf.cell(25, cell_height, f"{int(row['Цена для клиента']):,}₸", border=1, align="R")
+            pdf.cell(25, cell_height, f"{int(row['Выручка']):,}₸", border=1, align="R")
+            pdf.ln(cell_height)
+            total_sum += row["Выручка"]
+        pdf.cell(185, 8, f"Итого: {int(total_sum):,}₸", 0, ln=True, align="R")
+        pdf.ln(2)
+        total_revenue_pdf = df["Выручка"].sum()
+        nds_calculated = total_revenue_pdf * 12 / 112
+        pdf.cell(185, 8, f"В том числе НДС: {int(nds_calculated):,}₸", 0, ln=True, align="R")
+        pdf.ln(2)
+        total_items = len(df)
+        pdf.cell(0, 5, f"Всего наименований {total_items}, на сумму {int(total_sum):,} тенге", ln=True)
+        pdf.ln(2)
+        sum_words = num2words(int(total_sum), lang="ru").capitalize() + " тенге 00 тиын"
+        pdf.cell(0, 5, f"Итого к оплате: {sum_words}", ln=True)
+        pdf.ln(2)
+        current_y = pdf.get_y()
+        pdf.line(10, current_y, 200, current_y)
+        pdf.ln(4)
+        pdf.ln(2)
+        pdf.set_font("DejaVu", "", 8)
+        pdf.multi_cell(
+            0,
+            4,
+            (
+                "СЧЕТ ДЕЙСТВИТЕЛЕН В ТЕЧЕНИИ 3-Х БАНКОВСКИХ ДНЕЙ.\n"
+                "ПО ИСТЕЧЕНИИ УКАЗАННОГО СРОКА Поставщик не гарантирует наличие товара.\n"
+                "ПРИ ПОКУПКЕ Б/У ТРУБ, ТОВАР ВОЗВРАТУ НЕ ПОДЛЕЖИТ."
+            ),
+        )
+        pdf.ln(5)
+        pdf.set_font("DejaVu", "", 9)
+        pdf.cell(30, 5, "Исполнитель", ln=False)
+        pdf.cell(60, 5, "_______", ln=True)
+        y_sign = pdf.get_y()
+        pdf.ln(5)
+        stamp_path = os.path.join(os.path.dirname(__file__), "assets", "stamp.PNG")
+        signature_path = os.path.join(os.path.dirname(__file__), "assets", "signature.png")
+        try:
+            pdf.image(stamp_path, x=100, y=y_sign - 10, w=50)
+        except Exception as e:
+            print("Ошибка загрузки печати:", e)
+        try:
+            pdf.image(signature_path, x=40, y=y_sign - 10, w=20)
+        except Exception as e:
+            print("Ошибка загрузки подписи:", e)
+        os.makedirs("output", exist_ok=True)
+        pdf_path = os.path.join("output", "invoice_gos_full.pdf")
+        pdf.output(pdf_path, "F")
+        return pdf_path
 
-def run_margin_service():
-    st.title("Калькулятор маржинальности")  # Восстанавливаем заголовок
+    st.title("Калькулятор маржинальности")
     # --- Блок "Данные клиента" (компактный вариант)
     with st.expander("📌 Данные клиента"):
         col1, col2 = st.columns(2)
@@ -548,164 +497,3 @@ def run_margin_service():
                     file_name="invoice_gos_full.pdf",
                     mime="application/pdf",
                 )
-
-# Функция для сервиса логистики
-def run_logistics_service():
-    st.title("Калькулятор логистики")  # Восстанавливаем заголовок
-    # Данные для городских перевозок
-    city_data = [
-        {"Вид транспорта": "Легковая машина", "Вес груза": 40, "Длинна груза": 2, "Стоимость доставки": "4000-8000"},
-        {"Вид транспорта": "Газель", "Вес груза": 300, "Длинна груза": 3, "Стоимость доставки": "4000-12000"},
-        {"Вид транспорта": "Длинномер/бортовой", "Вес груза": 1000, "Длинна груза": 12, "Стоимость доставки": "30000-35000"},
-        {"Вид транспорта": "Газель Бортовая", "Вес груза": 2000, "Длинна груза": 4, "Стоимость доставки": "10000-20000"},
-        {"Вид транспорта": "Бортовой грузовик", "Вес груза": 6000, "Длинна груза": 7, "Стоимость доставки": "20000-30000"},
-        {"Вид транспорта": "Фура", "Вес груза": 23000, "Длинна груза": 12, "Стоимость доставки": "50000-60000"}
-    ]
-
-    # Данные для междугородних перевозок
-    intercity_data = {
-        "Алматы-Астана": 500000,
-        "Алматы-Шымкент": 300000,
-        "Алматы-Aктау": 1200000,
-        "Алматы-Атырау": 800000,
-        "Алматы-города1": 1,
-        "Алматы-города2": 1,
-        "Алматы-города3": 1
-    }
-
-    delivery_type = st.selectbox("Тип доставки", ["По городу", "Межгород"])
-
-    if delivery_type == "По городу":
-        weight = st.number_input("Вес (кг)", min_value=0.0, step=0.1, value=0.0)
-        length = st.number_input("Длина (м) (опционально)", min_value=0.0, step=0.1, value=0.0)
-
-        if st.button("Рассчитать"):
-            if weight <= 0:
-                st.error("Пожалуйста, введите вес груза!")
-            else:
-                length_val = None if length <= 0 else length
-                suitable_options = [
-                    entry for entry in city_data
-                    if weight <= entry["Вес груза"] and (length_val is None or length_val <= entry["Длинна груза"])
-                ]
-                if not suitable_options:
-                    st.warning("Нет подходящих вариантов для заданных параметров.")
-                else:
-                    suitable_options.sort(key=lambda x: int(x["Стоимость доставки"].split('-')[0]))
-                    best_option = suitable_options[0]
-                    alternative_option = suitable_options[1] if len(suitable_options) > 1 else None
-                    
-                    st.markdown(
-                        f"**Лучший вариант:**<br>**{best_option['Вид транспорта']}** {best_option['Стоимость доставки']} тг",
-                        unsafe_allow_html=True
-                    )
-                    if alternative_option:
-                        st.markdown(
-                            f"**Альтернативный вариант:**<br>**{alternative_option['Вид транспорта']}** {alternative_option['Стоимость доставки']} тг",
-                            unsafe_allow_html=True
-                        )
-
-    elif delivery_type == "Межгород":
-        direction = st.selectbox("Выберите направление", list(intercity_data.keys()))
-        weight_tonn = st.number_input("Вес (тонн)", min_value=0.0, step=0.1, value=0.0)
-
-        if st.button("Рассчитать"):
-            if weight_tonn <= 0:
-                st.error("Пожалуйста, введите вес груза!")
-            else:
-                tariff = intercity_data[direction]
-                capacity = 20  # Допустим, фура может перевозить до 20 тонн
-                coef = 2       # Коэффициент догруза
-                cost = (tariff / capacity) * weight_tonn * coef
-                st.success(f"Стоимость перевозки: **{round(cost)} тг**")
-
-# Объединение сервисов через вкладки
-tab_margin, tab_logistics = st.tabs(["**Калькулятор маржинальности**", "**Калькулятор логистики**"])
-
-with tab_margin:
-    run_margin_service()
-
-with tab_logistics:
-    # Применяем стили для второго сервиса (логистики) с максимальной изоляцией
-    st.markdown(
-        """
-        <style>
-        /* Компактный дизайн только для логистики */
-        #root > div:nth-child(1) > div > div > div > section > div.block-container.logistics-container {
-            max-width: 400px !important;
-            margin: 0 auto !important;
-            padding: 20px !important;
-            background-color: #fff !important;
-            border-radius: 10px !important;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1) !important;
-        }
-        /* Фон страницы для контраста */
-        body {
-            background-color: #f8f9fa !important;
-        }
-        /* Стили для полей ввода, селектов и кнопок в логистике */
-        #root > div:nth-child(1) > div > div > div > section > div.block-container.logistics-container div[data-testid="stNumberInput"] input,
-        #root > div:nth-child(1) > div > div > div > section > div.block-container.logistics-container div[data-testid="stTextInput"] input,
-        #root > div:nth-child(1) > div > div > div > section > div.block-container.logistics-container div[data-testid="stSelectbox"] select {
-            border: 1px solid #ccc !important;
-            border-radius: 5px !important;
-            padding: 8px !important;
-            font-size: 14px !important;
-            max-width: 100% !important;
-        }
-        #root > div:nth-child(1) > div > div > div > section > div.block-container.logistics-container div.stButton > button {
-            background-color: #007bff !important;
-            color: #fff !important;
-            border: none !important;
-            border-radius: 5px !important;
-            padding: 10px 20px !important;
-            font-size: 16px !important;
-            cursor: pointer !important;
-            transition: background-color 0.3s ease !important;
-            max-width: 100% !important;
-        }
-        #root > div:nth-child(1) > div > div > div > section > div.block-container.logistics-container div.stButton > button:hover {
-            background-color: #0056b3 !important;
-        }
-        /* Восстанавливаем видимость и позицию заголовка и вкладок в логистике */
-        #root > div:nth-child(1) > div > div > div > section > div.block-container.logistics-container .stTitle,
-        #root > div:nth-child(1) > div > div > div > section > div.block-container.logistics-container .stTabs {
-            margin-top: 20px !important;
-        }
-        /* Убираем лишние отступы и центрируем всё в логистике */
-        .stTabs {
-            margin: 0 !important;
-        }
-        .stTab {
-            text-align: center !important;
-            padding: 10px !important;
-            font-size: 16px !important;
-        }
-        /* Ограничиваем ширину элементов логистики */
-        #root > div:nth-child(1) > div > div > div > section > div.block-container.logistics-container .st-expander,
-        #root > div:nth-child(1) > div > div > div > section > div.block-container.logistics-container .st-selectbox,
-        #root > div:nth-child(1) > div > div > div > section > div.block-container.logistics-container .st-number-input,
-        #root > div:nth-child(1) > div > div > div > section > div.block-container.logistics-container .st-button {
-            width: 100% !important;
-            max-width: 400px !important;
-        }
-        /* Сбрасываем мобильный вид для всего приложения на десктопах */
-        @media (min-width: 768px) {
-            #root > div:nth-child(1) > div > div > div > section > div.block-container:not(.logistics-container) {
-                max-width: 1200px !important;
-                width: 100% !important;
-            }
-            #root > div:nth-child(1) > div > div > div > section > div.block-container.logistics-container {
-                max-width: 400px !important;
-                width: 100% !important;
-            }
-        }
-        </style>
-        """,
-        unsafe_allow_html=True
-    )
-    # Оборачиваем содержимое в контейнер для изоляции стилей
-    with st.container():
-        st.markdown('<div class="logistics-container">', unsafe_allow_html=True)
-        run_logistics_service()
-        st.markdown('</div>', unsafe_allow_html=True)
