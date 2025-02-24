@@ -19,9 +19,6 @@ logo_path = os.path.join(os.path.dirname(__file__), "assets", "Logo.png")
 st.image(logo_path, width=170)
 
 # Заголовок приложения (можно убрать, если не нужен глобальный заголовок)
-st.write("")
-st.write("")
-st.write("")
 st.markdown("<h3 style='text-align:center;'>Сервис расчета логистики и маржинальности</h3>", unsafe_allow_html=True)
 
 
