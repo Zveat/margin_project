@@ -99,4 +99,4 @@ with tab_logistics:
             """,
             unsafe_allow_html=True
         )
-        run_logistics_service()
+        run_logistics_service()  # Убедились, что вызываем функцию напрямую, а не через iframe
