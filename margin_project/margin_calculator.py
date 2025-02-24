@@ -17,7 +17,8 @@ st.set_page_config(layout="wide")
 st.write("")
 st.write("")
 st.write("")
-st.subheader("Сервис расчета логистики и маржинальности")
+st.markdown("<h3 style='text-align:center;'>Сервис расчета логистики и маржинальност</h3>", unsafe_allow_html=True)
+
 
 # Устанавливаем локаль для вывода даты на русском языке
 try:
