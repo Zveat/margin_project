@@ -15,7 +15,7 @@ st.set_page_config(layout="wide")
 
 # Заголовок приложения (можно убрать, если не нужен глобальный заголовок)
 st.markdown(
-    "<h4 style='text-align:center; font-weight:bold;'>Сервис расчета логистики и маржинальности</h4>",
+    "<h4 style='text-align:center; font-weight:bold;'>Сервис расчета логистики и маржинальности</h3>",
     unsafe_allow_html=True
 )
 
