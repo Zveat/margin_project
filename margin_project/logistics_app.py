@@ -1,62 +1,7 @@
 import streamlit as st
 import math
-import datetime
-import locale
 
-def run_logistics_app():
-    # Устанавливаем локаль
-    try:
-        locale.setlocale(locale.LC_TIME, 'ru_RU.UTF-8')
-    except locale.Error:
-        locale.setlocale(locale.LC_TIME, '')
-
-    # CSS для узкого, центрированного контейнера и стили полей/кнопок
-    st.markdown(
-        """
-        <style>
-        .logistics-container {
-            max-width: 400px !important; /* Желаемая ширина */
-            margin: 20px auto !important; /* Центрирование: 20px сверху и снизу, auto слева и справа */
-            background-color: #fff !important;
-            padding: 20px !important;
-            border-radius: 10px !important;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1) !important;
-        }
-        body {
-            background-color: #f8f9fa !important;
-        }
-        div[data-testid="stNumberInput"] input,
-        div[data-testid="stTextInput"] input,
-        div[data-testid="stSelectbox"] select {
-            border: 1px solid #ccc !important;
-            border-radius: 5px !important;
-            padding: 8px !important;
-            font-size: 14px !important;
-        }
-        div.stButton > button {
-            background-color: #007bff !important;
-            color: #fff !important;
-            border: none !important;
-            border-radius: 5px !important;
-            padding: 10px 20px !important;
-            font-size: 16px !important;
-            cursor: pointer !important;
-            transition: background-color 0.3s ease !important;
-        }
-        div.stButton > button:hover {
-            background-color: #0056b3 !important;
-        }
-        </style>
-        """,
-        unsafe_allow_html=True
-    )
-
-    # Открываем собственный контейнер для логистического калькулятора
-    st.markdown("<div class='logistics-container'>", unsafe_allow_html=True)
-
-    # Заголовок, выровненный по центру внутри контейнера
-    st.markdown("<h2 style='margin-top: 0; text-align: center;'>Калькулятор логистики</h2>", unsafe_allow_html=True)
-
+def run_logistics_service():
     # Данные для городских перевозок
     city_data = [
         {"Вид транспорта": "Легковая машина", "Вес груза": 40, "Длинна груза": 2, "Стоимость доставки": "4000-8000"},
@@ -71,13 +16,14 @@ def run_logistics_app():
     intercity_data = {
         "Алматы-Астана": 500000,
         "Алматы-Шымкент": 300000,
-        "Алматы-Актау": 1200000,
-        "Алматы-Атырау": 800000,
+        "Алматы-Aктау": 1200000,
+        "Алматы-Атыраu": 800000,
         "Алматы-города1": 1,
         "Алматы-города2": 1,
         "Алматы-города3": 1
     }
 
+    st.title("Калькулятор логистики")
     delivery_type = st.selectbox("Тип доставки", ["По городу", "Межгород"])
 
     if delivery_type == "По городу":
@@ -99,14 +45,14 @@ def run_logistics_app():
                     suitable_options.sort(key=lambda x: int(x["Стоимость доставки"].split('-')[0]))
                     best_option = suitable_options[0]
                     alternative_option = suitable_options[1] if len(suitable_options) > 1 else None
-
+                    
                     st.markdown(
-                        f"**Лучший вариант:**<br><b>{best_option['Вид транспорта']}</b> {best_option['Стоимость доставки']} тг",
+                        f"**Лучший вариант:**<br>**{best_option['Вид транспорта']}** {best_option['Стоимость доставки']} тг",
                         unsafe_allow_html=True
                     )
                     if alternative_option:
                         st.markdown(
-                            f"**Альтернативный вариант:**<br><b>{alternative_option['Вид транспорта']}</b> {alternative_option['Стоимость доставки']} тг",
+                            f"**Альтернативный вариант:**<br>**{alternative_option['Вид транспорта']}** {alternative_option['Стоимость доставки']} тг",
                             unsafe_allow_html=True
                         )
 
@@ -123,9 +69,3 @@ def run_logistics_app():
                 coef = 2       # Коэффициент догруза
                 cost = (tariff / capacity) * weight_tonn * coef
                 st.success(f"Стоимость перевозки: **{round(cost)} тг**")
-
-    # Закрываем контейнер
-    st.markdown("</div>", unsafe_allow_html=True)
-
-if __name__ == '__main__':
-    run_logistics_app()
