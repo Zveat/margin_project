@@ -7,7 +7,6 @@ from num2words import num2words
 import math
 import datetime
 import locale
-from logistics_app import run_logistics_service  # Импортируем логику второго сервиса
 
 # Этот вызов должен быть первым
 st.set_page_config(page_title="Объединённый сервис", layout="wide")
@@ -52,7 +51,7 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# Функции для генерации PDF и других расчётов оставляем без изменений (копируй их из твоего оригинального main.py)
+# Функции для генерации PDF и расчётов
 def get_line_count(pdf, width, text):
     lines = text.split("\n")
     count = 0
@@ -283,7 +282,6 @@ def run_margin_service():
     # --- Форма для добавления товаров (одна форма)
     st.subheader("🛒 Добавление товаров")
     with st.form("add_product_form"):
-        # Две основные колонки: левая (общие поля), правая (поставщики)
         col_left, col_right = st.columns(2)
     
         with col_left:
@@ -297,7 +295,6 @@ def run_margin_service():
             weight = st.number_input("", min_value=0, value=0, format="%d", key="weight", label_visibility="collapsed")
     
         with col_right:
-            # Ряд 1: Цена поставщика 1, Комментарий 1
             row1_col1, row1_col2 = st.columns(2)
             with row1_col1:
                 st.markdown('<p style="font-size:16px; margin-bottom:0px;">Цена поставщика 1 (₸)</p>', unsafe_allow_html=True)
@@ -306,7 +303,6 @@ def run_margin_service():
                 st.markdown("⠀")
                 comment1 = st.text_input("", placeholder="Введите комментарий", key="comm_1", label_visibility="collapsed")
     
-            # Ряд 2: Цена поставщика 2, Комментарий 2
             row2_col1, row2_col2 = st.columns(2)
             with row2_col1:
                 st.markdown('<p style="font-size:16px; margin-bottom:0px;">Цена поставщика 2 (₸)</p>', unsafe_allow_html=True)
@@ -315,7 +311,6 @@ def run_margin_service():
                 st.markdown("⠀")
                 comment2 = st.text_input("", placeholder="Введите комментарий", key="comm_2", label_visibility="collapsed")
     
-            # Ряд 3: Цена поставщика 3, Комментарий 3
             row3_col1, row3_col2 = st.columns(2)
             with row3_col1:
                 st.markdown('<p style="font-size:16px; margin-bottom:0px;">Цена поставщика 3 (₸)</p>', unsafe_allow_html=True)
@@ -324,7 +319,6 @@ def run_margin_service():
                 st.markdown("⠀")
                 comment3 = st.text_input("", placeholder="Введите комментарий", key="comm_3", label_visibility="collapsed")
     
-            # Ряд 4: Цена поставщика 4, Комментарий 4
             row4_col1, row4_col2 = st.columns(2)
             with row4_col1:
                 st.markdown('<p style="font-size:16px; margin-bottom:0px;">Цена поставщика 4 (₸)</p>', unsafe_allow_html=True)
@@ -333,7 +327,6 @@ def run_margin_service():
                 st.markdown("⠀")
                 comment4 = st.text_input("", placeholder="Введите комментарий", key="comm_4", label_visibility="collapsed")
     
-            # Ряд 5: Наценка (%)
             row5_col1, row5_col2, row5_col3 = st.columns([2,1,2])
             with row5_col1:
                 st.markdown("Наценка (%)")
@@ -530,6 +523,77 @@ def run_margin_service():
                     mime="application/pdf",
                 )
 
+# Функция для сервиса логистики (перенесена из logistics_app.py)
+def run_logistics_service():
+    st.markdown("<h1 style='margin-top: 30px;'>Калькулятор логистики</h1>", unsafe_allow_html=True)
+
+    # Данные для городских перевозок
+    city_data = [
+        {"Вид транспорта": "Легковая машина", "Вес груза": 40, "Длинна груза": 2, "Стоимость доставки": "4000-8000"},
+        {"Вид транспорта": "Газель", "Вес груза": 300, "Длинна груза": 3, "Стоимость доставки": "4000-12000"},
+        {"Вид транспорта": "Длинномер/бортовой", "Вес груза": 1000, "Длинна груза": 12, "Стоимость доставки": "30000-35000"},
+        {"Вид транспорта": "Газель Бортовая", "Вес груза": 2000, "Длинна груза": 4, "Стоимость доставки": "10000-20000"},
+        {"Вид транспорта": "Бортовой грузовик", "Вес груза": 6000, "Длинна груза": 7, "Стоимость доставки": "20000-30000"},
+        {"Вид транспорта": "Фура", "Вес груза": 23000, "Длинна груза": 12, "Стоимость доставки": "50000-60000"}
+    ]
+
+    # Данные для междугородних перевозок
+    intercity_data = {
+        "Алматы-Астана": 500000,
+        "Алматы-Шымкент": 300000,
+        "Алматы-Актау": 1200000,
+        "Алматы-Атырау": 800000,
+        "Алматы-города1": 1,
+        "Алматы-города2": 1,
+        "Алматы-города3": 1
+    }
+
+    delivery_type = st.selectbox("Тип доставки", ["По городу", "Межгород"])
+
+    if delivery_type == "По городу":
+        weight = st.number_input("Вес (кг)", min_value=0.0, step=0.1, value=0.0)
+        length = st.number_input("Длина (м) (опционально)", min_value=0.0, step=0.1, value=0.0)
+
+        if st.button("Рассчитать"):
+            if weight <= 0:
+                st.error("Пожалуйста, введите вес груза!")
+            else:
+                length_val = None if length <= 0 else length
+                suitable_options = [
+                    entry for entry in city_data
+                    if weight <= entry["Вес груза"] and (length_val is None or length_val <= entry["Длинна груза"])
+                ]
+                if not suitable_options:
+                    st.warning("Нет подходящих вариантов для заданных параметров.")
+                else:
+                    suitable_options.sort(key=lambda x: int(x["Стоимость доставки"].split('-')[0]))
+                    best_option = suitable_options[0]
+                    alternative_option = suitable_options[1] if len(suitable_options) > 1 else None
+                    
+                    st.markdown(
+                        f"**Лучший вариант:**<br>**{best_option['Вид транспорта']}** {best_option['Стоимость доставки']} тг",
+                        unsafe_allow_html=True
+                    )
+                    if alternative_option:
+                        st.markdown(
+                            f"**Альтернативный вариант:**<br>**{alternative_option['Вид транспорта']}** {alternative_option['Стоимость доставки']} тг",
+                            unsafe_allow_html=True
+                        )
+
+    elif delivery_type == "Межгород":
+        direction = st.selectbox("Выберите направление", list(intercity_data.keys()))
+        weight_tonn = st.number_input("Вес (тонн)", min_value=0.0, step=0.1, value=0.0)
+
+        if st.button("Рассчитать"):
+            if weight_tonn <= 0:
+                st.error("Пожалуйста, введите вес груза!")
+            else:
+                tariff = intercity_data[direction]
+                capacity = 20  # Допустим, фура может перевозить до 20 тонн
+                coef = 2       # Коэффициент догруза
+                cost = (tariff / capacity) * weight_tonn * coef
+                st.success(f"Стоимость перевозки: **{round(cost)} тг**")
+
 # Объединение сервисов через вкладки
 tab_margin, tab_logistics = st.tabs(["**Калькулятор маржинальности**", "**Калькулятор логистики**"])
 
@@ -537,7 +601,7 @@ with tab_margin:
     run_margin_service()
 
 with tab_logistics:
-    # Запускаем второй сервис с сохранением его стилей
+    # Применяем стили для второго сервиса (логистики)
     st.markdown(
         """
         <style>
