@@ -31,7 +31,7 @@ encoded_logo = base64.b64encode(data).decode()
 html_block = f"""
 <div style="display:flex; align-items:center; margin-bottom:20px;">
   <!-- width=200px - меняйте на нужный размер -->
-  <img src="data:image/png;base64,{encoded_logo}" style="width:150px; margin-right:20px;" alt="Logo" />
+  <img src="data:image/png;base64,{encoded_logo}" style="width:150px; margin-right:70px;" alt="Logo" />
   <h2 style="margin:0;">
     Сервис расчета логистики и маржинальности
   </h2>
