@@ -79,7 +79,7 @@ def run_margin_service():
         net_margin,
     ):
         invoice_date = format_date_russian(datetime.datetime.now())
-        pdf = FPDF()
+        pdf = FPDF2()
         pdf.add_page()
         font_path = os.path.join(os.path.dirname(__file__), "assets", "DejaVuSans.ttf")
         bold_font_path = os.path.join(os.path.dirname(__file__), "assets", "DejaVuSans-Bold.ttf")
