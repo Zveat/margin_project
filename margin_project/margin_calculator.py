@@ -564,3 +564,8 @@ def run_margin_service():
                     file_name="invoice_gos_full.pdf",
                     mime="application/pdf",
                 )
+
+with tab_margin:
+    # Запускаем сервис маржинальности
+    run_margin_service()
+
