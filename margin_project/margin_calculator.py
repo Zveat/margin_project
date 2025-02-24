@@ -45,9 +45,6 @@ html_block = f"""
 
 st.markdown(html_block, unsafe_allow_html=True)
 
-# Далее остальной код приложения
-st.write("Здесь основной контент...")
-
 # Устанавливаем локаль для вывода даты на русском языке
 try:
     locale.setlocale(locale.LC_TIME, 'ru_RU.UTF-8')
