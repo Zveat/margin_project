@@ -14,8 +14,6 @@ from num2words import num2words
 st.set_page_config(layout="wide")
 
 st.write("")  # Пустая строка
-st.write("")  # Пустая строка
-st.write("")  # Пустая строка
 import streamlit as st
 import base64
 import os
