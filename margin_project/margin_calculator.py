@@ -13,12 +13,24 @@ from num2words import num2words
 # Устанавливаем глобальные настройки страницы (делаем "wide", можно поменять при желании)
 st.set_page_config(layout="wide")
 
-col1, col2 = st.columns([1, 5])  # Можно подогнать пропорции
-with col1:
-    st.image("assets/Logo.png", use_column_width=True)
+import os
 
+# Получаем абсолютный путь к логотипу из папки assets
+logo_path = os.path.join(os.path.dirname(__file__), "assets", "Logo.png")
+
+# Создаём 2 колонки с разным соотношением ширины (1 к 5)
+col1, col2 = st.columns([1, 5])
+
+# В левой колонке выводим логотип
+with col1:
+    st.image(logo_path, use_container_width=True)
+
+# В правой колонке выводим заголовок
 with col2:
-    st.markdown("## Сервис расчета логистики и маржинальности")
+    st.markdown(
+        "<h3 style='text-align:center; font-weight:bold;'>Сервис расчета логистики и маржинальности</h3>",
+        unsafe_allow_html=True
+    )
 
 # Устанавливаем локаль для вывода даты на русском языке
 try:
