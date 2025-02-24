@@ -565,7 +565,7 @@ def run_margin_service():
                     mime="application/pdf",
                 )
 
-with tab_margin:
-    # Запускаем сервис маржинальности
-    run_margin_service()
+            with tab_margin:
+                # Запускаем сервис маржинальности
+                run_margin_service()
 
