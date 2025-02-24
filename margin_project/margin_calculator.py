@@ -33,7 +33,7 @@ html_block = f"""
   <!-- width=200px - меняйте на нужный размер -->
   <img src="data:image/png;base64,{encoded_logo}" style="width:200px; margin-right:170px;" alt="Logo" />
   <h2 style="margin:0; font-size:25px;">
-    Сервис расчета логистики и маржинальности
+    Сервис расчета логистики и ⠀⠀⠀⠀⠀⠀маржинальности
   </h2>
 </div>
 """
