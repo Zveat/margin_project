@@ -469,7 +469,7 @@ def run_margin_service():
             weight = st.number_input("", min_value=0, value=0, format="%d", key="weight", label_visibility="collapsed")
 
         with col_right:
-            # Цена поставщика 1
+            # Поставщик 1
             row1_col1, row1_col2 = st.columns(2)
             with row1_col1:
                 st.markdown('<p style="font-size:16px; margin-bottom:0px;">Цена поставщика 1 (₸)</p>', unsafe_allow_html=True)
@@ -478,7 +478,7 @@ def run_margin_service():
                 st.markdown("⠀")
                 comment1 = st.text_input("", placeholder="Комментарий", key="comm_1", label_visibility="collapsed")
 
-            # Цена поставщика 2
+            # Поставщик 2
             row2_col1, row2_col2 = st.columns(2)
             with row2_col1:
                 st.markdown('<p style="font-size:16px; margin-bottom:0px;">Цена поставщика 2 (₸)</p>', unsafe_allow_html=True)
@@ -487,7 +487,7 @@ def run_margin_service():
                 st.markdown("⠀")
                 comment2 = st.text_input("", placeholder="Комментарий", key="comm_2", label_visibility="collapsed")
 
-            # Цена поставщика 3
+            # Поставщик 3
             row3_col1, row3_col2 = st.columns(2)
             with row3_col1:
                 st.markdown('<p style="font-size:16px; margin-bottom:0px;">Цена поставщика 3 (₸)</p>', unsafe_allow_html=True)
@@ -496,7 +496,7 @@ def run_margin_service():
                 st.markdown("⠀")
                 comment3 = st.text_input("", placeholder="Комментарий", key="comm_3", label_visibility="collapsed")
 
-            # Цена поставщика 4
+            # Поставщик 4
             row4_col1, row4_col2 = st.columns(2)
             with row4_col1:
                 st.markdown('<p style="font-size:16px; margin-bottom:0px;">Цена поставщика 4 (₸)</p>', unsafe_allow_html=True)
