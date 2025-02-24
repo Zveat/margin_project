@@ -21,7 +21,7 @@ with tab_logistics:
         """
         <style>
         #root > div:nth-child(1) > div > div > div > section > div.block-container {
-            max-width: 400px !important;
+            max-width: 600px !important;
             margin: 0 auto !important;
             padding: 20px !important;
             background-color: #fff !important;
