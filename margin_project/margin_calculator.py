@@ -17,23 +17,38 @@ st.write("")  # Пустая строка
 st.write("")  # Пустая строка
 st.write("")  # Пустая строка
 import os
+import streamlit as st
 
-# Получаем абсолютный путь к логотипу из папки assets
+st.set_page_config(layout="wide")
+
+# Формируем путь к логотипу
 logo_path = os.path.join(os.path.dirname(__file__), "assets", "Logo.png")
 
-# Создаём 2 колонки с разным соотношением ширины (1 к 5)
-col1, col2 = st.columns([1, 5])
+# Добавляем отступ сверху, если надо (уберите/уменьшите, если не хотите отступ)
+st.write("")
 
-# В левой колонке выводим логотип
-with col1:
-    st.image(logo_path, use_container_width=True)
+# Превращаем логотип в base64 или даём ссылку (но чаще достаточно относительного пути)
+# Можно применить ту же логику, что и при вставке stamp/signature в PDF
+# но если st.image() ранее работал, значит этот путь корректен.
+# Для HTML <img> пропишем абсолютный путь через Data URI ИЛИ укажем src.
+# Если src="assets/Logo.png" работает у вас, оставляем. Если нет — используйте base64.
 
-# В правой колонке выводим заголовок
-with col2:
-    st.markdown(
-        "<h3 style='text-align:center; font-weight:bold;'>Сервис расчета логистики и маржинальности</h3>",
-        unsafe_allow_html=True
-    )
+html_block = f"""
+<div style="display:flex; align-items:center; margin-bottom:20px;">
+  <!-- Логотип слева -->
+  <img src="assets/Logo.png" style="width:150px; margin-right:20px;" alt="Logo" />
+
+  <!-- Заголовок справа -->
+  <h2 style="margin:0;">
+    Сервис расчета логистики и маржинальности
+  </h2>
+</div>
+"""
+
+st.markdown(html_block, unsafe_allow_html=True)
+
+# Далее остальной код приложения
+st.write("Здесь основной контент...")
 
 # Устанавливаем локаль для вывода даты на русском языке
 try:
