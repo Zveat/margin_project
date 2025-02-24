@@ -23,7 +23,7 @@ body {
 
 /* Общий контейнер Streamlit */
 .block-container {
-    max-width: 400px !important; /* Можно поставить 600, 800 или 400, как в логистике */
+    max-width: 700px !important; /* Можно поставить 600, 800 или 400, как в логистике */
     margin-left: 20px !important; /* Отступ слева */
     background-color: #fff;
     padding: 20px;
