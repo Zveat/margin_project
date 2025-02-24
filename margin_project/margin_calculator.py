@@ -13,7 +13,8 @@ from num2words import num2words
 # Устанавливаем глобальные настройки страницы (делаем "wide", можно поменять при желании)
 st.set_page_config(layout="wide")
 
-st.image("assets/Logo.png", width=120)
+logo_path = os.path.join(os.path.dirname(__file__), "assets", "Logo.png")
+st.image(logo_path, width=120)
 
 # Заголовок приложения (можно убрать, если не нужен глобальный заголовок)
 st.write("")
