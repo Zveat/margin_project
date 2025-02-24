@@ -34,7 +34,7 @@ st.markdown(
     """
     <style>
     /* Широкий дизайн для маржинальности */
-    .block-container {
+    #root > div:nth-child(1) > div > div > div > section > div.block-container {
         max-width: 1200px !important; /* Широкий контейнер для маржинальности */
         margin: 0 auto !important;
         padding: 20px !important;
@@ -51,6 +51,13 @@ st.markdown(
          min-height: 35px !important;
          padding: 4px 6px !important;
          font-size: 14px !important;
+    }
+    /* Сбрасываем мобильный вид для маржинальности на десктопах */
+    @media (min-width: 768px) {
+        #root > div:nth-child(1) > div > div > div > section > div.block-container {
+            width: 100% !important;
+            max-width: 1200px !important;
+        }
     }
     </style>
     """,
@@ -658,10 +665,12 @@ with tab_logistics:
             width: 100% !important;
             max-width: 400px !important;
         }
-        /* Сбрасываем мобильный вид для всего приложения, если он применяется */
+        /* Сбрасываем мобильный вид для всего приложения на десктопах */
         @media (min-width: 768px) {
-            .block-container {
+            #root > div:nth-child(1) > div > div > div > section > div.block-container {
                 width: 100% !important;
+            }
+            #root > div:nth-child(1) > div > div > div > section > div.block-container:nth-child(2) {
                 max-width: 1200px !important;
             }
         }
