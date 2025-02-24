@@ -20,8 +20,6 @@ import streamlit as st
 import base64
 import os
 
-st.set_page_config(layout="wide")
-
 logo_path = os.path.join(os.path.dirname(__file__), "assets", "Logo.png")
 
 # Пробуем прочитать файл и превратить в base64
