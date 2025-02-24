@@ -31,7 +31,7 @@ html_block = f"""
   <!-- width=200px - меняйте на нужный размер -->
   <img src="data:image/png;base64,{encoded_logo}" style="width:200px; margin-right:170px;" alt="Logo" />
   <h2 style="margin:0; font-size:25px;">
-  <span style="color:#C0C0C0;">Сервис расчета логистики и ㅤㅤㅤㅤмаржинальности</span>
+  <span style="color:#007bff;">Сервис расчета логистики и ㅤㅤㅤㅤмаржинальности</span>
   </h2>
 </div>
 """
