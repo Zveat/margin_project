@@ -12,16 +12,28 @@ st.markdown("<h1 style='margin-top: 20px; margin-bottom: 20px;'>Объединё
 tab_margin, tab_logistics = st.tabs(["**Калькулятор маржинальности**", "**Калькулятор логистики**"])
 
 with tab_margin:
-    # Широкий дизайн для маржинальности
     with st.container():
         st.markdown(
             """
             <style>
+            /* Устанавливаем ширину для всего контейнера приложения */
             #root > div:nth-child(1) > div > div > div > section > div.block-container {
                 max-width: 1200px !important;
                 width: 100% !important;
                 margin: 0 auto !important;
                 padding: 20px !important;
+            }
+            /* Убираем ограничения для вкладок, чтобы они не сужали контент */
+            .stTabs {
+                max-width: 1200px !important;
+                margin: 0 auto !important;
+            }
+            .stTab {
+                max-width: 100% !important;
+            }
+            /* Убедимся, что содержимое внутри вкладки не сужено */
+            .stApp {
+                max-width: 1200px !important;
             }
             .stTabs [data-baseweb="tab"] {
                 background-color: #f0f0f0 !important;
