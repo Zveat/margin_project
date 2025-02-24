@@ -601,46 +601,62 @@ with tab_margin:
     run_margin_service()
 
 with tab_logistics:
-    # Применяем стили для второго сервиса (логистики)
+    # Применяем стили для второго сервиса (логистики) с максимальной изоляцией
     st.markdown(
         """
         <style>
-        .logistics-container {
+        /* Сбрасываем ширину .block-container только для логистики */
+        #root > div:nth-child(1) > div > div > div > section > div.block-container {
             max-width: 400px !important;
             margin: 0 auto !important;
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            padding: 20px !important;
+            background-color: #fff !important;
+            border-radius: 10px !important;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1) !important;
         }
+        /* Фон страницы для контраста */
         body {
-            background-color: #f8f9fa;
+            background-color: #f8f9fa !important;
         }
+        /* Стили для полей ввода, селектов и кнопок в контексте логистики */
         div[data-testid="stNumberInput"] input,
         div[data-testid="stTextInput"] input,
         div[data-testid="stSelectbox"] select {
-             border: 1px solid #ccc !important;
-             border-radius: 5px !important;
-             padding: 8px !important;
-             font-size: 14px !important;
+            border: 1px solid #ccc !important;
+            border-radius: 5px !important;
+            padding: 8px !important;
+            font-size: 14px !important;
         }
         div.stButton > button {
-             background-color: #007bff;
-             color: #fff;
-             border: none;
-             border-radius: 5px;
-             padding: 10px 20px;
-             font-size: 16px;
-             cursor: pointer;
-             transition: background-color 0.3s ease;
+            background-color: #007bff !important;
+            color: #fff !important;
+            border: none !important;
+            border-radius: 5px !important;
+            padding: 10px 20px !important;
+            font-size: 16px !important;
+            cursor: pointer !important;
+            transition: background-color 0.3s ease !important;
         }
         div.stButton > button:hover {
-             background-color: #0056b3;
+            background-color: #0056b3 !important;
+        }
+        /* Убираем лишние отступы и центрируем всё в логистике */
+        .stTabs {
+            margin: 0 !important;
+        }
+        .stTab {
+            text-align: center !important;
+        }
+        /* Сброс ширины для элементов внутри логистики, чтобы избежать влияния других стилей */
+        .st-expander, .st-selectbox, .st-number-input, .st-button {
+            width: 100% !important;
+            max-width: 400px !important;
         }
         </style>
         """,
         unsafe_allow_html=True
     )
+    # Оборачиваем содержимое в контейнер для изоляции стилей
     with st.container():
         st.markdown('<div class="logistics-container">', unsafe_allow_html=True)
         run_logistics_service()
