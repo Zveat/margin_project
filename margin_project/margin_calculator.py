@@ -14,10 +14,8 @@ from num2words import num2words
 st.set_page_config(layout="wide")
 
 # Заголовок приложения (можно убрать, если не нужен глобальный заголовок)
-st.write("")  # Пустая строка
-st.write("")  # Пустая строка
-st.write("")  # Пустая строка
-st.subheader("Сервис расчета логистики и маржинальности")
+st.write("")
+st.title("Сервис расчета логистики и маржинальности")
 
 # Устанавливаем локаль для вывода даты на русском языке
 try:
@@ -726,3 +724,6 @@ with tab_margin:
 
 with tab_logistics:
     run_logistics_service()
+
+
+
