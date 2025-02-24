@@ -457,7 +457,7 @@ def run_margin_service():
 
             row2_col1, row2_col2 = st.columns(2)
             with row2_col1:
-                st.markdown('<p style="font-size:16px; margin-bottom:0px;">Цена поставщика 2 (₸)</p>', unsafe_allow_html=True)
+                st.markdown('<p style="font-size:16px; margin-bottom:0px;">Поставщик 2 (₸)</p>', unsafe_allow_html=True)
                 price2 = st.number_input("", min_value=0, value=0, format="%d", key="price_2", label_visibility="collapsed")
             with row2_col2:
                 st.markdown("⠀")
@@ -465,7 +465,7 @@ def run_margin_service():
 
             row3_col1, row3_col2 = st.columns(2)
             with row3_col1:
-                st.markdown('<p style="font-size:16px; margin-bottom:0px;">Цена поставщика 3 (₸)</p>', unsafe_allow_html=True)
+                st.markdown('<p style="font-size:16px; margin-bottom:0px;">Поставщика 3 (₸)</p>', unsafe_allow_html=True)
                 price3 = st.number_input("", min_value=0, value=0, format="%d", key="price_3", label_visibility="collapsed")
             with row3_col2:
                 st.markdown("⠀")
@@ -473,7 +473,7 @@ def run_margin_service():
 
             row4_col1, row4_col2 = st.columns(2)
             with row4_col1:
-                st.markdown('<p style="font-size:16px; margin-bottom:0px;">Цена поставщика 4 (₸)</p>', unsafe_allow_html=True)
+                st.markdown('<p style="font-size:16px; margin-bottom:0px;">Поставщик 4 (₸)</p>', unsafe_allow_html=True)
                 price4 = st.number_input("", min_value=0, value=0, format="%d", key="price_4", label_visibility="collapsed")
             with row4_col2:
                 st.markdown("⠀")
