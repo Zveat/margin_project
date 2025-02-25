@@ -4,25 +4,12 @@ import base64
 import locale
 import io
 import pandas as pd
-import math
-import datetime
+from passlib.hash import bcrypt
 from fpdf import FPDF
 from num2words import num2words
-from passlib.hash import bcrypt
 
 # MUST be the first command!
 st.set_page_config(layout="wide")
-
-# Добавляем глобальный CSS для фиксированной ширины основного контейнера
-st.markdown("""
-<style>
-  .block-container {
-    max-width: 750px !important;
-    margin-left: auto !important;
-    margin-right: auto !important;
-  }
-</style>
-""", unsafe_allow_html=True)
 
 # -------------------------
 # Данные пользователей
@@ -46,7 +33,7 @@ if "authenticated" not in st.session_state:
 if "user" not in st.session_state:
     st.session_state["user"] = ""
 if "products" not in st.session_state:
-    st.session_state["products"] = []  # Инициализация переменной для товаров
+    st.session_state["products"] = []  # Если используется для расчёта
 
 # -------------------------
 # Форма входа
@@ -60,7 +47,6 @@ if not st.session_state["authenticated"]:
             st.session_state["authenticated"] = True
             st.session_state["user"] = username_input
             st.success(f"Добро пожаловать, {users[username_input]['name']}!")
-            st.experimental_rerun()  # Перерисовываем страницу после входа
         else:
             st.error("Неверный логин или пароль")
     st.stop()
@@ -68,13 +54,12 @@ else:
     st.success(f"Добро пожаловать, {users[st.session_state['user']]['name']}!")
 
 # -------------------------
-# Основной контент сервиса (обёрнут в контейнер с фиксированной шириной)
+# Основной контент сервиса (отображается только после успешного входа)
 # -------------------------
 with st.container():
-    # Этот блок будет отображаться в пределах фиксированного контейнера (.block-container)
-    st.write("")  # Пустая строка для отступа
+    st.write("")  # Отступ
 
-    # Логотип
+    # Загрузка логотипа и его конвертация в base64
     logo_path = os.path.join(os.path.dirname(__file__), "assets", "Logo.png")
     with open(logo_path, "rb") as f:
         data = f.read()
@@ -124,7 +109,7 @@ with st.container():
     
     # Пример расчёта маржинальности
     if st.button("Рассчитать маржинальность"):
-        # Здесь должна быть логика расчёта; для примера создаём DataFrame:
+        # Здесь демонстрационный расчёт: создаём DataFrame
         df = pd.DataFrame({
             "Продукт": ["A", "B", "C"],
             "Цена": [1000, 2000, 3000],
@@ -162,7 +147,7 @@ with st.container():
     st.write("Основной контент сервиса...")
 
 # -------------------------
-# Настройка локали для вывода дат
+# Настройка локали для вывода дат на русском языке
 # -------------------------
 try:
     locale.setlocale(locale.LC_TIME, 'ru_RU.UTF-8')
@@ -177,6 +162,7 @@ if st.button("Выйти"):
     st.session_state["user"] = ""
     st.info("Вы вышли из сервиса. Обновите страницу или зайдите снова.")
     st.stop()
+
 
 ###############################################################################
 #                         БЛОК 1: КОД ЛОГИСТИЧЕСКОГО КАЛЬКУЛЯТОРА
