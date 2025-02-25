@@ -3,50 +3,53 @@ import os
 import base64
 import locale
 from passlib.hash import bcrypt
-from fpdf import FPDF
-from num2words import num2words
 
-# MUST be the first command!
 st.set_page_config(layout="wide")
 
-# Функция для проверки аутентификации
-def check_credentials(username, password, credentials):
-    if username in credentials:
-        # Проверяем хэшированное значение пароля
-        return bcrypt.verify(password, credentials[username]["password"])
-    return False
+# --- Хэширование паролей ---
+def hash_passwords(passwords):
+    return [bcrypt.hash(p) for p in passwords]
 
-# Заранее хэшированные пароли (в реальном приложении храните их безопаснее)
-# Для примера: для "john" пароль "123", для "jane" пароль "456"
-# Если вы хотите изменить пароли, отредактируйте их здесь.
+# Здесь можно поменять логины и пароли
 users = {
     "john": {"name": "John Doe", "password": bcrypt.hash("123")},
     "jane": {"name": "Jane Doe", "password": bcrypt.hash("456")}
 }
 
-# Форма логина
-st.title("Вход в сервис")
-username_input = st.text_input("Логин")
-password_input = st.text_input("Пароль", type="password")
+def check_credentials(username, password):
+    """Проверка логина и пароля (сравнение с хэшами в словаре `users`)."""
+    if username in users:
+        return bcrypt.verify(password, users[username]["password"])
+    return False
 
-if st.button("Войти"):
-    if check_credentials(username_input, password_input, users):
-        st.session_state["authenticated"] = True
-        st.session_state["user"] = username_input
-        st.success(f"Добро пожаловать, {users[username_input]['name']}!")
-    else:
-        st.error("Неверный логин или пароль")
+# --- Проверка аутентификации ---
+if "authenticated" not in st.session_state:
+    st.session_state["authenticated"] = False
+if "user" not in st.session_state:
+    st.session_state["user"] = ""
 
-# Если пользователь не аутентифицирован, останавливаем выполнение
-if "authenticated" not in st.session_state or not st.session_state["authenticated"]:
+# Если пользователь не авторизован, показываем форму входа
+if not st.session_state["authenticated"]:
+    st.title("Вход в сервис")
+    username_input = st.text_input("Логин")
+    password_input = st.text_input("Пароль", type="password")
+
+    if st.button("Войти"):
+        if check_credentials(username_input, password_input):
+            st.session_state["authenticated"] = True
+            st.session_state["user"] = username_input
+            st.experimental_rerun()
+        else:
+            st.error("Неверный логин или пароль")
     st.stop()
+else:
+    # Если пользователь авторизован, приветствуем
+    st.success(f"Добро пожаловать, {users[st.session_state['user']]['name']}!")
 
-# -------------------------
-# Блок с логотипом и заголовком
-# -------------------------
+# --- Ниже весь остальной контент (логотип, заголовок и т.д.) ---
 st.write("")  # Пустая строка для отступа
 
-# Загружаем логотип из папки assets и конвертируем в base64
+# Логотип
 logo_path = os.path.join(os.path.dirname(__file__), "assets", "Logo.png")
 with open(logo_path, "rb") as f:
     data = f.read()
@@ -92,9 +95,7 @@ html_block = f"""
 """
 st.markdown(html_block, unsafe_allow_html=True)
 
-# -------------------------
-# Настройка локали для вывода даты на русском языке
-# -------------------------
+# Настройка локали
 try:
     locale.setlocale(locale.LC_TIME, 'ru_RU.UTF-8')
 except locale.Error:
@@ -102,9 +103,10 @@ except locale.Error:
 
 st.write("Основной контент сервиса...")
 
-# Опционально: кнопка для выхода (очистка сессии)
+# Кнопка "Выйти"
 if st.button("Выйти"):
     st.session_state["authenticated"] = False
+    st.session_state["user"] = ""
     st.experimental_rerun()
 
 ###############################################################################
