@@ -1,17 +1,11 @@
 import streamlit as st
-import streamlit.components.v1 as components
-import pandas as pd
-import io
+import streamlit_authenticator as stauth
 import os
-import math
-import datetime
-import locale
 import base64
-
+import locale
+from passlib.hash import bcrypt
 from fpdf import FPDF
 from num2words import num2words
-import streamlit_authenticator as stauth
-from passlib.hash import bcrypt
 
 # MUST be the first command!
 st.set_page_config(layout="wide")
@@ -25,7 +19,7 @@ def hash_passwords(passwords):
 # Генерируем хэшированные пароли для пользователей (пример: "123" для john, "456" для jane)
 hashed_passwords = hash_passwords(["123", "456"])
 
-# Настройка учетных данных
+# Настройка учётных данных
 credentials = {
     "usernames": {
         "john": {"name": "John Doe", "password": hashed_passwords[0]},
@@ -35,16 +29,17 @@ credentials = {
 
 cookie_settings = {"expiry_days": 1, "key": "some_signature_key"}
 
-# Инициализируем аутентификатор, передавая параметры в правильном порядке
+# Инициализируем аутентификатор. В версии 0.1.0 порядок параметров:
+# Authenticate(credentials, cookie_name, key, expiry_days)
 authenticator = stauth.Authenticate(
     credentials,
-    "some_cookie_name",                    # Имя cookie
-    cookie_settings["key"],                # Ключ для подписи cookie
-    cookie_expiry_days=cookie_settings["expiry_days"]
+    "some_cookie_name",  # Имя cookie
+    cookie_settings["key"],  # Ключ подписи
+    cookie_settings["expiry_days"]  # Срок действия cookie
 )
 
-# Выводим форму логина
-name, authentication_status, username = authenticator.login("Login", location="main")
+# Вызываем login, передавая позиционно "main" как местоположение
+name, authentication_status, username = authenticator.login("Login", "main")
 
 if authentication_status:
     st.success(f"Добро пожаловать, {name}!")
@@ -56,17 +51,16 @@ else:
     st.stop()
 
 # -------------------------
-# Ваш существующий блок кода (логотип + заголовок)
+# Блок с логотипом и заголовком (пример адаптивного блока)
 # -------------------------
 st.write("")  # Пустая строка для отступа
 
-# Получаем путь к логотипу и конвертируем его в base64
 logo_path = os.path.join(os.path.dirname(__file__), "assets", "Logo.png")
 with open(logo_path, "rb") as f:
     data = f.read()
 encoded_logo = base64.b64encode(data).decode()
+logo_src = f"data:image/png;base64,{encoded_logo}"
 
-# Формируем адаптивный HTML-блок: логотип и заголовок в одной строке
 html_block = f"""
 <style>
   .responsive-header {{
@@ -98,7 +92,7 @@ html_block = f"""
   }}
 </style>
 <div class="responsive-header">
-  <img src="data:image/png;base64,{encoded_logo}" alt="Logo" />
+  <img src="{logo_src}" alt="Logo" />
   <h2>
     <span style="color:#007bff;">ㅤСЕРВСИС РАСЧЕТА ЛОГИСТИКИ И ㅤㅤㅤㅤМАРЖИНАЛЬНОСТИ</span>
   </h2>
@@ -114,7 +108,6 @@ try:
 except locale.Error:
     locale.setlocale(locale.LC_TIME, '')
 
-# Здесь размещается остальной основной контент вашего сервиса...
 st.write("Основной контент сервиса...")
 
 # Кнопка выхода (logout)
