@@ -2,55 +2,35 @@ import streamlit as st
 import os
 import base64
 import locale
-import io
 import pandas as pd
-import math
-import datetime
-from fpdf import FPDF
-from num2words import num2words
 from passlib.hash import bcrypt
 
+# Устанавливаем параметры страницы
 st.set_page_config(layout="wide")
 
-# Глобальный CSS для фиксированной ширины контейнера
-st.markdown("""
-<style>
-  .block-container {
-    max-width: 750px !important;
-    margin-left: auto !important;
-    margin-right: auto !important;
-  }
-</style>
-""", unsafe_allow_html=True)
-
 # -------------------------
-# Данные пользователей (фиксированные хэши)
-# Эти хэши были сгенерированы один раз для пароля "123" для john и "456" для jane.
+# Данные пользователей
+# -------------------------
 users = {
-    "john": {
-        "name": "John Doe",
-        "password": "$2b$12$zo5TEYz3gX9KkR8rFY7A0Oj0v0cOkQjg3ZLzQKyEKB2uwNZ2Xik1C"
-    },
-    "jane": {
-        "name": "Jane Doe",
-        "password": "$2b$12$94yL5UohmRL3.1ghftqHmeZUr5ayb9iJ0nxKXAGDqLA1bzhQ.SN6u"
-    }
+    "john": {"name": "John Doe", "password": bcrypt.hash("123")},
+    "jane": {"name": "Jane Doe", "password": bcrypt.hash("456")}
 }
 
 def check_credentials(username, password):
+    """Функция проверки логина и пароля"""
     if username in users:
         return bcrypt.verify(password, users[username]["password"])
     return False
 
 # -------------------------
-# Инициализация состояния сессии
+# Состояние сессии
 # -------------------------
 if "authenticated" not in st.session_state:
     st.session_state["authenticated"] = False
 if "user" not in st.session_state:
     st.session_state["user"] = ""
-if "products" not in st.session_state:
-    st.session_state["products"] = []  # Если используется в расчётах
+if "products" not in st.session_state:  # Добавляем пустой список товаров
+    st.session_state["products"] = []
 
 # -------------------------
 # Форма входа
@@ -59,114 +39,72 @@ if not st.session_state["authenticated"]:
     st.title("Вход в сервис")
     username_input = st.text_input("Логин").strip().lower()
     password_input = st.text_input("Пароль", type="password").strip()
+    
     if st.button("Войти"):
         if check_credentials(username_input, password_input):
             st.session_state["authenticated"] = True
             st.session_state["user"] = username_input
-            st.success(f"Добро пожаловать, {users[username_input]['name']}!")
+            st.rerun()  # Обновляем страницу, чтобы показать основной контент
         else:
             st.error("Неверный логин или пароль")
-    st.stop()  # Если не авторизован, останавливаем выполнение
+    st.stop()  # Останавливаем выполнение кода, пока не будет авторизации
 
-# Если пользователь авторизован, показываем приветствие
+# -------------------------
+# Основной сервис (отображается после входа)
+# -------------------------
 st.success(f"Добро пожаловать, {users[st.session_state['user']]['name']}!")
 
-# -------------------------
-# Основной контент сервиса (отображается после успешной авторизации)
-# -------------------------
-with st.container():
-    st.write("")  # Отступ
+# Пустая строка для отступа
+st.write("")  
 
-    # Загрузка логотипа (используем os.getcwd() для текущей директории)
-    logo_path = os.path.join(os.getcwd(), "assets", "Logo.png")
-    with open(logo_path, "rb") as f:
-        data = f.read()
-    encoded_logo = base64.b64encode(data).decode()
-    logo_src = f"data:image/png;base64,{encoded_logo}"
+# Загрузка логотипа из assets
+logo_path = os.path.join(os.path.dirname(__file__), "assets", "Logo.png")
+with open(logo_path, "rb") as f:
+    data = f.read()
+encoded_logo = base64.b64encode(data).decode()
+logo_src = f"data:image/png;base64,{encoded_logo}"
 
-    html_block = f"""
-    <style>
-      .responsive-header {{
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-wrap: wrap;
-        margin-bottom: 20px;
-      }}
-      .responsive-header img {{
-        max-width: 200px;
-        width: 100%;
-        height: auto;
-        margin-right: 20px;
-      }}
-      .responsive-header h2 {{
-        margin: 0;
-        font-size: 25px;
-      }}
-      @media (max-width: 480px) {{
-        .responsive-header img {{
-          max-width: 150px;
-          margin-right: 10px;
-        }}
-        .responsive-header h2 {{
-          font-size: 20px;
-          text-align: center;
-        }}
-      }}
-    </style>
-    <div class="responsive-header">
-      <img src="{logo_src}" alt="Logo" />
-      <h2>
-        <span style="color:#007bff;">СЕРВСИС РАСЧЕТА ЛОГИСТИКИ И МАРЖИНАЛЬНОСТИ</span>
-      </h2>
-    </div>
-    """
-    st.markdown(html_block, unsafe_allow_html=True)
+# HTML-блок с логотипом и заголовком
+html_block = f"""
+<style>
+  .responsive-header {{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+  }}
+  .responsive-header img {{
+    max-width: 200px;
+    width: 100%;
+    height: auto;
+    margin-right: 20px;
+  }}
+  .responsive-header h2 {{
+    margin: 0;
+    font-size: 25px;
+  }}
+  @media (max-width: 480px) {{
+    .responsive-header img {{
+      max-width: 150px;
+      margin-right: 10px;
+    }}
+    .responsive-header h2 {{
+      font-size: 20px;
+      text-align: center;
+    }}
+  }}
+</style>
+<div class="responsive-header">
+  <img src="{logo_src}" alt="Logo" />
+  <h2>
+    <span style="color:#007bff;">СЕРВСИС РАСЧЕТА ЛОГИСТИКИ И МАРЖИНАЛЬНОСТИ</span>
+  </h2>
+</div>
+"""
+st.markdown(html_block, unsafe_allow_html=True)
 
-    st.write("### Калькулятор маржинальности")
-    if st.button("Рассчитать маржинальность"):
-        # Пример расчёта: создаём DataFrame для демонстрации
-        df = pd.DataFrame({
-            "Продукт": ["A", "B", "C"],
-            "Цена": [1000, 2000, 3000],
-            "Количество": [10, 5, 2]
-        })
-        st.dataframe(df)
-        
-        # Генерация Excel файла
-        output_excel = io.BytesIO()
-        with pd.ExcelWriter(output_excel, engine="xlsxwriter") as writer:
-            df.to_excel(writer, index=False, sheet_name="Расчет")
-        output_excel.seek(0)
-        st.download_button(
-            label="Скачать Excel",
-            data=output_excel,
-            file_name="margin_calculation.xlsx",
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        )
-        
-        # Генерация PDF файла (демонстрация)
-        pdf = FPDF()
-        pdf.add_page()
-        pdf.set_font("Arial", size=12)
-        pdf.cell(200, 10, txt="Margin Calculation", ln=True, align='C')
-        pdf_file_name = "margin_calculation.pdf"
-        pdf.output(pdf_file_name)
-        with open(pdf_file_name, "rb") as pdf_file:
-            st.download_button(
-                label="Скачать PDF",
-                data=pdf_file,
-                file_name=pdf_file_name,
-                mime="application/pdf"
-            )
-        
-        st.write("Основной контент сервиса после расчёта...")
-    
-    st.write("Основной контент сервиса...")
-
-# -------------------------
-# Настройка локали для вывода дат на русском языке
-# -------------------------
+# Настройка локали
 try:
     locale.setlocale(locale.LC_TIME, 'ru_RU.UTF-8')
 except locale.Error:
@@ -175,13 +113,35 @@ except locale.Error:
 st.write("Основной контент сервиса...")
 
 # -------------------------
-# Кнопка "Выйти"
+# Калькулятор маржинальности
 # -------------------------
+def run_margin_service():
+    st.set_page_config(layout="wide")  # Исправляем изменение ширины
+    st.write("Здесь будет калькулятор маржинальности...")
+
+    # Проверяем, есть ли товары
+    if not st.session_state["products"]:
+        st.warning("Добавьте хотя бы один товар для расчета!")
+        return
+
+    # Пример создания DataFrame
+    df = pd.DataFrame(st.session_state["products"])
+
+    # Вывод результатов
+    st.write(df)
+
+    # Кнопки скачивания
+    st.download_button("📥 Скачать расчёт в Excel", data=b"Данные Excel", file_name="calc.xlsx")
+    st.download_button("📥 Скачать счет в PDF", data=b"Данные PDF", file_name="invoice.pdf")
+
+if st.button("📊 Рассчитать маржинальность"):
+    run_margin_service()
+
+# Кнопка выхода
 if st.button("Выйти"):
     st.session_state["authenticated"] = False
     st.session_state["user"] = ""
-    st.info("Вы вышли из сервиса. Обновите страницу или зайдите снова.")
-    st.stop()
+    st.rerun()  # Обновляем страницу после выхода
 
 
 ###############################################################################
