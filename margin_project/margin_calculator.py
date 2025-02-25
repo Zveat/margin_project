@@ -6,48 +6,39 @@ from passlib.hash import bcrypt
 from fpdf import FPDF
 from num2words import num2words
 
-# Импортируем модуль аутентификатора из подмодуля authenticator
-from streamlit_authenticator import authenticator as stauth_auth
-
 # MUST be the first command!
 st.set_page_config(layout="wide")
 
-# -------------------------
-# Блок аутентификации
-# -------------------------
-def hash_passwords(passwords):
-    return [bcrypt.hash(p) for p in passwords]
+# Функция для проверки аутентификации
+def check_credentials(username, password, credentials):
+    if username in credentials:
+        # Проверяем хэшированное значение пароля
+        return bcrypt.verify(password, credentials[username]["password"])
+    return False
 
-# Генерируем хэшированные пароли для пользователей (пример: "123" для john, "456" для jane)
-hashed_passwords = hash_passwords(["123", "456"])
-
-credentials = {
-    "usernames": {
-        "john": {"name": "John Doe", "password": hashed_passwords[0]},
-        "jane": {"name": "Jane Doe", "password": hashed_passwords[1]}
-    }
+# Заранее хэшированные пароли (в реальном приложении храните их безопаснее)
+# Для примера: для "john" пароль "123", для "jane" пароль "456"
+# Если вы хотите изменить пароли, отредактируйте их здесь.
+users = {
+    "john": {"name": "John Doe", "password": bcrypt.hash("123")},
+    "jane": {"name": "Jane Doe", "password": bcrypt.hash("456")}
 }
 
-cookie_settings = {"expiry_days": 1, "key": "some_signature_key"}
+# Форма логина
+st.title("Вход в сервис")
+username_input = st.text_input("Логин")
+password_input = st.text_input("Пароль", type="password")
 
-# Инициализируем аутентификатор через подмодуль authenticator
-authenticator = stauth_auth.Authenticate(
-    credentials,
-    "some_cookie_name",               # имя cookie
-    cookie_settings["key"],           # ключ подписи cookie
-    cookie_expiry_days=cookie_settings["expiry_days"]
-)
-
-# Вызываем форму логина (передаем "main" как позиционный параметр, если это требуется)
-name, authentication_status, username = authenticator.login("Login", "main")
-
-if authentication_status:
-    st.success(f"Добро пожаловать, {name}!")
-else:
-    if authentication_status is False:
-        st.error("Неверный логин или пароль")
+if st.button("Войти"):
+    if check_credentials(username_input, password_input, users):
+        st.session_state["authenticated"] = True
+        st.session_state["user"] = username_input
+        st.success(f"Добро пожаловать, {users[username_input]['name']}!")
     else:
-        st.warning("Введите логин и пароль")
+        st.error("Неверный логин или пароль")
+
+# Если пользователь не аутентифицирован, останавливаем выполнение
+if "authenticated" not in st.session_state or not st.session_state["authenticated"]:
     st.stop()
 
 # -------------------------
@@ -55,6 +46,7 @@ else:
 # -------------------------
 st.write("")  # Пустая строка для отступа
 
+# Загружаем логотип из папки assets и конвертируем в base64
 logo_path = os.path.join(os.path.dirname(__file__), "assets", "Logo.png")
 with open(logo_path, "rb") as f:
     data = f.read()
@@ -110,8 +102,10 @@ except locale.Error:
 
 st.write("Основной контент сервиса...")
 
-# Кнопка выхода (logout)
-authenticator.logout("Logout", "main")
+# Опционально: кнопка для выхода (очистка сессии)
+if st.button("Выйти"):
+    st.session_state["authenticated"] = False
+    st.experimental_rerun()
 
 ###############################################################################
 #                         БЛОК 1: КОД ЛОГИСТИЧЕСКОГО КАЛЬКУЛЯТОРА
