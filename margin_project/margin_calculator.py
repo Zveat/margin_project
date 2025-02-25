@@ -2,32 +2,51 @@ import streamlit as st
 import os
 import base64
 import locale
+import io
+import pandas as pd
+import math
+import datetime
+from fpdf import FPDF
+from num2words import num2words
 from passlib.hash import bcrypt
 
-# Устанавливаем параметры страницы
+# MUST be the first command!
 st.set_page_config(layout="wide")
+
+# Добавляем глобальный CSS для фиксированной ширины основного контейнера
+st.markdown("""
+<style>
+  .block-container {
+    max-width: 750px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+</style>
+""", unsafe_allow_html=True)
 
 # -------------------------
 # Данные пользователей
 # -------------------------
+# Логины в нижнем регистре: для "john" пароль "123", для "jane" пароль "456".
 users = {
     "john": {"name": "John Doe", "password": bcrypt.hash("123")},
     "jane": {"name": "Jane Doe", "password": bcrypt.hash("456")}
 }
 
 def check_credentials(username, password):
-    """Функция проверки логина и пароля"""
     if username in users:
         return bcrypt.verify(password, users[username]["password"])
     return False
 
 # -------------------------
-# Состояние сессии
+# Инициализация состояния сессии
 # -------------------------
 if "authenticated" not in st.session_state:
     st.session_state["authenticated"] = False
 if "user" not in st.session_state:
     st.session_state["user"] = ""
+if "products" not in st.session_state:
+    st.session_state["products"] = []  # Инициализация переменной для товаров
 
 # -------------------------
 # Форма входа
@@ -36,84 +55,128 @@ if not st.session_state["authenticated"]:
     st.title("Вход в сервис")
     username_input = st.text_input("Логин").strip().lower()
     password_input = st.text_input("Пароль", type="password").strip()
-    
     if st.button("Войти"):
         if check_credentials(username_input, password_input):
             st.session_state["authenticated"] = True
             st.session_state["user"] = username_input
-            st.rerun()  # Обновляем страницу, чтобы показать основной контент
+            st.success(f"Добро пожаловать, {users[username_input]['name']}!")
+            st.experimental_rerun()  # Перерисовываем страницу после входа
         else:
             st.error("Неверный логин или пароль")
-    st.stop()  # Останавливаем выполнение кода, пока не будет авторизации
+    st.stop()
+else:
+    st.success(f"Добро пожаловать, {users[st.session_state['user']]['name']}!")
 
 # -------------------------
-# Основной сервис (отображается после входа)
+# Основной контент сервиса (обёрнут в контейнер с фиксированной шириной)
 # -------------------------
-st.success(f"Добро пожаловать, {users[st.session_state['user']]['name']}!")
+with st.container():
+    # Этот блок будет отображаться в пределах фиксированного контейнера (.block-container)
+    st.write("")  # Пустая строка для отступа
 
-# Пустая строка для отступа
-st.write("")  
+    # Логотип
+    logo_path = os.path.join(os.path.dirname(__file__), "assets", "Logo.png")
+    with open(logo_path, "rb") as f:
+        data = f.read()
+    encoded_logo = base64.b64encode(data).decode()
+    logo_src = f"data:image/png;base64,{encoded_logo}"
 
-# Загрузка логотипа из assets
-logo_path = os.path.join(os.path.dirname(__file__), "assets", "Logo.png")
-with open(logo_path, "rb") as f:
-    data = f.read()
-encoded_logo = base64.b64encode(data).decode()
-logo_src = f"data:image/png;base64,{encoded_logo}"
+    html_block = f"""
+    <style>
+      .responsive-header {{
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin-bottom: 20px;
+      }}
+      .responsive-header img {{
+        max-width: 200px;
+        width: 100%;
+        height: auto;
+        margin-right: 20px;
+      }}
+      .responsive-header h2 {{
+        margin: 0;
+        font-size: 25px;
+      }}
+      @media (max-width: 480px) {{
+        .responsive-header img {{
+          max-width: 150px;
+          margin-right: 10px;
+        }}
+        .responsive-header h2 {{
+          font-size: 20px;
+          text-align: center;
+        }}
+      }}
+    </style>
+    <div class="responsive-header">
+      <img src="{logo_src}" alt="Logo" />
+      <h2>
+        <span style="color:#007bff;">СЕРВСИС РАСЧЕТА ЛОГИСТИКИ И МАРЖИНАЛЬНОСТИ</span>
+      </h2>
+    </div>
+    """
+    st.markdown(html_block, unsafe_allow_html=True)
 
-# HTML-блок с логотипом и заголовком
-html_block = f"""
-<style>
-  .responsive-header {{
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-wrap: wrap;
-    margin-bottom: 20px;
-  }}
-  .responsive-header img {{
-    max-width: 200px;
-    width: 100%;
-    height: auto;
-    margin-right: 20px;
-  }}
-  .responsive-header h2 {{
-    margin: 0;
-    font-size: 25px;
-  }}
-  @media (max-width: 480px) {{
-    .responsive-header img {{
-      max-width: 150px;
-      margin-right: 10px;
-    }}
-    .responsive-header h2 {{
-      font-size: 20px;
-      text-align: center;
-    }}
-  }}
-</style>
-<div class="responsive-header">
-  <img src="{logo_src}" alt="Logo" />
-  <h2>
-    <span style="color:#007bff;">СЕРВСИС РАСЧЕТА ЛОГИСТИКИ И МАРЖИНАЛЬНОСТИ</span>
-  </h2>
-</div>
-"""
-st.markdown(html_block, unsafe_allow_html=True)
+    st.write("### Калькулятор маржинальности")
+    
+    # Пример расчёта маржинальности
+    if st.button("Рассчитать маржинальность"):
+        # Здесь должна быть логика расчёта; для примера создаём DataFrame:
+        df = pd.DataFrame({
+            "Продукт": ["A", "B", "C"],
+            "Цена": [1000, 2000, 3000],
+            "Количество": [10, 5, 2]
+        })
+        st.dataframe(df)
+        
+        # Генерация Excel файла
+        output_excel = io.BytesIO()
+        with pd.ExcelWriter(output_excel, engine="xlsxwriter") as writer:
+            df.to_excel(writer, index=False, sheet_name="Расчет")
+        output_excel.seek(0)
+        st.download_button(
+            label="Скачать Excel",
+            data=output_excel,
+            file_name="margin_calculation.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+        
+        # Генерация PDF файла (демонстрация)
+        pdf = FPDF()
+        pdf.add_page()
+        pdf.set_font("Arial", size=12)
+        pdf.cell(200, 10, txt="Margin Calculation", ln=True, align='C')
+        pdf_file_name = "margin_calculation.pdf"
+        pdf.output(pdf_file_name)
+        with open(pdf_file_name, "rb") as pdf_file:
+            st.download_button(
+                label="Скачать PDF",
+                data=pdf_file,
+                file_name=pdf_file_name,
+                mime="application/pdf"
+            )
+    
+    st.write("Основной контент сервиса...")
 
-# Настройка локали
+# -------------------------
+# Настройка локали для вывода дат
+# -------------------------
 try:
     locale.setlocale(locale.LC_TIME, 'ru_RU.UTF-8')
 except locale.Error:
     locale.setlocale(locale.LC_TIME, '')
 
-st.write("Основной контент сервиса...")
-
-# Кнопка выхода
+# -------------------------
+# Кнопка "Выйти"
+# -------------------------
 if st.button("Выйти"):
     st.session_state["authenticated"] = False
     st.session_state["user"] = ""
-    st.rerun()  # Обновляем страницу после выхода
+    st.info("Вы вышли из сервиса. Обновите страницу или зайдите снова.")
+    st.stop()
 
 ###############################################################################
 #                         БЛОК 1: КОД ЛОГИСТИЧЕСКОГО КАЛЬКУЛЯТОРА
