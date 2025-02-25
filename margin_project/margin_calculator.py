@@ -4,25 +4,25 @@ import base64
 import locale
 from passlib.hash import bcrypt
 
+# Устанавливаем параметры страницы
 st.set_page_config(layout="wide")
 
 # -------------------------
-# Пользовательские данные (логин и пароль)
+# Данные пользователей
 # -------------------------
-# Внимание: логины в словаре — это ключи в нижнем регистре.
-# Для john пароль "123", для jane — "456".
 users = {
     "john": {"name": "John Doe", "password": bcrypt.hash("123")},
     "jane": {"name": "Jane Doe", "password": bcrypt.hash("456")}
 }
 
 def check_credentials(username, password):
+    """Функция проверки логина и пароля"""
     if username in users:
         return bcrypt.verify(password, users[username]["password"])
     return False
 
 # -------------------------
-# Инициализация состояния сессии
+# Состояние сессии
 # -------------------------
 if "authenticated" not in st.session_state:
     st.session_state["authenticated"] = False
@@ -34,32 +34,34 @@ if "user" not in st.session_state:
 # -------------------------
 if not st.session_state["authenticated"]:
     st.title("Вход в сервис")
-    # Приводим логин к нижнему регистру и убираем пробелы
     username_input = st.text_input("Логин").strip().lower()
     password_input = st.text_input("Пароль", type="password").strip()
+    
     if st.button("Войти"):
         if check_credentials(username_input, password_input):
             st.session_state["authenticated"] = True
             st.session_state["user"] = username_input
-            st.success(f"Добро пожаловать, {users[username_input]['name']}!")
+            st.rerun()  # Обновляем страницу, чтобы показать основной контент
         else:
             st.error("Неверный логин или пароль")
-    st.stop()
-else:
-    st.success(f"Добро пожаловать, {users[st.session_state['user']]['name']}!")
+    st.stop()  # Останавливаем выполнение кода, пока не будет авторизации
 
 # -------------------------
-# Основной контент сервиса (появляется только при успешной авторизации)
+# Основной сервис (отображается после входа)
 # -------------------------
-st.write("")  # Пустая строка для отступа
+st.success(f"Добро пожаловать, {users[st.session_state['user']]['name']}!")
 
-# Загрузка логотипа из папки assets и его конвертация в base64
+# Пустая строка для отступа
+st.write("")  
+
+# Загрузка логотипа из assets
 logo_path = os.path.join(os.path.dirname(__file__), "assets", "Logo.png")
 with open(logo_path, "rb") as f:
     data = f.read()
 encoded_logo = base64.b64encode(data).decode()
 logo_src = f"data:image/png;base64,{encoded_logo}"
 
+# HTML-блок с логотипом и заголовком
 html_block = f"""
 <style>
   .responsive-header {{
@@ -99,7 +101,7 @@ html_block = f"""
 """
 st.markdown(html_block, unsafe_allow_html=True)
 
-# Настройка локали для вывода дат на русском языке
+# Настройка локали
 try:
     locale.setlocale(locale.LC_TIME, 'ru_RU.UTF-8')
 except locale.Error:
@@ -107,12 +109,11 @@ except locale.Error:
 
 st.write("Основной контент сервиса...")
 
-# Кнопка "Выйти"
+# Кнопка выхода
 if st.button("Выйти"):
     st.session_state["authenticated"] = False
     st.session_state["user"] = ""
-    st.info("Вы вышли из сервиса. Обновите страницу или зайдите снова.")
-    st.stop()
+    st.rerun()  # Обновляем страницу после выхода
 
 ###############################################################################
 #                         БЛОК 1: КОД ЛОГИСТИЧЕСКОГО КАЛЬКУЛЯТОРА
