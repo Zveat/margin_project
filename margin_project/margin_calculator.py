@@ -10,9 +10,10 @@ from fpdf import FPDF
 from num2words import num2words
 from passlib.hash import bcrypt
 
+# MUST be the first command!
 st.set_page_config(layout="wide")
 
-# Глобальный CSS для фиксированной ширины основного контейнера
+# Глобальный CSS для контейнера (фиксированная ширина)
 st.markdown("""
 <style>
   .block-container {
@@ -24,12 +25,12 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # -------------------------
-# Данные пользователей (с заранее сгенерированными хэшами)
-# Для "john": пароль "123"
-# Для "jane": пароль "456"
+# Данные пользователей
+# -------------------------
+# Сгенерируйте хэши для паролей "123" и "456" один раз и вставьте их здесь.
 users = {
-    "john": {"name": "John Doe", "password": "$2b$12$zo5TEYz3gX9KkR8rFY7A0Oj0v0cOkQjg3ZLzQKyEKB2uwNZ2Xik1C"},
-    "jane": {"name": "Jane Doe", "password": "$2b$12$94yL5UohmRL3.1ghftqHmeZUr5ayb9iJ0nxKXAGDqLA1bzhQ.SN6u"}
+    "john": {"name": "John Doe", "password": "$2b$12$JxlEiEpKpoY08IFkMzPBzOlVOXg6E4g3JKW3b7Mx9i7IN7eIPxFMK"},
+    "jane": {"name": "Jane Doe", "password": "$2b$12$MhmGplU7Y9K6.Gnn8oWQK.j8iIprhH0e47OH44Zm93xRVWy1O2GeO"}
 }
 
 def check_credentials(username, password):
@@ -45,13 +46,14 @@ if "authenticated" not in st.session_state:
 if "user" not in st.session_state:
     st.session_state["user"] = ""
 if "products" not in st.session_state:
-    st.session_state["products"] = []  # Если используется для расчёта
+    st.session_state["products"] = []  # Инициализация, если используется в расчетах
 
 # -------------------------
 # Форма входа
 # -------------------------
 if not st.session_state["authenticated"]:
     st.title("Вход в сервис")
+    # Приводим логин к нижнему регистру и убираем лишние пробелы
     username_input = st.text_input("Логин").strip().lower()
     password_input = st.text_input("Пароль", type="password").strip()
     if st.button("Войти"):
@@ -66,12 +68,12 @@ else:
     st.success(f"Добро пожаловать, {users[st.session_state['user']]['name']}!")
 
 # -------------------------
-# Основной контент сервиса (отображается только после успешной авторизации)
+# Основной контент сервиса
 # -------------------------
 with st.container():
     st.write("")  # Отступ
 
-    # Загрузка логотипа из папки assets
+    # Загрузка логотипа из папки assets (используем os.getcwd() для получения пути)
     logo_path = os.path.join(os.getcwd(), "assets", "Logo.png")
     with open(logo_path, "rb") as f:
         data = f.read()
@@ -159,7 +161,7 @@ with st.container():
     st.write("Основной контент сервиса...")
 
 # -------------------------
-# Настройка локали для вывода дат на русском языке
+# Настройка локали для вывода дат
 # -------------------------
 try:
     locale.setlocale(locale.LC_TIME, 'ru_RU.UTF-8')
@@ -176,6 +178,7 @@ if st.button("Выйти"):
     st.session_state["user"] = ""
     st.info("Вы вышли из сервиса. Обновите страницу или зайдите снова.")
     st.stop()
+
 
 ###############################################################################
 #                         БЛОК 1: КОД ЛОГИСТИЧЕСКОГО КАЛЬКУЛЯТОРА
