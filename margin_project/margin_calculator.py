@@ -485,7 +485,7 @@ def run_margin_service():
         """
         <style>
         .margin-container {
-            max-width: 1200px;
+            max-width: 1300px;
             padding: 20px;
         }
         div[data-testid="stNumberInput"] input,
