@@ -1,11 +1,119 @@
-вместо кнопок скачать  иксель и счет в пдф появилось это 
-NameError: This app has encountered an error. The original error message is redacted to prevent data leaks. Full error details have been recorded in the logs (if you're on Streamlit Cloud, click on 'Manage app' in the lower right of your app).
-Traceback:
-File "/mount/src/margin_project/margin_project/margin_calculator.py", line 815, in <module>
-    run_margin_service()
-File "/mount/src/margin_project/margin_project/margin_calculator.py", line 669, in run_margin_service
-    df = pd.DataFrame(st.session_state.products)
-         ^^
+import streamlit as st
+import os
+import base64
+import locale
+from passlib.hash import bcrypt
+
+# Устанавливаем параметры страницы
+st.set_page_config(layout="wide")
+
+# -------------------------
+# Данные пользователей
+# -------------------------
+users = {
+    "john": {"name": "John Doe", "password": bcrypt.hash("123")},
+    "jane": {"name": "Jane Doe", "password": bcrypt.hash("456")}
+}
+
+def check_credentials(username, password):
+    """Функция проверки логина и пароля"""
+    if username in users:
+        return bcrypt.verify(password, users[username]["password"])
+    return False
+
+# -------------------------
+# Состояние сессии
+# -------------------------
+if "authenticated" not in st.session_state:
+    st.session_state["authenticated"] = False
+if "user" not in st.session_state:
+    st.session_state["user"] = ""
+
+# -------------------------
+# Форма входа
+# -------------------------
+if not st.session_state["authenticated"]:
+    st.title("Вход в сервис")
+    username_input = st.text_input("Логин").strip().lower()
+    password_input = st.text_input("Пароль", type="password").strip()
+    
+    if st.button("Войти"):
+        if check_credentials(username_input, password_input):
+            st.session_state["authenticated"] = True
+            st.session_state["user"] = username_input
+            st.rerun()  # Обновляем страницу, чтобы показать основной контент
+        else:
+            st.error("Неверный логин или пароль")
+    st.stop()  # Останавливаем выполнение кода, пока не будет авторизации
+
+# -------------------------
+# Основной сервис (отображается после входа)
+# -------------------------
+st.success(f"Добро пожаловать, {users[st.session_state['user']]['name']}!")
+
+# Пустая строка для отступа
+st.write("")  
+
+# Загрузка логотипа из assets
+logo_path = os.path.join(os.path.dirname(__file__), "assets", "Logo.png")
+with open(logo_path, "rb") as f:
+    data = f.read()
+encoded_logo = base64.b64encode(data).decode()
+logo_src = f"data:image/png;base64,{encoded_logo}"
+
+# HTML-блок с логотипом и заголовком
+html_block = f"""
+<style>
+  .responsive-header {{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+  }}
+  .responsive-header img {{
+    max-width: 200px;
+    width: 100%;
+    height: auto;
+    margin-right: 20px;
+  }}
+  .responsive-header h2 {{
+    margin: 0;
+    font-size: 25px;
+  }}
+  @media (max-width: 480px) {{
+    .responsive-header img {{
+      max-width: 150px;
+      margin-right: 10px;
+    }}
+    .responsive-header h2 {{
+      font-size: 20px;
+      text-align: center;
+    }}
+  }}
+</style>
+<div class="responsive-header">
+  <img src="{logo_src}" alt="Logo" />
+  <h2>
+    <span style="color:#007bff;">СЕРВСИС РАСЧЕТА ЛОГИСТИКИ И МАРЖИНАЛЬНОСТИ</span>
+  </h2>
+</div>
+"""
+st.markdown(html_block, unsafe_allow_html=True)
+
+# Настройка локали
+try:
+    locale.setlocale(locale.LC_TIME, 'ru_RU.UTF-8')
+except locale.Error:
+    locale.setlocale(locale.LC_TIME, '')
+
+st.write("Основной контент сервиса...")
+
+# Кнопка выхода
+if st.button("Выйти"):
+    st.session_state["authenticated"] = False
+    st.session_state["user"] = ""
+    st.rerun()  # Обновляем страницу после выхода
 
 ###############################################################################
 #                         БЛОК 1: КОД ЛОГИСТИЧЕСКОГО КАЛЬКУЛЯТОРА
