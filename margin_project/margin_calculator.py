@@ -10,10 +10,9 @@ from fpdf import FPDF
 from num2words import num2words
 from passlib.hash import bcrypt
 
-# MUST be the first command!
 st.set_page_config(layout="wide")
 
-# Глобальный CSS для контейнера (фиксированная ширина)
+# Глобальный CSS для фиксированной ширины контейнера
 st.markdown("""
 <style>
   .block-container {
@@ -25,12 +24,17 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # -------------------------
-# Данные пользователей
-# -------------------------
-# Сгенерируйте хэши для паролей "123" и "456" один раз и вставьте их здесь.
+# Данные пользователей (фиксированные хэши)
+# Эти хэши были сгенерированы один раз для пароля "123" для john и "456" для jane.
 users = {
-    "john": {"name": "John Doe", "password": "$2b$12$JxlEiEpKpoY08IFkMzPBzOlVOXg6E4g3JKW3b7Mx9i7IN7eIPxFMK"},
-    "jane": {"name": "Jane Doe", "password": "$2b$12$MhmGplU7Y9K6.Gnn8oWQK.j8iIprhH0e47OH44Zm93xRVWy1O2GeO"}
+    "john": {
+        "name": "John Doe",
+        "password": "$2b$12$zo5TEYz3gX9KkR8rFY7A0Oj0v0cOkQjg3ZLzQKyEKB2uwNZ2Xik1C"
+    },
+    "jane": {
+        "name": "Jane Doe",
+        "password": "$2b$12$94yL5UohmRL3.1ghftqHmeZUr5ayb9iJ0nxKXAGDqLA1bzhQ.SN6u"
+    }
 }
 
 def check_credentials(username, password):
@@ -46,14 +50,13 @@ if "authenticated" not in st.session_state:
 if "user" not in st.session_state:
     st.session_state["user"] = ""
 if "products" not in st.session_state:
-    st.session_state["products"] = []  # Инициализация, если используется в расчетах
+    st.session_state["products"] = []  # Если используется в расчётах
 
 # -------------------------
 # Форма входа
 # -------------------------
 if not st.session_state["authenticated"]:
     st.title("Вход в сервис")
-    # Приводим логин к нижнему регистру и убираем лишние пробелы
     username_input = st.text_input("Логин").strip().lower()
     password_input = st.text_input("Пароль", type="password").strip()
     if st.button("Войти"):
@@ -63,17 +66,18 @@ if not st.session_state["authenticated"]:
             st.success(f"Добро пожаловать, {users[username_input]['name']}!")
         else:
             st.error("Неверный логин или пароль")
-    st.stop()
-else:
-    st.success(f"Добро пожаловать, {users[st.session_state['user']]['name']}!")
+    st.stop()  # Если не авторизован, останавливаем выполнение
+
+# Если пользователь авторизован, показываем приветствие
+st.success(f"Добро пожаловать, {users[st.session_state['user']]['name']}!")
 
 # -------------------------
-# Основной контент сервиса
+# Основной контент сервиса (отображается после успешной авторизации)
 # -------------------------
 with st.container():
     st.write("")  # Отступ
 
-    # Загрузка логотипа из папки assets (используем os.getcwd() для получения пути)
+    # Загрузка логотипа (используем os.getcwd() для текущей директории)
     logo_path = os.path.join(os.getcwd(), "assets", "Logo.png")
     with open(logo_path, "rb") as f:
         data = f.read()
@@ -161,7 +165,7 @@ with st.container():
     st.write("Основной контент сервиса...")
 
 # -------------------------
-# Настройка локали для вывода дат
+# Настройка локали для вывода дат на русском языке
 # -------------------------
 try:
     locale.setlocale(locale.LC_TIME, 'ru_RU.UTF-8')
