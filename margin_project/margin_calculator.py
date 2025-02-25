@@ -9,7 +9,7 @@ st.set_page_config(layout="wide")
 def hash_passwords(passwords):
     return [bcrypt.hash(p) for p in passwords]
 
-# Задаём пользователей: логин -> {name, password}
+# Словарь пользователей (логин -> {name, password})
 users = {
     "john": {"name": "John Doe", "password": bcrypt.hash("123")},
     "jane": {"name": "Jane Doe", "password": bcrypt.hash("456")}
@@ -25,6 +25,8 @@ if "authenticated" not in st.session_state:
     st.session_state["authenticated"] = False
 if "user" not in st.session_state:
     st.session_state["user"] = ""
+if "rerun_done" not in st.session_state:
+    st.session_state["rerun_done"] = False
 
 # Форма входа
 if not st.session_state["authenticated"]:
@@ -36,8 +38,18 @@ if not st.session_state["authenticated"]:
             st.session_state["authenticated"] = True
             st.session_state["user"] = username_input
             st.success(f"Добро пожаловать, {users[username_input]['name']}!")
-            # Перерендерим страницу с сохранением состояния
-            st.experimental_rerun()
+            try:
+                st.experimental_rerun()
+            except Exception:
+                # Если st.experimental_rerun() недоступна, используем JS-перезагрузку
+                st.markdown(
+                    """
+                    <script>
+                      window.location.reload();
+                    </script>
+                    """,
+                    unsafe_allow_html=True
+                )
         else:
             st.error("Неверный логин или пароль")
     st.stop()
@@ -48,7 +60,6 @@ else:
 
 st.write("")  # Отступ
 
-# Логотип
 logo_path = os.path.join(os.path.dirname(__file__), "assets", "Logo.png")
 with open(logo_path, "rb") as f:
     data = f.read()
@@ -94,7 +105,6 @@ html_block = f"""
 """
 st.markdown(html_block, unsafe_allow_html=True)
 
-# Настройка локали
 try:
     locale.setlocale(locale.LC_TIME, 'ru_RU.UTF-8')
 except locale.Error:
