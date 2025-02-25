@@ -2,7 +2,6 @@ import streamlit as st
 import os
 import base64
 import locale
-import pandas as pd
 from passlib.hash import bcrypt
 
 # Устанавливаем параметры страницы
@@ -29,8 +28,6 @@ if "authenticated" not in st.session_state:
     st.session_state["authenticated"] = False
 if "user" not in st.session_state:
     st.session_state["user"] = ""
-if "products" not in st.session_state:  # Добавляем пустой список товаров
-    st.session_state["products"] = []
 
 # -------------------------
 # Форма входа
@@ -111,31 +108,6 @@ except locale.Error:
     locale.setlocale(locale.LC_TIME, '')
 
 st.write("Основной контент сервиса...")
-
-# -------------------------
-# Калькулятор маржинальности
-# -------------------------
-def run_margin_service():
-    st.set_page_config(layout="wide")  # Исправляем изменение ширины
-    st.write("Здесь будет калькулятор маржинальности...")
-
-    # Проверяем, есть ли товары
-    if not st.session_state["products"]:
-        st.warning("Добавьте хотя бы один товар для расчета!")
-        return
-
-    # Пример создания DataFrame
-    df = pd.DataFrame(st.session_state["products"])
-
-    # Вывод результатов
-    st.write(df)
-
-    # Кнопки скачивания
-    st.download_button("📥 Скачать расчёт в Excel", data=b"Данные Excel", file_name="calc.xlsx")
-    st.download_button("📥 Скачать счет в PDF", data=b"Данные PDF", file_name="invoice.pdf")
-
-if st.button("📊 Рассчитать маржинальность"):
-    run_margin_service()
 
 # Кнопка выхода
 if st.button("Выйти"):
