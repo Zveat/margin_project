@@ -10,24 +10,12 @@ from fpdf import FPDF
 from num2words import num2words
 from passlib.hash import bcrypt
 
-# MUST be the first command!
 st.set_page_config(layout="wide")
-
-# Глобальный CSS для контейнера (фиксированная ширина)
-st.markdown("""
-<style>
-  .block-container {
-    max-width: 750px !important;
-    margin-left: auto !important;
-    margin-right: auto !important;
-  }
-</style>
-""", unsafe_allow_html=True)
 
 # -------------------------
 # Данные пользователей
 # -------------------------
-# Внимание: логины в словаре должны быть в нижнем регистре.
+# Логины должны быть в нижнем регистре:
 # Для "john" пароль "123", для "jane" пароль "456".
 users = {
     "john": {"name": "John Doe", "password": bcrypt.hash("123")},
@@ -46,35 +34,36 @@ if "authenticated" not in st.session_state:
     st.session_state["authenticated"] = False
 if "user" not in st.session_state:
     st.session_state["user"] = ""
-if "products" not in st.session_state:
-    st.session_state["products"] = []  # Инициализируем, если используется в расчётах
 
 # -------------------------
-# Форма входа
+# Форма входа с использованием контейнера
 # -------------------------
+login_container = st.empty()  # Контейнер для формы входа
 if not st.session_state["authenticated"]:
-    st.title("Вход в сервис")
-    # Приводим логин к нижнему регистру и убираем лишние пробелы
-    username_input = st.text_input("Логин").strip().lower()
-    password_input = st.text_input("Пароль", type="password").strip()
-    if st.button("Войти"):
-        if check_credentials(username_input, password_input):
-            st.session_state["authenticated"] = True
-            st.session_state["user"] = username_input
-            st.success(f"Добро пожаловать, {users[username_input]['name']}!")
-        else:
-            st.error("Неверный логин или пароль")
+    with login_container.container():
+        st.title("Вход в сервис")
+        username_input = st.text_input("Логин").strip().lower()
+        password_input = st.text_input("Пароль", type="password").strip()
+        if st.button("Войти"):
+            if check_credentials(username_input, password_input):
+                st.session_state["authenticated"] = True
+                st.session_state["user"] = username_input
+                st.success(f"Добро пожаловать, {users[username_input]['name']}!")
+                # Очищаем контейнер формы входа
+                login_container.empty()
+            else:
+                st.error("Неверный логин или пароль")
     st.stop()
 else:
     st.success(f"Добро пожаловать, {users[st.session_state['user']]['name']}!")
 
 # -------------------------
-# Основной контент сервиса (отображается только после успешной авторизации)
+# Основной контент сервиса
 # -------------------------
 with st.container():
-    st.write("")  # Пустая строка для отступа
+    st.write("")  # Отступ
 
-    # Загрузка логотипа и его конвертация в base64
+    # Загрузка логотипа из папки assets с использованием os.getcwd()
     logo_path = os.path.join(os.getcwd(), "assets", "Logo.png")
     with open(logo_path, "rb") as f:
         data = f.read()
@@ -122,7 +111,7 @@ with st.container():
 
     st.write("### Калькулятор маржинальности")
     if st.button("Рассчитать маржинальность"):
-        # Демонстрация расчёта: создаём DataFrame
+        # Пример расчёта: создаём DataFrame для демонстрации
         df = pd.DataFrame({
             "Продукт": ["A", "B", "C"],
             "Цена": [1000, 2000, 3000],
@@ -162,7 +151,7 @@ with st.container():
     st.write("Основной контент сервиса...")
 
 # -------------------------
-# Настройка локали для вывода дат на русском языке
+# Настройка локали для вывода дат
 # -------------------------
 try:
     locale.setlocale(locale.LC_TIME, 'ru_RU.UTF-8')
