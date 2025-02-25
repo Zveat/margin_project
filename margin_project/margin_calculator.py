@@ -19,22 +19,48 @@ import base64
 import os
 
 logo_path = os.path.join(os.path.dirname(__file__), "assets", "Logo.png")
-
-# Пробуем прочитать файл и превратить в base64
 with open(logo_path, "rb") as f:
     data = f.read()
 encoded_logo = base64.b64encode(data).decode()
 
-# Формируем HTML-блок: картинка + заголовок в одну строку
 html_block = f"""
-<div style="display:flex; align-items:center; margin-bottom:20px;">
-  <!-- width=200px - меняйте на нужный размер -->
-  <img src="data:image/png;base64,{encoded_logo}" style="width:200px; margin-right:170px;" alt="Logo" />
-  <h2 style="margin:0; font-size:25px;">
-  <span style="color:#007bff;">Сервис расчета логистики и ㅤㅤㅤㅤмаржинальности</span>
+<style>
+  .responsive-header {{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+  }}
+  .responsive-header img {{
+    max-width: 200px;
+    width: 100%;
+    height: auto;
+    margin-right: 20px;
+  }}
+  .responsive-header h2 {{
+    margin: 0;
+    font-size: 25px;
+  }}
+  @media (max-width: 480px) {{
+    .responsive-header img {{
+      max-width: 150px;
+      margin-right: 10px;
+    }}
+    .responsive-header h2 {{
+      font-size: 20px;
+      text-align: center;
+    }}
+  }}
+</style>
+<div class="responsive-header">
+  <img src="data:image/png;base64,{encoded_logo}" alt="Logo" />
+  <h2>
+    <span style="color:#007bff;">Сервис расчета логистики и ㅤㅤㅤㅤмаржинальности</span>
   </h2>
 </div>
 """
+
 st.markdown(html_block, unsafe_allow_html=True)
 
 # Устанавливаем локаль для вывода даты на русском языке
