@@ -7,52 +7,45 @@ from passlib.hash import bcrypt
 st.set_page_config(layout="wide")
 
 def hash_passwords(passwords):
-    """Хэшируем список паролей."""
     return [bcrypt.hash(p) for p in passwords]
 
-# Словарь пользователей: логин -> { "name":..., "password": хэш пароля }
 users = {
     "john": {"name": "John Doe", "password": bcrypt.hash("123")},
     "jane": {"name": "Jane Doe", "password": bcrypt.hash("456")}
 }
 
 def check_credentials(username, password):
-    """Проверяем логин и пароль (сравниваем с хэшами)."""
     if username in users:
         return bcrypt.verify(password, users[username]["password"])
     return False
 
-# Инициализация состояния
 if "authenticated" not in st.session_state:
     st.session_state["authenticated"] = False
 if "user" not in st.session_state:
     st.session_state["user"] = ""
 
-# Если пользователь не авторизован, показываем форму логина
 if not st.session_state["authenticated"]:
     st.title("Вход в сервис")
     username_input = st.text_input("Логин")
     password_input = st.text_input("Пароль", type="password")
-
     if st.button("Войти"):
         if check_credentials(username_input, password_input):
             st.session_state["authenticated"] = True
             st.session_state["user"] = username_input
             st.success(f"Добро пожаловать, {users[username_input]['name']}!")
-            # Перерендерим страницу, чтобы сразу отобразился основной контент
-            st.experimental_rerun()
+            try:
+                st.experimental_rerun()
+            except Exception as e:
+                st.write("Автоматическая перезагрузка не удалась. Пожалуйста, обновите страницу вручную.")
         else:
             st.error("Неверный логин или пароль")
     st.stop()
 else:
-    # Пользователь уже авторизован
     st.success(f"Добро пожаловать, {users[st.session_state['user']]['name']}!")
 
-# --- Ниже основной контент (логотип, заголовок, и т.д.) ---
-
+# Далее ваш основной контент
 st.write("")  # Пустая строка
 
-# Пример: логотип
 logo_path = os.path.join(os.path.dirname(__file__), "assets", "Logo.png")
 with open(logo_path, "rb") as f:
     data = f.read()
@@ -105,13 +98,11 @@ except locale.Error:
 
 st.write("Основной контент сервиса...")
 
-# Кнопка "Выйти"
 if st.button("Выйти"):
     st.session_state["authenticated"] = False
     st.session_state["user"] = ""
-    st.info("Вы вышли из сервиса.")
+    st.info("Вы вышли из сервиса. Обновите страницу или зайдите снова.")
     st.stop()
-
 
 ###############################################################################
 #                         БЛОК 1: КОД ЛОГИСТИЧЕСКОГО КАЛЬКУЛЯТОРА
