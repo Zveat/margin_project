@@ -3,13 +3,15 @@ import os
 import base64
 import locale
 from passlib.hash import bcrypt
+from fpdf import FPDF
+from num2words import num2words
 
 st.set_page_config(layout="wide")
 
 def hash_passwords(passwords):
     return [bcrypt.hash(p) for p in passwords]
 
-# Словарь пользователей (логин -> {name, password})
+# Задаём пользователей: логин -> {name, password}
 users = {
     "john": {"name": "John Doe", "password": bcrypt.hash("123")},
     "jane": {"name": "Jane Doe", "password": bcrypt.hash("456")}
@@ -20,7 +22,7 @@ def check_credentials(username, password):
         return bcrypt.verify(password, users[username]["password"])
     return False
 
-# Инициализация состояния
+# Инициализация состояния сессии
 if "authenticated" not in st.session_state:
     st.session_state["authenticated"] = False
 if "user" not in st.session_state:
@@ -38,27 +40,23 @@ if not st.session_state["authenticated"]:
             st.session_state["authenticated"] = True
             st.session_state["user"] = username_input
             st.success(f"Добро пожаловать, {users[username_input]['name']}!")
-            try:
-                st.experimental_rerun()
-            except Exception:
-                # Если st.experimental_rerun() недоступна, используем JS-перезагрузку
-                st.markdown(
-                    """
-                    <script>
-                      window.location.reload();
-                    </script>
-                    """,
-                    unsafe_allow_html=True
-                )
         else:
             st.error("Неверный логин или пароль")
     st.stop()
 else:
     st.success(f"Добро пожаловать, {users[st.session_state['user']]['name']}!")
+    # Если перезагрузка ещё не выполнена, пытаемся её выполнить один раз:
+    if not st.session_state["rerun_done"]:
+        st.session_state["rerun_done"] = True
+        try:
+            st.experimental_rerun()
+        except Exception:
+            st.markdown('<meta http-equiv="refresh" content="0">', unsafe_allow_html=True)
 
-# --- Основной контент сервиса ---
-
-st.write("")  # Отступ
+# -------------------------
+# Блок с логотипом и заголовком
+# -------------------------
+st.write("")  # Пустая строка для отступа
 
 logo_path = os.path.join(os.path.dirname(__file__), "assets", "Logo.png")
 with open(logo_path, "rb") as f:
@@ -105,6 +103,9 @@ html_block = f"""
 """
 st.markdown(html_block, unsafe_allow_html=True)
 
+# -------------------------
+# Настройка локали для вывода даты на русском языке
+# -------------------------
 try:
     locale.setlocale(locale.LC_TIME, 'ru_RU.UTF-8')
 except locale.Error:
