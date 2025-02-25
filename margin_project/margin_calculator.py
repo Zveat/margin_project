@@ -1,11 +1,18 @@
 import streamlit as st
-import streamlit_authenticator as stauth
 import os
 import base64
 import locale
 from passlib.hash import bcrypt
+import streamlit_authenticator as stauth
 from fpdf import FPDF
 from num2words import num2words
+
+# Попытка импортировать класс Authenticate из модуля authentication
+try:
+    from streamlit_authenticator.authentication import Authenticate as Authenticator
+except ImportError:
+    st.error("Ошибка импорта класса Authenticate. Убедитесь, что установлена версия streamlit-authenticator==0.1.0.")
+    st.stop()
 
 # MUST be the first command!
 st.set_page_config(layout="wide")
@@ -16,7 +23,7 @@ st.set_page_config(layout="wide")
 def hash_passwords(passwords):
     return [bcrypt.hash(p) for p in passwords]
 
-# Генерируем хэшированные пароли (пример: "123" для john, "456" для jane)
+# Генерируем хэшированные пароли для пользователей (например: "123" для john, "456" для jane)
 hashed_passwords = hash_passwords(["123", "456"])
 
 credentials = {
@@ -28,15 +35,16 @@ credentials = {
 
 cookie_settings = {"expiry_days": 1, "key": "some_signature_key"}
 
-# Инициализируем аутентификатор (используем параметры в порядке: credentials, cookie_name, key, cookie_expiry_days)
-authenticator = stauth.Authenticate(
+# Инициализируем аутентификатор.
+# В версии 0.1.0 ожидается: Authenticate(credentials, cookie_name, key, cookie_expiry_days)
+authenticator = Authenticator(
     credentials,
-    "some_cookie_name",               
-    cookie_settings["key"],
+    "some_cookie_name",               # имя cookie
+    cookie_settings["key"],           # ключ подписи cookie
     cookie_expiry_days=cookie_settings["expiry_days"]
 )
 
-# Вызываем форму логина (передаём "main" как второй параметр, если это требуется)
+# Вызываем форму логина. Если ваша версия принимает "main" как позиционный параметр, передаём его.
 name, authentication_status, username = authenticator.login("Login", "main")
 
 if authentication_status:
