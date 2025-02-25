@@ -56,7 +56,7 @@ html_block = f"""
 <div class="responsive-header">
   <img src="data:image/png;base64,{encoded_logo}" alt="Logo" />
   <h2>
-    <span style="color:#007bff;">Сервис расчета логистики и маржинальности</span>
+    <span style="color:#007bff;">СЕРВСИ РАСЧЕТА ЛОГИСТИКИ И МАРЖИНАЛЬНОСТИ</span>
   </h2>
 </div>
 """
