@@ -1,11 +1,17 @@
 import streamlit as st
-import streamlit_authenticator as stauth
+import streamlit.components.v1 as components
+import pandas as pd
+import io
 import os
-import base64
+import math
+import datetime
 import locale
-from passlib.hash import bcrypt
+import base64
+
 from fpdf import FPDF
 from num2words import num2words
+import streamlit_authenticator as stauth
+from passlib.hash import bcrypt
 
 # MUST be the first command!
 st.set_page_config(layout="wide")
@@ -19,6 +25,7 @@ def hash_passwords(passwords):
 # Генерируем хэшированные пароли для пользователей (пример: "123" для john, "456" для jane)
 hashed_passwords = hash_passwords(["123", "456"])
 
+# Настройка учетных данных
 credentials = {
     "usernames": {
         "john": {"name": "John Doe", "password": hashed_passwords[0]},
@@ -28,11 +35,12 @@ credentials = {
 
 cookie_settings = {"expiry_days": 1, "key": "some_signature_key"}
 
+# Инициализируем аутентификатор, передавая параметры в правильном порядке
 authenticator = stauth.Authenticate(
     credentials,
-    cookie_settings["key"],
-    cookie_settings["expiry_days"],
-    cookie_name="some_cookie_name"
+    "some_cookie_name",                    # Имя cookie
+    cookie_settings["key"],                # Ключ для подписи cookie
+    cookie_expiry_days=cookie_settings["expiry_days"]
 )
 
 # Выводим форму логина
@@ -48,7 +56,7 @@ else:
     st.stop()
 
 # -------------------------
-# Блок с логотипом и заголовком
+# Ваш существующий блок кода (логотип + заголовок)
 # -------------------------
 st.write("")  # Пустая строка для отступа
 
@@ -57,8 +65,8 @@ logo_path = os.path.join(os.path.dirname(__file__), "assets", "Logo.png")
 with open(logo_path, "rb") as f:
     data = f.read()
 encoded_logo = base64.b64encode(data).decode()
-logo_src = f"data:image/png;base64,{encoded_logo}"
 
+# Формируем адаптивный HTML-блок: логотип и заголовок в одной строке
 html_block = f"""
 <style>
   .responsive-header {{
@@ -90,27 +98,13 @@ html_block = f"""
   }}
 </style>
 <div class="responsive-header">
-  <img src="{logo_src}" alt="Logo" />
+  <img src="data:image/png;base64,{encoded_logo}" alt="Logo" />
   <h2>
     <span style="color:#007bff;">ㅤСЕРВСИС РАСЧЕТА ЛОГИСТИКИ И ㅤㅤㅤㅤМАРЖИНАЛЬНОСТИ</span>
   </h2>
 </div>
 """
 st.markdown(html_block, unsafe_allow_html=True)
-
-# -------------------------
-# Настройка локали для вывода даты на русском языке
-# -------------------------
-try:
-    locale.setlocale(locale.LC_TIME, 'ru_RU.UTF-8')
-except locale.Error:
-    locale.setlocale(locale.LC_TIME, '')
-
-# Здесь размещается остальной основной контент вашего сервиса...
-st.write("Основной контент сервиса...")
-
-# Кнопка выхода (logout)
-authenticator.logout("Logout", "main")
 
 # -------------------------
 # Настройка локали для вывода даты на русском языке
