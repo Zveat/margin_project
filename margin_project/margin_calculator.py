@@ -13,55 +13,8 @@ from num2words import num2words
 # Устанавливаем глобальные настройки страницы (делаем "wide", можно поменять при желании)
 st.set_page_config(layout="wide")
 
-st.write("")  # Пустая строка
-import streamlit as st
-import base64
-import os
-
-logo_path = os.path.join(os.path.dirname(__file__), "assets", "Logo.png")
-with open(logo_path, "rb") as f:
-    data = f.read()
-encoded_logo = base64.b64encode(data).decode()
-
-html_block = f"""
-<style>
-  .responsive-header {{
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-wrap: wrap;
-    margin-bottom: 20px;
-  }}
-  .responsive-header img {{
-    max-width: 200px;
-    width: 100%;
-    height: auto;
-    margin-right: 20px;
-  }}
-  .responsive-header h2 {{
-    margin: 0;
-    font-size: 20px;
-  }}
-  @media (max-width: 480px) {{
-    .responsive-header img {{
-      max-width: 150px;
-      margin-right: 10px;
-    }}
-    .responsive-header h2 {{
-      font-size: 20px;
-      text-align: center;
-    }}
-  }}
-</style>
-<div class="responsive-header">
-  <img src="data:image/png;base64,{encoded_logo}" alt="Logo" />
-  <h2>
-    <span style="color:#007bff;">ㅤСЕРВСИС РАСЧЕТА ЛОГИСТИКИ И МАРЖИНАЛЬНОСТИ</span>
-  </h2>
-</div>
-"""
-
-st.markdown(html_block, unsafe_allow_html=True)
+# Заголовок приложения (можно убрать, если не нужен глобальный заголовок)
+st.title("Сервис расчета логистики и маржинальности")
 
 # Устанавливаем локаль для вывода даты на русском языке
 try:
@@ -73,6 +26,7 @@ except locale.Error:
 #                         БЛОК 1: КОД ЛОГИСТИЧЕСКОГО КАЛЬКУЛЯТОРА
 ###############################################################################
 def run_logistics_service():
+    st.markdown("<h2 style='margin-top: 30px;'>Калькулятор логистики</h2>", unsafe_allow_html=True)
 
     # Дополнительные стили (CSS) логистического калькулятора
     st.markdown(
@@ -81,7 +35,7 @@ def run_logistics_service():
         /* Задаём для .block-container желаемую ширину и отступ слева 
            (можете подправить стили под себя) */
         .block-container {
-            max-width: 750px !important; /* Желаемая ширина */
+            max-width: 400px !important; /* Желаемая ширина */
             margin-left: 20px !important; /* Отступ слева */
             background-color: #fff;
             padding: 20px;
@@ -578,12 +532,12 @@ def run_margin_service():
             })
             st.rerun()
         else:
-            st.warning("Введите название товара ⚠️ ")
+            st.warning("⚠️ Введите название товара!")
 
     # --- Список товаров ---
     st.subheader("📦 Список товаров")
     if not st.session_state.products:
-        st.info("Товары ещё не добавлены❗")
+        st.info("❗ Товары ещё не добавлены")
     else:
         for index, product in enumerate(st.session_state.products):
             supplier_prices = [
@@ -771,16 +725,4 @@ with tab_margin:
 with tab_logistics:
     run_logistics_service()
 
-# --- В самом конце файла вставляем JS, отключающий автозаполнение ---
-st.markdown("""
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-  document.querySelectorAll('input').forEach(function(el) {
-    el.setAttribute('autocomplete', 'off');
-    el.setAttribute('autocorrect', 'off');
-    el.setAttribute('autocapitalize', 'off');
-  });
-});
-</script>
-""", unsafe_allow_html=True)
 
