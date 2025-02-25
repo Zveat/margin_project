@@ -134,7 +134,7 @@ def run_logistics_service():
         """
         <style>
         .logistics-container {
-            max-width: 750px;
+            max-width: 950px;
             margin-left: 20px;
             background-color: #fff;
             padding: 20px;
