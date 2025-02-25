@@ -1,32 +1,130 @@
+
 import streamlit as st
-import streamlit.components.v1 as components
+import os
+import base64
+import locale
+from passlib.hash import bcrypt
 import pandas as pd
 import io
-import os
 import math
 import datetime
-import locale
-
 from fpdf import FPDF
 from num2words import num2words
 
-# Устанавливаем глобальные настройки страницы (делаем "wide", можно поменять при желании)
-st.set_page_config(layout="wide")
+# Устанавливаем параметры страницы
+st.set_page_config()
 
-# Заголовок приложения (можно убрать, если не нужен глобальный заголовок)
-st.title("Сервис расчета логистики и маржинальности")
+# -------------------------
+# Данные пользователей
+# -------------------------
+users = {
+    "john": {"name": "John Doe", "password": bcrypt.hash("123")},
+    "jane": {"name": "Jane Doe", "password": bcrypt.hash("456")}
+}
 
-# Устанавливаем локаль для вывода даты на русском языке
+def check_credentials(username, password):
+    """Функция проверки логина и пароля с отладочными выводами"""
+    print(f"Проверка логина: {username}, пароль: {password}")  # Отладка
+    if username in users:
+        print(f"Найден пользователь, проверка пароля: {password}")
+        result = bcrypt.verify(password, users[username]["password"])
+        print(f"Результат проверки пароля: {result}")
+        return result
+    print("Пользователь не найден")
+    return False
+
+# -------------------------
+# Состояние сессии
+# -------------------------
+if "authenticated" not in st.session_state:
+    st.session_state["authenticated"] = False
+if "user" not in st.session_state:
+    st.session_state["user"] = ""
+
+# -------------------------
+# Форма входа
+# -------------------------
+if not st.session_state["authenticated"]:
+    st.title("Вход в сервис")
+    username_input = st.text_input("Логин").strip().lower()
+    password_input = st.text_input("Пароль", type="password").strip()
+    
+    if st.button("Войти"):
+        if check_credentials(username_input, password_input):
+            st.session_state["authenticated"] = True
+            st.session_state["user"] = username_input
+            st.rerun()
+        else:
+            st.error("Неверный логин или пароль")
+    st.stop()
+
+# -------------------------
+# Основной сервис
+# -------------------------
+
+# Загрузка логотипа
+logo_path = os.path.join(os.path.dirname(__file__), "assets", "Logo.png")
+with open(logo_path, "rb") as f:
+    data = f.read()
+encoded_logo = base64.b64encode(data).decode()
+logo_src = f"data:image/png;base64,{encoded_logo}"
+
+# HTML-блок с логотипом и заголовком
+html_block = f"""
+<style>
+  .responsive-header {{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+  }}
+  .responsive-header img {{
+    max-width: 200px;
+    width: 100%;
+    height: auto;
+    margin-right: 20px;
+  }}
+  .responsive-header h2 {{
+    margin: 0;
+    font-size: 25px;
+  }}
+  @media (max-width: 480px) {{
+    .responsive-header img {{
+      max-width: 150px;
+      margin-right: 10px;
+    }}
+    .responsive-header h2 {{
+      font-size: 20px;
+      text-align: center;
+    }}
+  }}
+</style>
+<div class="responsive-header">
+  <img src="{logo_src}" alt="Logo" />
+  <h2>
+    <span style="color:#007bff;">СЕРВСИС РАСЧЕТА ЛОГИСТИКИ И МАРЖИНАЛЬНОСТИ</span>
+  </h2>
+</div>
+"""
+st.markdown(html_block, unsafe_allow_html=True)
+
+# Настройка локали
 try:
     locale.setlocale(locale.LC_TIME, 'ru_RU.UTF-8')
 except locale.Error:
     locale.setlocale(locale.LC_TIME, '')
 
+# Кнопка выхода
+if st.button("Выйти"):
+    st.session_state["authenticated"] = False
+    st.session_state["user"] = ""
+    st.rerun()
+
 ###############################################################################
 #                         БЛОК 1: КОД ЛОГИСТИЧЕСКОГО КАЛЬКУЛЯТОРА
 ###############################################################################
 def run_logistics_service():
-    st.markdown("<h2 style='margin-top: 30px;'>Калькулятор логистики</h2>", unsafe_allow_html=True)
 
     # Дополнительные стили (CSS) логистического калькулятора
     st.markdown(
@@ -35,7 +133,7 @@ def run_logistics_service():
         /* Задаём для .block-container желаемую ширину и отступ слева 
            (можете подправить стили под себя) */
         .block-container {
-            max-width: 400px !important; /* Желаемая ширина */
+            max-width: 750px !important; /* Желаемая ширина */
             margin-left: 20px !important; /* Отступ слева */
             background-color: #fff;
             padding: 20px;
@@ -532,12 +630,12 @@ def run_margin_service():
             })
             st.rerun()
         else:
-            st.warning("⚠️ Введите название товара!")
+            st.warning("Введите название товара ⚠️ ")
 
     # --- Список товаров ---
     st.subheader("📦 Список товаров")
     if not st.session_state.products:
-        st.info("❗ Товары ещё не добавлены")
+        st.info("Товары ещё не добавлены❗")
     else:
         for index, product in enumerate(st.session_state.products):
             supplier_prices = [
@@ -725,4 +823,16 @@ with tab_margin:
 with tab_logistics:
     run_logistics_service()
 
+# --- В самом конце файла вставляем JS, отключающий автозаполнение ---
+st.markdown("""
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('input').forEach(function(el) {
+    el.setAttribute('autocomplete', 'off');
+    el.setAttribute('autocorrect', 'off');
+    el.setAttribute('autocapitalize', 'off');
+  });
+});
+</script>
+""", unsafe_allow_html=True)
 
