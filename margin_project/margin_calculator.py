@@ -1,74 +1,28 @@
 import streamlit as st
-import os
-import base64
-import locale
-from passlib.hash import bcrypt
+import streamlit.components.v1 as components
 import pandas as pd
 import io
+import os
 import math
 import datetime
+import locale
+
 from fpdf import FPDF
 from num2words import num2words
 
-# Устанавливаем параметры страницы
-st.set_page_config()
+# Устанавливаем глобальные настройки страницы (делаем "wide", можно поменять при желании)
+st.set_page_config(layout="wide")
 
-# -------------------------
-# Данные пользователей
-# -------------------------
-users = {
-    "john": {"name": "John Doe", "password": bcrypt.hash("123")},
-    "jane": {"name": "Jane Doe", "password": bcrypt.hash("456")}
-}
+st.write("")  # Пустая строка
+import streamlit as st
+import base64
+import os
 
-def check_credentials(username, password):
-    """Функция проверки логина и пароля с отладочными выводами"""
-    print(f"Проверка логина: {username}, пароль: {password}")  # Отладка
-    if username in users:
-        print(f"Найден пользователь, проверка пароля: {password}")
-        result = bcrypt.verify(password, users[username]["password"])
-        print(f"Результат проверки пароля: {result}")
-        return result
-    print("Пользователь не найден")
-    return False
-
-# -------------------------
-# Состояние сессии
-# -------------------------
-if "authenticated" not in st.session_state:
-    st.session_state["authenticated"] = False
-if "user" not in st.session_state:
-    st.session_state["user"] = ""
-
-# -------------------------
-# Форма входа
-# -------------------------
-if not st.session_state["authenticated"]:
-    st.title("Вход в сервис")
-    username_input = st.text_input("Логин").strip().lower()
-    password_input = st.text_input("Пароль", type="password").strip()
-    
-    if st.button("Войти"):
-        if check_credentials(username_input, password_input):
-            st.session_state["authenticated"] = True
-            st.session_state["user"] = username_input
-            st.rerun()
-        else:
-            st.error("Неверный логин или пароль")
-    st.stop()
-
-# -------------------------
-# Основной сервис
-# -------------------------
-
-# Загрузка логотипа
 logo_path = os.path.join(os.path.dirname(__file__), "assets", "Logo.png")
 with open(logo_path, "rb") as f:
     data = f.read()
 encoded_logo = base64.b64encode(data).decode()
-logo_src = f"data:image/png;base64,{encoded_logo}"
 
-# HTML-блок с логотипом и заголовком
 html_block = f"""
 <style>
   .responsive-header {{
@@ -86,7 +40,7 @@ html_block = f"""
   }}
   .responsive-header h2 {{
     margin: 0;
-    font-size: 25px;
+    font-size: 20px;
   }}
   @media (max-width: 480px) {{
     .responsive-header img {{
@@ -100,49 +54,53 @@ html_block = f"""
   }}
 </style>
 <div class="responsive-header">
-  <img src="{logo_src}" alt="Logo" />
+  <img src="data:image/png;base64,{encoded_logo}" alt="Logo" />
   <h2>
-    <span style="color:#007bff;">СЕРВСИС РАСЧЕТА ЛОГИСТИКИ И МАРЖИНАЛЬНОСТИ</span>
+    <span style="color:#007bff;">ㅤСЕРВСИС РАСЧЕТА ЛОГИСТИКИ И МАРЖИНАЛЬНОСТИ</span>
   </h2>
 </div>
 """
+
 st.markdown(html_block, unsafe_allow_html=True)
 
-# Настройка локали
+# Устанавливаем локаль для вывода даты на русском языке
 try:
     locale.setlocale(locale.LC_TIME, 'ru_RU.UTF-8')
 except locale.Error:
     locale.setlocale(locale.LC_TIME, '')
 
-# Кнопка выхода
-if st.button("Выйти"):
-    st.session_state["authenticated"] = False
-    st.session_state["user"] = ""
-    st.rerun()
-
 ###############################################################################
-# БЛОК 1: КОД ЛОГИСТИЧЕСКОГО КАЛЬКУЛЯТОРА
+#                         БЛОК 1: КОД ЛОГИСТИЧЕСКОГО КАЛЬКУЛЯТОРА
 ###############################################################################
 def run_logistics_service():
+
+    # Дополнительные стили (CSS) логистического калькулятора
     st.markdown(
         """
         <style>
-        .logistics-container {
-            max-width: 750px;
-            margin: 0 auto;
+        /* Задаём для .block-container желаемую ширину и отступ слева 
+           (можете подправить стили под себя) */
+        .block-container {
+            max-width: 750px !important; /* Желаемая ширина */
+            margin-left: 20px !important; /* Отступ слева */
             background-color: #fff;
             padding: 20px;
             border-radius: 10px;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
         }
+        body {
+            background-color: #f8f9fa;
+        }
+        /* Стили для полей ввода */
         div[data-testid="stNumberInput"] input,
         div[data-testid="stTextInput"] input,
         div[data-testid="stSelectbox"] select {
-             border: 1px solid #ccc;
-             border-radius: 5px;
-             padding: 8px;
-             font-size: 14px;
+             border: 1px solid #ccc !important;
+             border-radius: 5px !important;
+             padding: 8px !important;
+             font-size: 14px !important;
         }
+        /* Стили для кнопок */
         div.stButton > button {
              background-color: #007bff;
              color: #fff;
@@ -157,7 +115,6 @@ def run_logistics_service():
              background-color: #0056b3;
         }
         </style>
-        <div class="logistics-container">
         """,
         unsafe_allow_html=True
     )
@@ -183,6 +140,7 @@ def run_logistics_service():
         "Алматы-города3": 1
     }
 
+    # Выбор типа доставки
     delivery_type = st.selectbox("Тип доставки", ["По городу", "Межгород"])
 
     if delivery_type == "По городу":
@@ -226,17 +184,19 @@ def run_logistics_service():
                 st.error("Пожалуйста, введите вес груза!")
             else:
                 tariff = intercity_data[direction]
-                capacity = 20
-                coef = 2
+                capacity = 20  # Допустим, фура может перевозить до 20 тонн
+                coef = 2       # Коэффициент догруза
                 cost = (tariff / capacity) * weight_tonn * coef
                 st.success(f"Стоимость перевозки: **{round(cost)} тг**")
 
-    st.markdown("</div>", unsafe_allow_html=True)
 
 ###############################################################################
-# БЛОК 2: КОД КАЛЬКУЛЯТОРА МАРЖИНАЛЬНОСТИ
+#                 БЛОК 2: КОД КАЛЬКУЛЯТОРА МАРЖИНАЛЬНОСТИ (Основной сервис)
 ###############################################################################
 def get_line_count(pdf, width, text):
+    """
+    Возвращает количество строк, которое потребуется для вывода текста в ячейке заданной ширины.
+    """
     lines = text.split("\n")
     count = 0
     for line in lines:
@@ -259,6 +219,10 @@ def format_date_russian(date_obj):
     return formatted
 
 def get_next_invoice_number(prefix="INV", format_str="{:05d}"):
+    """
+    Генерирует следующий уникальный номер счёта (invoice).
+    Хранится в файле 'last_invoice.txt' (можно заменить на базу данных или другое хранилище).
+    """
     storage_file = "last_invoice.txt"
     current_year = datetime.datetime.now().year
 
@@ -304,10 +268,14 @@ def generate_invoice_gos(
     tax_nds,
     net_margin,
 ):
+    # Текущая дата в формате "XX Месяц YYYY г."
     invoice_date = format_date_russian(datetime.datetime.now())
+
     pdf = FPDF()
     pdf.add_page()
 
+    # Пример подключения шрифта (если нужно DejaVu)
+    # Убедитесь, что у вас есть папка assets и в ней DejaVuSans.ttf, DejaVuSans-Bold.ttf
     try:
         font_path = os.path.join(os.path.dirname(__file__), "assets", "DejaVuSans.ttf")
         bold_font_path = os.path.join(os.path.dirname(__file__), "assets", "DejaVuSans-Bold.ttf")
@@ -315,6 +283,7 @@ def generate_invoice_gos(
         pdf.add_font("DejaVu", "B", bold_font_path, uni=True)
         pdf.set_font("DejaVu", "", 9)
     except:
+        # Если не нашли шрифт, пусть хотя бы базовый работает
         pdf.set_font("Arial", "", 9)
 
     attention_text = (
@@ -326,11 +295,13 @@ def generate_invoice_gos(
     pdf.multi_cell(0, 5, attention_text)
     pdf.ln(3)
 
+    # Образец платежного поручения
     pdf.set_font("DejaVu", "B", 9)
     pdf.cell(0, 5, "Образец платежного поручения", ln=True, align="L")
     pdf.ln(2)
     pdf.set_font("DejaVu", "", 9)
 
+    # Первая строка таблицы (Бенефициар, ИИК, Кбе)
     start_x = pdf.get_x()
     start_y = pdf.get_y()
     w1, w2, w3 = 70, 65, 50
@@ -349,6 +320,7 @@ def generate_invoice_gos(
     row1_end = max(col1_end, col2_end, col3_end)
     pdf.set_xy(start_x, row1_end)
 
+    # Вторая строка
     start_x2 = pdf.get_x()
     start_y2 = pdf.get_y()
     txt4 = "Банк бенефициара:\nАО «Kaspi Bank»"
@@ -380,10 +352,14 @@ def generate_invoice_gos(
     pdf.ln(2)
     pdf.cell(0, 5, f"Покупатель: {client_company}, БИН: {client_bin}, Тел: {client_phone}", ln=True)
     pdf.ln(2)
-    contract_text = f"Договор: {contract_number}" if contract_number else "Договор: Без договора"
+    if contract_number:
+        contract_text = f"Договор: {contract_number}"
+    else:
+        contract_text = "Договор: Без договора"
     pdf.cell(0, 5, contract_text, ln=True)
     pdf.ln(2)
 
+    # Таблица товаров
     pdf.set_draw_color(0, 0, 0)
     pdf.set_line_width(0.2)
     pdf.set_font("DejaVu", "B", 9)
@@ -407,7 +383,7 @@ def generate_invoice_gos(
         start_y = pdf.get_y()
 
         pdf.cell(10, cell_height, str(idx + 1), border=1, align="C")
-        pdf.cell(25, cell_height, "", border=1, align="C")
+        pdf.cell(25, cell_height, "", border=1, align="C")  # Под "Код" (пусто)
         
         x_product = pdf.get_x()
         y_product = pdf.get_y()
@@ -439,6 +415,7 @@ def generate_invoice_gos(
     current_y = pdf.get_y()
     pdf.line(10, current_y, 200, current_y)
     pdf.ln(4)
+    pdf.ln(2)
 
     pdf.set_font("DejaVu", "", 8)
     pdf.multi_cell(
@@ -457,6 +434,7 @@ def generate_invoice_gos(
     y_sign = pdf.get_y()
     pdf.ln(5)
 
+    # Пример: вставка печати и подписи из папки assets
     stamp_path = os.path.join(os.path.dirname(__file__), "assets", "stamp.PNG")
     signature_path = os.path.join(os.path.dirname(__file__), "assets", "signature.png")
 
@@ -475,47 +453,29 @@ def generate_invoice_gos(
     return pdf_path
 
 def run_margin_service():
+    # CSS для единообразия в «Калькуляторе маржинальности»
     st.markdown(
         """
         <style>
-        .margin-container {
-            max-width: 750px !important;
-            margin: 0 auto !important;
-            padding: 20px !important;
+        /* Унифицируем шрифт и отступы для markdown-меток внутри контейнера */
+        .block-container p {
+            margin: 0.3rem 0 0.2rem 0 !important;
+            font-size: 16px !important;
+            line-height: 1.2 !important;
         }
-        /* Стили для колонок внутри контейнера */
-        .margin-container .stColumns > div {
-            flex: 1 !important;
-            min-width: 0 !important;
-            max-width: 50% !important;  /* Равномерное распределение ширины колонок */
-        }
-        /* Стили для внутренних элементов колонок (поля ввода, кнопки и т.д.) */
-        .margin-container .stNumberInput, 
-        .margin-container .stTextInput, 
-        .margin-container .stSelectbox {
-            width: 100% !important;
-            margin: 0 !important;
-        }
-        .margin-container div[data-testid="stNumberInput"] input,
-        .margin-container div[data-testid="stTextInput"] input,
-        .margin-container div[data-testid="stSelectbox"] select {
-            width: 100% !important;
-            min-height: 35px !important;
-            padding: 4px 6px !important;
-            font-size: 14px !important;
-            box-sizing: border-box !important;  /* Учитываем padding в общей ширине */
-        }
-        /* Стили для кнопки формы */
-        .margin-container div.stButton > button {
-            width: 100% !important;
-            margin-top: 10px !important;
+        /* Унифицируем высоту и шрифт полей ввода */
+        div[data-testid="stNumberInput"] input,
+        div[data-testid="stTextInput"] input {
+             min-height: 35px !important;
+             padding: 4px 6px !important;
+             font-size: 14px !important;
         }
         </style>
-        <div class="margin-container">
         """,
         unsafe_allow_html=True
     )
 
+    # --- Блок "Данные клиента"
     with st.expander("📌 Данные клиента"):
         col1, col2 = st.columns(2)
         with col1:
@@ -527,6 +487,7 @@ def run_margin_service():
             client_address = st.text_input("Адрес доставки")
             client_contract = st.text_input("Договор (№)", placeholder="Без договора")
 
+    # --- Блок "Данные по сделке"
     with st.expander("📌 Данные по сделке"):
         col1, col2 = st.columns(2)
         with col1:
@@ -534,9 +495,11 @@ def run_margin_service():
         with col2:
             kickback = st.number_input("Откат клиенту (₸)", min_value=0, value=0, format="%d")
 
+    # Хранение товаров в сессии
     if "products" not in st.session_state:
         st.session_state.products = []
 
+    # --- Форма для добавления товаров
     st.subheader("🛒 Добавление товаров")
     with st.form("add_product_form"):
         col_left, col_right = st.columns(2)
@@ -552,6 +515,7 @@ def run_margin_service():
             weight = st.number_input("", min_value=0, value=0, format="%d", key="weight", label_visibility="collapsed")
 
         with col_right:
+            # Цена поставщика 1
             row1_col1, row1_col2 = st.columns(2)
             with row1_col1:
                 st.markdown('<p style="font-size:16px; margin-bottom:0px;">Цена поставщика 1 (₸)</p>', unsafe_allow_html=True)
@@ -560,6 +524,7 @@ def run_margin_service():
                 st.markdown("⠀")
                 comment1 = st.text_input("", placeholder="Комментарий", key="comm_1", label_visibility="collapsed")
 
+            # Цена поставщика 2
             row2_col1, row2_col2 = st.columns(2)
             with row2_col1:
                 st.markdown('<p style="font-size:16px; margin-bottom:0px;">Цена поставщика 2 (₸)</p>', unsafe_allow_html=True)
@@ -568,6 +533,7 @@ def run_margin_service():
                 st.markdown("⠀")
                 comment2 = st.text_input("", placeholder="Комментарий", key="comm_2", label_visibility="collapsed")
 
+            # Цена поставщика 3
             row3_col1, row3_col2 = st.columns(2)
             with row3_col1:
                 st.markdown('<p style="font-size:16px; margin-bottom:0px;">Цена поставщика 3 (₸)</p>', unsafe_allow_html=True)
@@ -576,6 +542,7 @@ def run_margin_service():
                 st.markdown("⠀")
                 comment3 = st.text_input("", placeholder="Комментарий", key="comm_3", label_visibility="collapsed")
 
+            # Цена поставщика 4
             row4_col1, row4_col2 = st.columns(2)
             with row4_col1:
                 st.markdown('<p style="font-size:16px; margin-bottom:0px;">Цена поставщика 4 (₸)</p>', unsafe_allow_html=True)
@@ -584,6 +551,7 @@ def run_margin_service():
                 st.markdown("⠀")
                 comment4 = st.text_input("", placeholder="Комментарий", key="comm_4", label_visibility="collapsed")
 
+            # Наценка
             row5_col1, _, _ = st.columns([2,1,2])
             with row5_col1:
                 st.markdown("Наценка (%)")
@@ -612,6 +580,7 @@ def run_margin_service():
         else:
             st.warning("Введите название товара ⚠️ ")
 
+    # --- Список товаров ---
     st.subheader("📦 Список товаров")
     if not st.session_state.products:
         st.info("Товары ещё не добавлены❗")
@@ -646,11 +615,13 @@ def run_margin_service():
                         st.session_state.products.pop(index)
                         st.rerun()
 
+    # --- Кнопка «Рассчитать»
     if st.button("📊 Рассчитать маржинальность"):
         if not st.session_state.products:
             st.warning("⚠️ Список товаров пуст. Добавьте хотя бы один товар.")
         else:
             df = pd.DataFrame(st.session_state.products)
+            # Рассчитываем мин. цену поставщика
             df["Мин. цена поставщика"] = df[
                 [
                     "Цена поставщика 1",
@@ -660,16 +631,19 @@ def run_margin_service():
                 ]
             ].replace(0, float("inf")).min(axis=1).replace(float("inf"), 0)
 
+            # Цена для клиента, выручка, себестоимость, прибыль (маржа)
             df["Цена для клиента"] = df["Мин. цена поставщика"] * (1 + df["Наценка (%)"] / 100)
             df["Выручка"] = df["Цена для клиента"] * df["Количество"]
             df["Себестоимость"] = df["Мин. цена поставщика"] * df["Количество"]
             df["Прибыль"] = df["Выручка"] - df["Себестоимость"]
             df["Маржинальность (%)"] = df["Прибыль"] / df["Выручка"] * 100
 
+            # Расходы
             tax_delivery = total_logistics * 0.15
             tax_kickback = kickback * 0.32
-            tax_nds = df["Прибыль"].sum() * 12 / 112
+            tax_nds = df["Прибыль"].sum() * 12 / 112  # Примерный расчет НДС
             net_margin = df["Прибыль"].sum() - total_logistics - kickback - tax_delivery - tax_kickback - tax_nds
+
             manager_bonus = net_margin * 0.2
 
             st.subheader("📊 Итоговый расчёт")
@@ -682,7 +656,10 @@ def run_margin_service():
                 st.metric("🏆 Бонус менеджера (20%)", f"{int(manager_bonus):,} ₸")
             with col3:
                 total_revenue = df["Выручка"].sum()
-                marz_percent = net_margin / total_revenue * 100 if total_revenue > 0 else 0
+                if math.isclose(total_revenue, 0, abs_tol=1e-9):
+                    marz_percent = 0
+                else:
+                    marz_percent = net_margin / total_revenue * 100
                 st.metric("📈 Маржинальность (%)", f"{max(0, marz_percent):.2f} %")
 
             st.write("### 🛑 Расходы")
@@ -692,8 +669,10 @@ def run_margin_service():
             st.text(f"💸 Налог на обнал (32%) (откат): {int(tax_kickback):,} ₸")
             st.text(f"📊 Налог НДС от маржи (12%): {int(tax_nds):,} ₸")
 
+            # Сохранение результатов в Excel
             output = io.BytesIO()
             with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
+                # Лист 1: данные клиента
                 client_data = pd.DataFrame({
                     "Поле": ["ФИО клиента", "Название компании", "БИН клиента", 
                              "Телефон клиента", "Адрес доставки", "Договор (№)"],
@@ -702,14 +681,17 @@ def run_margin_service():
                 })
                 client_data.to_excel(writer, index=False, sheet_name="Данные клиента")
 
+                # Лист 2: данные сделки
                 deal_data = pd.DataFrame({
                     "Поле": ["Общая стоимость логистики", "Откат клиенту"],
                     "Значение (₸)": [total_logistics, kickback],
                 })
                 deal_data.to_excel(writer, index=False, sheet_name="Данные сделки")
 
+                # Лист 3: товары
                 df.to_excel(writer, index=False, sheet_name="Список товаров")
 
+                # Лист 4: расчет итогов
                 final_data = pd.DataFrame({
                     "Показатель": [
                         "Выручка",
@@ -745,6 +727,7 @@ def run_margin_service():
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             )
 
+            # Генерация PDF
             unique_invoice_number = get_next_invoice_number(prefix="INV")
             pdf_path = generate_invoice_gos(
                 invoice_number=unique_invoice_number,
@@ -777,10 +760,8 @@ def run_margin_service():
                     mime="application/pdf",
                 )
 
-    st.markdown("</div>", unsafe_allow_html=True)
-
 ###############################################################################
-# ОСНОВНОЙ БЛОК: ВКЛАДКИ (TABS)
+#                     ОСНОВНОЙ БЛОК: ВКЛАДКИ (TABS)
 ###############################################################################
 tab_margin, tab_logistics = st.tabs(["**Калькулятор маржинальности**", "**Калькулятор логистики**"])
 
@@ -790,6 +771,7 @@ with tab_margin:
 with tab_logistics:
     run_logistics_service()
 
+# --- В самом конце файла вставляем JS, отключающий автозаполнение ---
 st.markdown("""
 <script>
 document.addEventListener('DOMContentLoaded', function() {
