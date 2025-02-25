@@ -40,7 +40,7 @@ html_block = f"""
   }}
   .responsive-header h2 {{
     margin: 0;
-    font-size: 15px;
+    font-size: 20px;
   }}
   @media (max-width: 480px) {{
     .responsive-header img {{
