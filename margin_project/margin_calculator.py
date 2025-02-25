@@ -1,17 +1,14 @@
 import streamlit as st
+import streamlit_authenticator as stauth
 import os
 import base64
 import locale
 from passlib.hash import bcrypt
-import streamlit_authenticator as stauth
 from fpdf import FPDF
 from num2words import num2words
 
 # MUST be the first command!
 st.set_page_config(layout="wide")
-
-# Выведем версию streamlit_authenticator для отладки
-st.write("streamlit_authenticator version:", stauth.__version__)
 
 # -------------------------
 # Блок аутентификации
@@ -31,25 +28,16 @@ credentials = {
 
 cookie_settings = {"expiry_days": 1, "key": "some_signature_key"}
 
-# Попытка создать аутентификатор
-try:
-    # В версии 0.1.0 ожидается: (credentials, cookie_name, key, cookie_expiry_days)
-    authenticator = stauth.Authenticate(
-        credentials,
-        "some_cookie_name",               
-        cookie_settings["key"],
-        cookie_expiry_days=cookie_settings["expiry_days"]
-    )
-except Exception as e:
-    st.error(f"Ошибка создания аутентификатора: {e}")
-    st.stop()
+# Инициализируем аутентификатор (используем параметры в порядке: credentials, cookie_name, key, cookie_expiry_days)
+authenticator = stauth.Authenticate(
+    credentials,
+    "some_cookie_name",               
+    cookie_settings["key"],
+    cookie_expiry_days=cookie_settings["expiry_days"]
+)
 
-# Вызываем форму логина (если параметр location поддерживается, передаём его; иначе попробуйте без него)
-try:
-    name, authentication_status, username = authenticator.login("Login", "main")
-except Exception as e:
-    st.error(f"Ошибка при вызове login: {e}")
-    st.stop()
+# Вызываем форму логина (передаём "main" как второй параметр, если это требуется)
+name, authentication_status, username = authenticator.login("Login", "main")
 
 if authentication_status:
     st.success(f"Добро пожаловать, {name}!")
