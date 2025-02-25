@@ -11,7 +11,7 @@ import base64
 from fpdf import FPDF
 from num2words import num2words
 import streamlit_authenticator as stauth
-from streamlit_authenticator import Hasher  # Добавляем этот импорт
+from streamlit_authenticator.hashers import Hasher
 
 # MUST be the first command!
 st.set_page_config(layout="wide")
