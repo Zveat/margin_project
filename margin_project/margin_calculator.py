@@ -3,18 +3,21 @@ import os
 import base64
 import locale
 from passlib.hash import bcrypt
-from fpdf import FPDF
-from num2words import num2words
 
 st.set_page_config(layout="wide")
 
-def hash_passwords(passwords):
-    return [bcrypt.hash(p) for p in passwords]
-
-# Задаём пользователей: логин -> {name, password}
+# Пред-хэшированные пароли (bcrypt). Эти хэши были получены заранее для значений "123" и "456".
+# Для "john": пароль "123"
+# Для "jane": пароль "456"
 users = {
-    "john": {"name": "John Doe", "password": bcrypt.hash("123")},
-    "jane": {"name": "Jane Doe", "password": bcrypt.hash("456")}
+    "john": {
+        "name": "John Doe",
+        "password": "$2b$12$9WW.NNqA6OjRtJKn/fCTx.wKX/ykXUymQFEtthSxJKt9D4C8PypzO"
+    },
+    "jane": {
+        "name": "Jane Doe",
+        "password": "$2b$12$yG4F8I2JX8clZ1kmSk7geO4l3vn5b7QkF/.QmoUSwHKBV/n1RpL5W"
+    }
 }
 
 def check_credentials(username, password):
@@ -27,8 +30,6 @@ if "authenticated" not in st.session_state:
     st.session_state["authenticated"] = False
 if "user" not in st.session_state:
     st.session_state["user"] = ""
-if "rerun_done" not in st.session_state:
-    st.session_state["rerun_done"] = False
 
 # Форма входа
 if not st.session_state["authenticated"]:
@@ -45,25 +46,18 @@ if not st.session_state["authenticated"]:
     st.stop()
 else:
     st.success(f"Добро пожаловать, {users[st.session_state['user']]['name']}!")
-    # Если перезагрузка ещё не выполнена, пытаемся её выполнить один раз:
-    if not st.session_state["rerun_done"]:
-        st.session_state["rerun_done"] = True
-        try:
-            st.experimental_rerun()
-        except Exception:
-            st.markdown('<meta http-equiv="refresh" content="0">', unsafe_allow_html=True)
 
-# -------------------------
-# Блок с логотипом и заголовком
-# -------------------------
+# Основной контент сервиса
 st.write("")  # Пустая строка для отступа
 
+# Загрузка логотипа и его конвертация в base64
 logo_path = os.path.join(os.path.dirname(__file__), "assets", "Logo.png")
 with open(logo_path, "rb") as f:
     data = f.read()
 encoded_logo = base64.b64encode(data).decode()
 logo_src = f"data:image/png;base64,{encoded_logo}"
 
+# Адаптивный HTML-блок с логотипом и заголовком
 html_block = f"""
 <style>
   .responsive-header {{
@@ -97,15 +91,13 @@ html_block = f"""
 <div class="responsive-header">
   <img src="{logo_src}" alt="Logo" />
   <h2>
-    <span style="color:#007bff;">ㅤСЕРВСИС РАСЧЕТА ЛОГИСТИКИ И ㅤㅤㅤㅤМАРЖИНАЛЬНОСТИ</span>
+    <span style="color:#007bff;">СЕРВСИС РАСЧЕТА ЛОГИСТИКИ И МАРЖИНАЛЬНОСТИ</span>
   </h2>
 </div>
 """
 st.markdown(html_block, unsafe_allow_html=True)
 
-# -------------------------
-# Настройка локали для вывода даты на русском языке
-# -------------------------
+# Настройка локали для вывода дат на русском языке
 try:
     locale.setlocale(locale.LC_TIME, 'ru_RU.UTF-8')
 except locale.Error:
@@ -113,6 +105,7 @@ except locale.Error:
 
 st.write("Основной контент сервиса...")
 
+# Кнопка выхода
 if st.button("Выйти"):
     st.session_state["authenticated"] = False
     st.session_state["user"] = ""
