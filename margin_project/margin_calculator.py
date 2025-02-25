@@ -1,10 +1,11 @@
 import streamlit as st
+import streamlit_authenticator as stauth
 import os
 import base64
 import locale
 from passlib.hash import bcrypt
-import streamlit_authenticator as stauth
-from streamlit_authenticator import Authenticate  # Импортируем класс напрямую
+from fpdf import FPDF
+from num2words import num2words
 
 # MUST be the first command!
 st.set_page_config(layout="wide")
@@ -25,18 +26,17 @@ credentials = {
     }
 }
 
-# Настройки cookie
 cookie_settings = {"expiry_days": 1, "key": "some_signature_key"}
 
-# Инициализируем аутентификатор через прямой импорт класса Authenticate
-authenticator = Authenticate(
+# Инициализируем аутентификатор через stauth.Authenticate (без прямого импорта Authenticate)
+authenticator = stauth.Authenticate(
     credentials,
-    "some_cookie_name",         # имя cookie
-    cookie_settings["key"],     # ключ для подписи
+    "some_cookie_name",               # имя cookie
+    cookie_settings["key"],           # ключ для подписи cookie
     cookie_expiry_days=cookie_settings["expiry_days"]
 )
 
-# Выводим форму логина (без параметра location, если он не поддерживается)
+# Выводим форму логина; если ваша версия требует, можете передать "main" как позиционный параметр
 name, authentication_status, username = authenticator.login("Login", "main")
 
 if authentication_status:
