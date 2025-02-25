@@ -108,82 +108,64 @@ html_block = f"""
 """
 st.markdown(html_block, unsafe_allow_html=True)
 
-# Глобальный стиль для .block-container и вкладок
-st.markdown("""
-<style>
-    /* Задаём для .block-container желаемую ширину и минимальные отступы */
-    .block-container {
-        max-width: 750px !important; /* Желаемая ширина */
-        margin: 0 auto !important;   /* Центрируем контейнер */
-        padding: 0 !important;       /* Убираем все отступы по бокам */
-    }
-    /* Стили для вкладок, чтобы убрать лишние отступы */
-    .stTabs [data-baseweb="tab-list"] {
-        margin-bottom: 0 !important;
-        padding-bottom: 0 !important;
-    }
-    /* Стили для содержимого вкладок, чтобы убрать верхние отступы */
-    .stTabs .stTabContent {
-        margin-top: 0 !important;
-        padding-top: 0 !important;
-    }
-</style>
-""", unsafe_allow_html=True)
-
 # Настройка локали
 try:
     locale.setlocale(locale.LC_TIME, 'ru_RU.UTF-8')
 except locale.Error:
     locale.setlocale(locale.LC_TIME, '')
 
+# Кнопка выхода
+if st.button("Выйти"):
+    st.session_state["authenticated"] = False
+    st.session_state["user"] = ""
+    st.rerun()
+
 ###############################################################################
-# БЛОК 1: КОД ЛОГИСТИЧЕСКОГО КАЛЬКУЛЯТОРА
+#                         БЛОК 1: КОД ЛОГИСТИЧЕСКОГО КАЛЬКУЛЯТОРА
 ###############################################################################
 def run_logistics_service():
+
+    # Дополнительные стили (CSS) логистического калькулятора
     st.markdown(
         """
         <style>
-        .logistics-container {
-            max-width: 750px;
-            margin: 0 auto;
+        /* Задаём для .block-container желаемую ширину и отступ слева 
+           (можете подправить стили под себя) */
+        .block-container {
+            max-width: 750px !important; /* Желаемая ширина */
+            margin-left: 20px !important; /* Отступ слева */
             background-color: #fff;
             padding: 20px;
             border-radius: 10px;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
         }
-        /* Стили для полей ввода и селектов */
-        .logistics-container .stNumberInput, 
-        .logistics-container .stSelectbox {
-            width: 100% !important;
-            margin: 0 !important;
-            height: 40px !important;  /* Фиксированная высота для полей */
+        body {
+            background-color: #f8f9fa;
         }
-        .logistics-container div[data-testid="stNumberInput"] input,
-        .logistics-container div[data-testid="stSelectbox"] select {
-            width: 100% !important;
-            min-height: 40px !important;  /* Фиксированная минимальная высота */
-            padding: 8px !important;
-            font-size: 14px !important;
-            box-sizing: border-box !important;  /* Учитываем padding в общей ширине */
-            line-height: 1.5 !important;  /* Унифицируем высоту текста */
+        /* Стили для полей ввода */
+        div[data-testid="stNumberInput"] input,
+        div[data-testid="stTextInput"] input,
+        div[data-testid="stSelectbox"] select {
+             border: 1px solid #ccc !important;
+             border-radius: 5px !important;
+             padding: 8px !important;
+             font-size: 14px !important;
         }
-        /* Стили для кнопки */
-        .logistics-container div.stButton > button {
-            background-color: #007bff;
-            color: #fff;
-            border: none;
-            border-radius: 5px;
-            padding: 10px 20px;
-            font-size: 16px;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-            height: 40px !important;  /* Фиксированная высота для кнопки */
+        /* Стили для кнопок */
+        div.stButton > button {
+             background-color: #007bff;
+             color: #fff;
+             border: none;
+             border-radius: 5px;
+             padding: 10px 20px;
+             font-size: 16px;
+             cursor: pointer;
+             transition: background-color 0.3s ease;
         }
-        .logistics-container div.stButton > button:hover {
-            background-color: #0056b3;
+        div.stButton > button:hover {
+             background-color: #0056b3;
         }
         </style>
-        <div class="logistics-container">
         """,
         unsafe_allow_html=True
     )
@@ -209,6 +191,7 @@ def run_logistics_service():
         "Алматы-города3": 1
     }
 
+    # Выбор типа доставки
     delivery_type = st.selectbox("Тип доставки", ["По городу", "Межгород"])
 
     if delivery_type == "По городу":
@@ -252,17 +235,19 @@ def run_logistics_service():
                 st.error("Пожалуйста, введите вес груза!")
             else:
                 tariff = intercity_data[direction]
-                capacity = 20
-                coef = 2
+                capacity = 20  # Допустим, фура может перевозить до 20 тонн
+                coef = 2       # Коэффициент догруза
                 cost = (tariff / capacity) * weight_tonn * coef
                 st.success(f"Стоимость перевозки: **{round(cost)} тг**")
 
-    st.markdown("</div>", unsafe_allow_html=True)
 
 ###############################################################################
-# БЛОК 2: КОД КАЛЬКУЛЯТОРА МАРЖИНАЛЬНОСТИ
+#                 БЛОК 2: КОД КАЛЬКУЛЯТОРА МАРЖИНАЛЬНОСТИ (Основной сервис)
 ###############################################################################
 def get_line_count(pdf, width, text):
+    """
+    Возвращает количество строк, которое потребуется для вывода текста в ячейке заданной ширины.
+    """
     lines = text.split("\n")
     count = 0
     for line in lines:
@@ -285,6 +270,10 @@ def format_date_russian(date_obj):
     return formatted
 
 def get_next_invoice_number(prefix="INV", format_str="{:05d}"):
+    """
+    Генерирует следующий уникальный номер счёта (invoice).
+    Хранится в файле 'last_invoice.txt' (можно заменить на базу данных или другое хранилище).
+    """
     storage_file = "last_invoice.txt"
     current_year = datetime.datetime.now().year
 
@@ -330,10 +319,14 @@ def generate_invoice_gos(
     tax_nds,
     net_margin,
 ):
+    # Текущая дата в формате "XX Месяц YYYY г."
     invoice_date = format_date_russian(datetime.datetime.now())
+
     pdf = FPDF()
     pdf.add_page()
 
+    # Пример подключения шрифта (если нужно DejaVu)
+    # Убедитесь, что у вас есть папка assets и в ней DejaVuSans.ttf, DejaVuSans-Bold.ttf
     try:
         font_path = os.path.join(os.path.dirname(__file__), "assets", "DejaVuSans.ttf")
         bold_font_path = os.path.join(os.path.dirname(__file__), "assets", "DejaVuSans-Bold.ttf")
@@ -341,6 +334,7 @@ def generate_invoice_gos(
         pdf.add_font("DejaVu", "B", bold_font_path, uni=True)
         pdf.set_font("DejaVu", "", 9)
     except:
+        # Если не нашли шрифт, пусть хотя бы базовый работает
         pdf.set_font("Arial", "", 9)
 
     attention_text = (
@@ -352,11 +346,13 @@ def generate_invoice_gos(
     pdf.multi_cell(0, 5, attention_text)
     pdf.ln(3)
 
+    # Образец платежного поручения
     pdf.set_font("DejaVu", "B", 9)
     pdf.cell(0, 5, "Образец платежного поручения", ln=True, align="L")
     pdf.ln(2)
     pdf.set_font("DejaVu", "", 9)
 
+    # Первая строка таблицы (Бенефициар, ИИК, Кбе)
     start_x = pdf.get_x()
     start_y = pdf.get_y()
     w1, w2, w3 = 70, 65, 50
@@ -375,6 +371,7 @@ def generate_invoice_gos(
     row1_end = max(col1_end, col2_end, col3_end)
     pdf.set_xy(start_x, row1_end)
 
+    # Вторая строка
     start_x2 = pdf.get_x()
     start_y2 = pdf.get_y()
     txt4 = "Банк бенефициара:\nАО «Kaspi Bank»"
@@ -406,10 +403,14 @@ def generate_invoice_gos(
     pdf.ln(2)
     pdf.cell(0, 5, f"Покупатель: {client_company}, БИН: {client_bin}, Тел: {client_phone}", ln=True)
     pdf.ln(2)
-    contract_text = f"Договор: {contract_number}" if contract_number else "Договор: Без договора"
+    if contract_number:
+        contract_text = f"Договор: {contract_number}"
+    else:
+        contract_text = "Договор: Без договора"
     pdf.cell(0, 5, contract_text, ln=True)
     pdf.ln(2)
 
+    # Таблица товаров
     pdf.set_draw_color(0, 0, 0)
     pdf.set_line_width(0.2)
     pdf.set_font("DejaVu", "B", 9)
@@ -433,7 +434,7 @@ def generate_invoice_gos(
         start_y = pdf.get_y()
 
         pdf.cell(10, cell_height, str(idx + 1), border=1, align="C")
-        pdf.cell(25, cell_height, "", border=1, align="C")
+        pdf.cell(25, cell_height, "", border=1, align="C")  # Под "Код" (пусто)
         
         x_product = pdf.get_x()
         y_product = pdf.get_y()
@@ -465,6 +466,7 @@ def generate_invoice_gos(
     current_y = pdf.get_y()
     pdf.line(10, current_y, 200, current_y)
     pdf.ln(4)
+    pdf.ln(2)
 
     pdf.set_font("DejaVu", "", 8)
     pdf.multi_cell(
@@ -483,6 +485,7 @@ def generate_invoice_gos(
     y_sign = pdf.get_y()
     pdf.ln(5)
 
+    # Пример: вставка печати и подписи из папки assets
     stamp_path = os.path.join(os.path.dirname(__file__), "assets", "stamp.PNG")
     signature_path = os.path.join(os.path.dirname(__file__), "assets", "signature.png")
 
@@ -500,8 +503,316 @@ def generate_invoice_gos(
     pdf.output(pdf_path, "F")
     return pdf_path
 
+def run_margin_service():
+    # CSS для единообразия в «Калькуляторе маржинальности»
+    st.markdown(
+        """
+        <style>
+        /* Унифицируем шрифт и отступы для markdown-меток внутри контейнера */
+        .block-container p {
+            margin: 0.3rem 0 0.2rem 0 !important;
+            font-size: 16px !important;
+            line-height: 1.2 !important;
+        }
+        /* Унифицируем высоту и шрифт полей ввода */
+        div[data-testid="stNumberInput"] input,
+        div[data-testid="stTextInput"] input {
+             min-height: 35px !important;
+             padding: 4px 6px !important;
+             font-size: 14px !important;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+
+    # --- Блок "Данные клиента"
+    with st.expander("📌 Данные клиента"):
+        col1, col2 = st.columns(2)
+        with col1:
+            client_name = st.text_input("ФИО клиента")
+            client_company = st.text_input("Название компании")
+            client_bin = st.text_input("БИН клиента")
+        with col2:
+            client_phone = st.text_input("Телефон клиента")
+            client_address = st.text_input("Адрес доставки")
+            client_contract = st.text_input("Договор (№)", placeholder="Без договора")
+
+    # --- Блок "Данные по сделке"
+    with st.expander("📌 Данные по сделке"):
+        col1, col2 = st.columns(2)
+        with col1:
+            total_logistics = st.number_input("Общая стоимость логистики (₸)", min_value=0, value=0, format="%d")
+        with col2:
+            kickback = st.number_input("Откат клиенту (₸)", min_value=0, value=0, format="%d")
+
+    # Хранение товаров в сессии
+    if "products" not in st.session_state:
+        st.session_state.products = []
+
+    # --- Форма для добавления товаров
+    st.subheader("🛒 Добавление товаров")
+    with st.form("add_product_form"):
+        col_left, col_right = st.columns(2)
+        with col_left:
+            st.markdown("Наименование товара")
+            name = st.text_input("", key="name", label_visibility="collapsed")
+            st.markdown("Ед. измерения")
+            unit = st.selectbox("", ["шт", "м", "кг", "км", "бухта", "рулон", "м²", "тонна"], 
+                                key="unit", label_visibility="collapsed")
+            st.markdown("Количество")
+            quantity = st.number_input("", min_value=1, value=1, key="quantity", label_visibility="collapsed")
+            st.markdown("Вес (кг)")
+            weight = st.number_input("", min_value=0, value=0, format="%d", key="weight", label_visibility="collapsed")
+
+        with col_right:
+            # Цена поставщика 1
+            row1_col1, row1_col2 = st.columns(2)
+            with row1_col1:
+                st.markdown('<p style="font-size:16px; margin-bottom:0px;">Цена поставщика 1 (₸)</p>', unsafe_allow_html=True)
+                price1 = st.number_input("", min_value=0, value=0, format="%d", key="price_1", label_visibility="collapsed")
+            with row1_col2:
+                st.markdown("⠀")
+                comment1 = st.text_input("", placeholder="Комментарий", key="comm_1", label_visibility="collapsed")
+
+            # Цена поставщика 2
+            row2_col1, row2_col2 = st.columns(2)
+            with row2_col1:
+                st.markdown('<p style="font-size:16px; margin-bottom:0px;">Цена поставщика 2 (₸)</p>', unsafe_allow_html=True)
+                price2 = st.number_input("", min_value=0, value=0, format="%d", key="price_2", label_visibility="collapsed")
+            with row2_col2:
+                st.markdown("⠀")
+                comment2 = st.text_input("", placeholder="Комментарий", key="comm_2", label_visibility="collapsed")
+
+            # Цена поставщика 3
+            row3_col1, row3_col2 = st.columns(2)
+            with row3_col1:
+                st.markdown('<p style="font-size:16px; margin-bottom:0px;">Цена поставщика 3 (₸)</p>', unsafe_allow_html=True)
+                price3 = st.number_input("", min_value=0, value=0, format="%d", key="price_3", label_visibility="collapsed")
+            with row3_col2:
+                st.markdown("⠀")
+                comment3 = st.text_input("", placeholder="Комментарий", key="comm_3", label_visibility="collapsed")
+
+            # Цена поставщика 4
+            row4_col1, row4_col2 = st.columns(2)
+            with row4_col1:
+                st.markdown('<p style="font-size:16px; margin-bottom:0px;">Цена поставщика 4 (₸)</p>', unsafe_allow_html=True)
+                price4 = st.number_input("", min_value=0, value=0, format="%d", key="price_4", label_visibility="collapsed")
+            with row4_col2:
+                st.markdown("⠀")
+                comment4 = st.text_input("", placeholder="Комментарий", key="comm_4", label_visibility="collapsed")
+
+            # Наценка
+            row5_col1, _, _ = st.columns([2,1,2])
+            with row5_col1:
+                st.markdown("Наценка (%)")
+                markup = st.number_input("", min_value=0, value=20, format="%d", key="markup", label_visibility="collapsed")
+
+        submit_btn = st.form_submit_button("➕ Добавить товар")
+
+    if submit_btn:
+        if st.session_state.name.strip():
+            st.session_state.products.append({
+                "Товар": st.session_state.name,
+                "Ед_измерения": st.session_state.unit,
+                "Количество": st.session_state.quantity,
+                "Вес (кг)": st.session_state.weight,
+                "Цена поставщика 1": st.session_state.price_1,
+                "Комментарий поставщика 1": st.session_state.comm_1,
+                "Цена поставщика 2": st.session_state.price_2,
+                "Комментарий поставщика 2": st.session_state.comm_2,
+                "Цена поставщика 3": st.session_state.price_3,
+                "Комментарий поставщика 3": st.session_state.comm_3,
+                "Цена поставщика 4": st.session_state.price_4,
+                "Комментарий поставщика 4": st.session_state.comm_4,
+                "Наценка (%)": st.session_state.markup,
+            })
+            st.rerun()
+        else:
+            st.warning("Введите название товара ⚠️ ")
+
+    # --- Список товаров ---
+    st.subheader("📦 Список товаров")
+    if not st.session_state.products:
+        st.info("Товары ещё не добавлены❗")
+    else:
+        for index, product in enumerate(st.session_state.products):
+            supplier_prices = [
+                p for p in [
+                    product["Цена поставщика 1"],
+                    product["Цена поставщика 2"],
+                    product["Цена поставщика 3"],
+                    product["Цена поставщика 4"],
+                ] if p > 0
+            ]
+            min_supplier_price = min(supplier_prices, default=0)
+            max_supplier_price = max(supplier_prices, default=0)
+            price_for_client = min_supplier_price * (1 + product["Наценка (%)"] / 100)
+            revenue = price_for_client * product["Количество"]
+            cost_price = min_supplier_price * product["Количество"]
+            margin = revenue - cost_price
+
+            with st.expander(f"🛒 {product['Товар']} ({product['Количество']} {product['Ед_измерения']})"):
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.write(f"**Цена для клиента (итого):** {int(revenue):,} ₸")
+                    st.write(f"**Себестоимость:** {int(cost_price):,} ₸")
+                    st.write(f"**Наша маржа:** {int(margin):,} ₸")
+                    st.write(f"**Наценка:** {product['Наценка (%)']}%")
+                with col2:
+                    st.write(f"**Цена поставщика (мин – макс):** {int(min_supplier_price):,} – {int(max_supplier_price):,} ₸")
+                    st.write(f"**Цена для клиента (за ед.):** {int(price_for_client):,} ₸")
+                    if st.button("❌ Удалить товар", key=f"del_{index}"):
+                        st.session_state.products.pop(index)
+                        st.rerun()
+
+    # --- Кнопка «Рассчитать»
+    if st.button("📊 Рассчитать маржинальность"):
+        if not st.session_state.products:
+            st.warning("⚠️ Список товаров пуст. Добавьте хотя бы один товар.")
+        else:
+            df = pd.DataFrame(st.session_state.products)
+            # Рассчитываем мин. цену поставщика
+            df["Мин. цена поставщика"] = df[
+                [
+                    "Цена поставщика 1",
+                    "Цена поставщика 2",
+                    "Цена поставщика 3",
+                    "Цена поставщика 4",
+                ]
+            ].replace(0, float("inf")).min(axis=1).replace(float("inf"), 0)
+
+            # Цена для клиента, выручка, себестоимость, прибыль (маржа)
+            df["Цена для клиента"] = df["Мин. цена поставщика"] * (1 + df["Наценка (%)"] / 100)
+            df["Выручка"] = df["Цена для клиента"] * df["Количество"]
+            df["Себестоимость"] = df["Мин. цена поставщика"] * df["Количество"]
+            df["Прибыль"] = df["Выручка"] - df["Себестоимость"]
+            df["Маржинальность (%)"] = df["Прибыль"] / df["Выручка"] * 100
+
+            # Расходы
+            tax_delivery = total_logistics * 0.15
+            tax_kickback = kickback * 0.32
+            tax_nds = df["Прибыль"].sum() * 12 / 112  # Примерный расчет НДС
+            net_margin = df["Прибыль"].sum() - total_logistics - kickback - tax_delivery - tax_kickback - tax_nds
+
+            manager_bonus = net_margin * 0.2
+
+            st.subheader("📊 Итоговый расчёт")
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                st.metric("💰 Выручка", f"{int(df['Выручка'].sum()):,} ₸")
+                st.metric("📊 Наша маржа (наценка)", f"{int(df['Прибыль'].sum()):,} ₸")
+            with col2:
+                st.metric("💰 Чистый маржинальный доход", f"{int(net_margin):,} ₸")
+                st.metric("🏆 Бонус менеджера (20%)", f"{int(manager_bonus):,} ₸")
+            with col3:
+                total_revenue = df["Выручка"].sum()
+                if math.isclose(total_revenue, 0, abs_tol=1e-9):
+                    marz_percent = 0
+                else:
+                    marz_percent = net_margin / total_revenue * 100
+                st.metric("📈 Маржинальность (%)", f"{max(0, marz_percent):.2f} %")
+
+            st.write("### 🛑 Расходы")
+            st.text(f"🚚 Логистика: {int(total_logistics):,} ₸")
+            st.text(f"💵 Откат клиенту: {int(kickback):,} ₸")
+            st.text(f"📊 Налог на обнал (15%) (логистика): {int(tax_delivery):,} ₸")
+            st.text(f"💸 Налог на обнал (32%) (откат): {int(tax_kickback):,} ₸")
+            st.text(f"📊 Налог НДС от маржи (12%): {int(tax_nds):,} ₸")
+
+            # Сохранение результатов в Excel
+            output = io.BytesIO()
+            with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
+                # Лист 1: данные клиента
+                client_data = pd.DataFrame({
+                    "Поле": ["ФИО клиента", "Название компании", "БИН клиента", 
+                             "Телефон клиента", "Адрес доставки", "Договор (№)"],
+                    "Значение": [client_name, client_company, client_bin, 
+                                 client_phone, client_address, client_contract],
+                })
+                client_data.to_excel(writer, index=False, sheet_name="Данные клиента")
+
+                # Лист 2: данные сделки
+                deal_data = pd.DataFrame({
+                    "Поле": ["Общая стоимость логистики", "Откат клиенту"],
+                    "Значение (₸)": [total_logistics, kickback],
+                })
+                deal_data.to_excel(writer, index=False, sheet_name="Данные сделки")
+
+                # Лист 3: товары
+                df.to_excel(writer, index=False, sheet_name="Список товаров")
+
+                # Лист 4: расчет итогов
+                final_data = pd.DataFrame({
+                    "Показатель": [
+                        "Выручка",
+                        "Наша маржа (итог)",
+                        "Чистый маржинальный доход",
+                        "Бонус менеджера (20%)",
+                        "Логистика",
+                        "Откат клиенту",
+                        "Налог на обнал (15%)",
+                        "Налог на обнал (32%)",
+                        "Налог НДС (12%)",
+                        "Итоговая сумма (net_margin)",
+                    ],
+                    "Значение (₸)": [
+                        df["Выручка"].sum(),
+                        df["Прибыль"].sum(),
+                        net_margin,
+                        manager_bonus,
+                        total_logistics,
+                        kickback,
+                        tax_delivery,
+                        tax_kickback,
+                        tax_nds,
+                        net_margin,
+                    ],
+                })
+                final_data.to_excel(writer, index=False, sheet_name="Расчет+Расходы")
+
+            st.download_button(
+                "📥 Скачать расчёт в Excel",
+                data=output.getvalue(),
+                file_name="margin_calculation.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            )
+
+            # Генерация PDF
+            unique_invoice_number = get_next_invoice_number(prefix="INV")
+            pdf_path = generate_invoice_gos(
+                invoice_number=unique_invoice_number,
+                invoice_date="placeholder",
+                supplier_name="ТОО OOK-STORE",
+                supplier_bin="170740032780",
+                supplier_address="г. Алматы, ул. Березовского 19",
+                supplier_bank_name="Kaspi Bank",
+                supplier_iik="KZ11722S000024087169",
+                supplier_bik="CASPKZKA",
+                client_name=client_name,
+                client_company=client_company,
+                client_bin=client_bin,
+                client_phone=client_phone,
+                client_address=client_address,
+                contract_number=client_contract,
+                df=df,
+                total_logistics=total_logistics,
+                kickback=kickback,
+                tax_delivery=tax_delivery,
+                tax_kickback=tax_kickback,
+                tax_nds=tax_nds,
+                net_margin=net_margin,
+            )
+            with open(pdf_path, "rb") as f:
+                st.download_button(
+                    "📥 Скачать счет (гос)",
+                    data=f,
+                    file_name="invoice_gos_full.pdf",
+                    mime="application/pdf",
+                )
+
 ###############################################################################
-# ОСНОВНОЙ БЛОК: ВКЛАДКИ (TABS)
+#                     ОСНОВНОЙ БЛОК: ВКЛАДКИ (TABS)
 ###############################################################################
 tab_margin, tab_logistics = st.tabs(["**Калькулятор маржинальности**", "**Калькулятор логистики**"])
 
@@ -511,6 +822,7 @@ with tab_margin:
 with tab_logistics:
     run_logistics_service()
 
+# --- В самом конце файла вставляем JS, отключающий автозаполнение ---
 st.markdown("""
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -522,3 +834,4 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 """, unsafe_allow_html=True)
+
