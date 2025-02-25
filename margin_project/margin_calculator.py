@@ -108,7 +108,7 @@ st.markdown(html_block, unsafe_allow_html=True)
 st.markdown("""
 <style>
     .main .block-container {
-        max-width: 1200px;
+        max-width: 1300px;
         padding: 1rem;
     }
 </style>
