@@ -10,25 +10,25 @@ st.set_page_config(layout="wide")
 def hash_passwords(passwords):
     return [bcrypt.hash(p) for p in passwords]
 
-# Здесь можно поменять логины и пароли
+# Словарь пользователей (логин -> { name, password_hash })
 users = {
     "john": {"name": "John Doe", "password": bcrypt.hash("123")},
     "jane": {"name": "Jane Doe", "password": bcrypt.hash("456")}
 }
 
 def check_credentials(username, password):
-    """Проверка логина и пароля (сравнение с хэшами в словаре `users`)."""
+    """Проверка логина и пароля (сравнение с хэшами)."""
     if username in users:
         return bcrypt.verify(password, users[username]["password"])
     return False
 
-# --- Проверка аутентификации ---
+# Инициализация состояния
 if "authenticated" not in st.session_state:
     st.session_state["authenticated"] = False
 if "user" not in st.session_state:
     st.session_state["user"] = ""
 
-# Если пользователь не авторизован, показываем форму входа
+# Если пользователь ещё не авторизован, показываем форму логина
 if not st.session_state["authenticated"]:
     st.title("Вход в сервис")
     username_input = st.text_input("Логин")
@@ -38,18 +38,20 @@ if not st.session_state["authenticated"]:
         if check_credentials(username_input, password_input):
             st.session_state["authenticated"] = True
             st.session_state["user"] = username_input
-            st.experimental_rerun()
+            # Выводим сообщение об успехе
+            st.success(f"Добро пожаловать, {users[username_input]['name']}! Перезагрузите страницу, если контент не отобразился.")
         else:
             st.error("Неверный логин или пароль")
     st.stop()
 else:
-    # Если пользователь авторизован, приветствуем
+    # Пользователь авторизован
     st.success(f"Добро пожаловать, {users[st.session_state['user']]['name']}!")
 
-# --- Ниже весь остальной контент (логотип, заголовок и т.д.) ---
-st.write("")  # Пустая строка для отступа
+# --- Ниже идёт основной контент (логотип, заголовок, и т.д.) ---
 
-# Логотип
+st.write("")  # Пустая строка
+
+# Пример: логотип
 logo_path = os.path.join(os.path.dirname(__file__), "assets", "Logo.png")
 with open(logo_path, "rb") as f:
     data = f.read()
@@ -89,7 +91,7 @@ html_block = f"""
 <div class="responsive-header">
   <img src="{logo_src}" alt="Logo" />
   <h2>
-    <span style="color:#007bff;">ㅤСЕРВСИС РАСЧЕТА ЛОГИСТИКИ И ㅤㅤㅤㅤМАРЖИНАЛЬНОСТИ</span>
+    <span style="color:#007bff;">СЕРВСИС РАСЧЕТА ЛОГИСТИКИ И МАРЖИНАЛЬНОСТИ</span>
   </h2>
 </div>
 """
@@ -107,7 +109,9 @@ st.write("Основной контент сервиса...")
 if st.button("Выйти"):
     st.session_state["authenticated"] = False
     st.session_state["user"] = ""
-    st.experimental_rerun()
+    st.info("Вы вышли из сервиса. Обновите страницу или зайдите снова.")
+    st.stop()
+
 
 ###############################################################################
 #                         БЛОК 1: КОД ЛОГИСТИЧЕСКОГО КАЛЬКУЛЯТОРА
