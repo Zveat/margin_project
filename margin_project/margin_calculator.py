@@ -9,6 +9,7 @@ st.set_page_config(layout="wide")
 def hash_passwords(passwords):
     return [bcrypt.hash(p) for p in passwords]
 
+# Задаём пользователей: логин -> {name, password}
 users = {
     "john": {"name": "John Doe", "password": bcrypt.hash("123")},
     "jane": {"name": "Jane Doe", "password": bcrypt.hash("456")}
@@ -19,11 +20,13 @@ def check_credentials(username, password):
         return bcrypt.verify(password, users[username]["password"])
     return False
 
+# Инициализация состояния
 if "authenticated" not in st.session_state:
     st.session_state["authenticated"] = False
 if "user" not in st.session_state:
     st.session_state["user"] = ""
 
+# Форма входа
 if not st.session_state["authenticated"]:
     st.title("Вход в сервис")
     username_input = st.text_input("Логин")
@@ -33,17 +36,19 @@ if not st.session_state["authenticated"]:
             st.session_state["authenticated"] = True
             st.session_state["user"] = username_input
             st.success(f"Добро пожаловать, {users[username_input]['name']}!")
-            # Добавляем meta-refresh для автоматической перезагрузки
-            st.markdown('<meta http-equiv="refresh" content="0">', unsafe_allow_html=True)
+            # Перерендерим страницу с сохранением состояния
+            st.experimental_rerun()
         else:
             st.error("Неверный логин или пароль")
     st.stop()
 else:
     st.success(f"Добро пожаловать, {users[st.session_state['user']]['name']}!")
 
-# Далее основной контент
+# --- Основной контент сервиса ---
+
 st.write("")  # Отступ
 
+# Логотип
 logo_path = os.path.join(os.path.dirname(__file__), "assets", "Logo.png")
 with open(logo_path, "rb") as f:
     data = f.read()
@@ -89,6 +94,7 @@ html_block = f"""
 """
 st.markdown(html_block, unsafe_allow_html=True)
 
+# Настройка локали
 try:
     locale.setlocale(locale.LC_TIME, 'ru_RU.UTF-8')
 except locale.Error:
