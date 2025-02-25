@@ -16,7 +16,7 @@ st.set_page_config(layout="wide")
 def hash_passwords(passwords):
     return [bcrypt.hash(p) for p in passwords]
 
-# Генерируем хэшированные пароли (пример: "123" для john, "456" для jane)
+# Генерируем хэшированные пароли для пользователей (пример: "123" для john, "456" для jane)
 hashed_passwords = hash_passwords(["123", "456"])
 
 credentials = {
@@ -28,17 +28,15 @@ credentials = {
 
 cookie_settings = {"expiry_days": 1, "key": "some_signature_key"}
 
-# Инициализируем аутентификатор. В версии 0.1.0 порядок параметров:
-# Authenticate(credentials, cookie_name, key, cookie_expiry_days)
+# Новый порядок параметров: credentials, key, expiry_days, cookie_name
 authenticator = stauth.Authenticate(
     credentials,
-    "some_cookie_name",               # имя cookie
-    cookie_settings["key"],           # ключ подписи cookie
-    cookie_expiry_days=cookie_settings["expiry_days"]
+    cookie_settings["key"],
+    cookie_settings["expiry_days"],
+    "some_cookie_name"
 )
 
-# Вызываем форму логина.
-# Если ваша версия требует указания местоположения, "main" является допустимым значением.
+# Выводим форму логина. Если ваша версия требует передачи второго параметра как "main", оставьте его.
 name, authentication_status, username = authenticator.login("Login", "main")
 
 if authentication_status:
@@ -55,7 +53,6 @@ else:
 # -------------------------
 st.write("")  # Пустая строка для отступа
 
-# Получаем путь к логотипу и конвертируем его в base64
 logo_path = os.path.join(os.path.dirname(__file__), "assets", "Logo.png")
 with open(logo_path, "rb") as f:
     data = f.read()
