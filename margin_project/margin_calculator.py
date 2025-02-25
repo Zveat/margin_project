@@ -1,11 +1,13 @@
 import streamlit as st
-import streamlit_authenticator as stauth
 import os
 import base64
 import locale
 from passlib.hash import bcrypt
 from fpdf import FPDF
 from num2words import num2words
+
+# Импортируем модуль аутентификатора из подмодуля authenticator
+from streamlit_authenticator import authenticator as stauth_auth
 
 # MUST be the first command!
 st.set_page_config(layout="wide")
@@ -28,17 +30,15 @@ credentials = {
 
 cookie_settings = {"expiry_days": 1, "key": "some_signature_key"}
 
-# Инициализируем аутентификатор.
-# В версии 0.1.0 порядок параметров: credentials, cookie_name, key, cookie_expiry_days
-authenticator = stauth.Authenticate(
+# Инициализируем аутентификатор через подмодуль authenticator
+authenticator = stauth_auth.Authenticate(
     credentials,
     "some_cookie_name",               # имя cookie
-    cookie_settings["key"],           # ключ для подписи cookie
+    cookie_settings["key"],           # ключ подписи cookie
     cookie_expiry_days=cookie_settings["expiry_days"]
 )
 
-# Выводим форму логина.
-# Если ваша версия принимает "main" как позиционный параметр, передаём его.
+# Вызываем форму логина (передаем "main" как позиционный параметр, если это требуется)
 name, authentication_status, username = authenticator.login("Login", "main")
 
 if authentication_status:
@@ -55,7 +55,6 @@ else:
 # -------------------------
 st.write("")  # Пустая строка для отступа
 
-# Получаем путь к логотипу и конвертируем его в base64
 logo_path = os.path.join(os.path.dirname(__file__), "assets", "Logo.png")
 with open(logo_path, "rb") as f:
     data = f.read()
