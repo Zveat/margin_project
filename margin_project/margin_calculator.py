@@ -6,18 +6,11 @@ from passlib.hash import bcrypt
 
 st.set_page_config(layout="wide")
 
-# Пред-хэшированные пароли (bcrypt). Эти хэши были получены заранее для значений "123" и "456".
-# Для "john": пароль "123"
-# Для "jane": пароль "456"
+# Пред-хэшированные пароли можно вычислять один раз при запуске.
+# Обратите внимание: если пользователь вводит пароль с лишними пробелами или с другой регистровой вариацией, проверка может не пройти.
 users = {
-    "john": {
-        "name": "John Doe",
-        "password": "$2b$12$9WW.NNqA6OjRtJKn/fCTx.wKX/ykXUymQFEtthSxJKt9D4C8PypzO"
-    },
-    "jane": {
-        "name": "Jane Doe",
-        "password": "$2b$12$yG4F8I2JX8clZ1kmSk7geO4l3vn5b7QkF/.QmoUSwHKBV/n1RpL5W"
-    }
+    "john": {"name": "John Doe", "password": bcrypt.hash("123")},
+    "jane": {"name": "Jane Doe", "password": bcrypt.hash("456")}
 }
 
 def check_credentials(username, password):
@@ -31,33 +24,33 @@ if "authenticated" not in st.session_state:
 if "user" not in st.session_state:
     st.session_state["user"] = ""
 
-# Форма входа
+# Форма входа (обратите внимание, что логин приводится к нижнему регистру, а лишние пробелы убираются)
 if not st.session_state["authenticated"]:
     st.title("Вход в сервис")
-    username_input = st.text_input("Логин")
-    password_input = st.text_input("Пароль", type="password")
+    username_input = st.text_input("Логин").strip().lower()
+    password_input = st.text_input("Пароль", type="password").strip()
     if st.button("Войти"):
         if check_credentials(username_input, password_input):
             st.session_state["authenticated"] = True
             st.session_state["user"] = username_input
             st.success(f"Добро пожаловать, {users[username_input]['name']}!")
+            st.experimental_rerun()  # Перерендер страницы, чтобы отобразить основной контент
         else:
             st.error("Неверный логин или пароль")
     st.stop()
 else:
     st.success(f"Добро пожаловать, {users[st.session_state['user']]['name']}!")
 
-# Основной контент сервиса
+# --- Основной контент сервиса ---
+
 st.write("")  # Пустая строка для отступа
 
-# Загрузка логотипа и его конвертация в base64
 logo_path = os.path.join(os.path.dirname(__file__), "assets", "Logo.png")
 with open(logo_path, "rb") as f:
     data = f.read()
 encoded_logo = base64.b64encode(data).decode()
 logo_src = f"data:image/png;base64,{encoded_logo}"
 
-# Адаптивный HTML-блок с логотипом и заголовком
 html_block = f"""
 <style>
   .responsive-header {{
@@ -97,7 +90,6 @@ html_block = f"""
 """
 st.markdown(html_block, unsafe_allow_html=True)
 
-# Настройка локали для вывода дат на русском языке
 try:
     locale.setlocale(locale.LC_TIME, 'ru_RU.UTF-8')
 except locale.Error:
@@ -105,12 +97,12 @@ except locale.Error:
 
 st.write("Основной контент сервиса...")
 
-# Кнопка выхода
 if st.button("Выйти"):
     st.session_state["authenticated"] = False
     st.session_state["user"] = ""
     st.info("Вы вышли из сервиса. Обновите страницу или зайдите снова.")
     st.stop()
+
 
 ###############################################################################
 #                         БЛОК 1: КОД ЛОГИСТИЧЕСКОГО КАЛЬКУЛЯТОРА
