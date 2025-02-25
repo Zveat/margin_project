@@ -10,7 +10,7 @@ import datetime
 from fpdf import FPDF
 from num2words import num2words
 
-# Устанавливаем параметры страницы (убираем layout="wide" из глобальной конфигурации)
+# Устанавливаем параметры страницы
 st.set_page_config()
 
 # -------------------------
@@ -104,16 +104,6 @@ html_block = f"""
 """
 st.markdown(html_block, unsafe_allow_html=True)
 
-# Глобальные стили для управления шириной
-st.markdown("""
-<style>
-    .main .block-container {
-        max-width: 1200px;
-        padding: 1rem;
-    }
-</style>
-""", unsafe_allow_html=True)
-
 # Настройка локали
 try:
     locale.setlocale(locale.LC_TIME, 'ru_RU.UTF-8')
@@ -135,7 +125,7 @@ def run_logistics_service():
         <style>
         .logistics-container {
             max-width: 750px;
-            margin-left: 20px;
+            margin: 0 auto;
             background-color: #fff;
             padding: 20px;
             border-radius: 10px;
@@ -485,8 +475,13 @@ def run_margin_service():
         """
         <style>
         .margin-container {
-            max-width: 1300px;
-            padding: 20px;
+            max-width: 750px !important;
+            margin: 0 auto !important;
+            padding: 20px !important;
+        }
+        .margin-container .stColumns > div {
+            flex: 1 !important;
+            min-width: 0 !important;
         }
         div[data-testid="stNumberInput"] input,
         div[data-testid="stTextInput"] input {
@@ -676,7 +671,6 @@ def run_margin_service():
             st.text(f"💸 Налог на обнал (32%) (откат): {int(tax_kickback):,} ₸")
             st.text(f"📊 Налог НДС от маржи (12%): {int(tax_nds):,} ₸")
 
-            # Генерация Excel
             output = io.BytesIO()
             with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
                 client_data = pd.DataFrame({
@@ -730,7 +724,6 @@ def run_margin_service():
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             )
 
-            # Генерация PDF
             unique_invoice_number = get_next_invoice_number(prefix="INV")
             pdf_path = generate_invoice_gos(
                 invoice_number=unique_invoice_number,
