@@ -44,7 +44,7 @@ authenticator = stauth.Authenticate(
 )
 
 # Выводим форму логина
-name, authentication_status, username = authenticator.login("Login", "main")
+name, authentication_status, username = authenticator.login("Login", location="main")
 
 if authentication_status:
     st.success(f"Добро пожаловать, {name}!")
