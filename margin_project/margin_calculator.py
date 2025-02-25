@@ -3,12 +3,18 @@ import os
 import base64
 import locale
 from passlib.hash import bcrypt
+from fpdf import FPDF
+from num2words import num2words
 
+# MUST be the first command!
 st.set_page_config(layout="wide")
 
+# --- Функция хэширования паролей ---
 def hash_passwords(passwords):
     return [bcrypt.hash(p) for p in passwords]
 
+# --- Словарь пользователей ---
+# В этом примере для "john" пароль "123", для "jane" пароль "456".
 users = {
     "john": {"name": "John Doe", "password": bcrypt.hash("123")},
     "jane": {"name": "Jane Doe", "password": bcrypt.hash("456")}
@@ -19,6 +25,7 @@ def check_credentials(username, password):
         return bcrypt.verify(password, users[username]["password"])
     return False
 
+# --- Инициализация состояния ---
 if "authenticated" not in st.session_state:
     st.session_state["authenticated"] = False
 if "user" not in st.session_state:
@@ -26,6 +33,7 @@ if "user" not in st.session_state:
 if "rerun_done" not in st.session_state:
     st.session_state["rerun_done"] = False
 
+# --- Форма входа ---
 if not st.session_state["authenticated"]:
     st.title("Вход в сервис")
     username_input = st.text_input("Логин")
@@ -35,31 +43,26 @@ if not st.session_state["authenticated"]:
             st.session_state["authenticated"] = True
             st.session_state["user"] = username_input
             st.success(f"Добро пожаловать, {users[username_input]['name']}!")
-            try:
-                st.experimental_rerun()
-            except Exception as e:
-                st.write("Автоматическая перезагрузка не удалась. Будет выполнена JavaScript-перезагрузка.")
+            # Автоматическая перезагрузка через JavaScript
+            if not st.session_state["rerun_done"]:
+                st.session_state["rerun_done"] = True
+                st.markdown(
+                    """
+                    <script>
+                      window.location.replace(window.location.href);
+                    </script>
+                    """,
+                    unsafe_allow_html=True
+                )
         else:
             st.error("Неверный логин или пароль")
     st.stop()
 else:
     st.success(f"Добро пожаловать, {users[st.session_state['user']]['name']}!")
 
-# Если пользователь авторизован и перезагрузка ещё не выполнена, попробуем через JavaScript:
-if st.session_state["authenticated"] and not st.session_state["rerun_done"]:
-    st.session_state["rerun_done"] = True
-    st.markdown(
-        """
-        <script>
-          setTimeout(function(){ window.location.reload(); }, 1000);
-        </script>
-        """,
-        unsafe_allow_html=True
-    )
+# --- Блок с логотипом и заголовком ---
+st.write("")  # Пустая строка для отступа
 
-st.write("")  # Отступ
-
-# Блок с логотипом и заголовком
 logo_path = os.path.join(os.path.dirname(__file__), "assets", "Logo.png")
 with open(logo_path, "rb") as f:
     data = f.read()
@@ -99,12 +102,13 @@ html_block = f"""
 <div class="responsive-header">
   <img src="{logo_src}" alt="Logo" />
   <h2>
-    <span style="color:#007bff;">СЕРВСИС РАСЧЕТА ЛОГИСТИКИ И МАРЖИНАЛЬНОСТИ</span>
+    <span style="color:#007bff;">ㅤСЕРВСИС РАСЧЕТА ЛОГИСТИКИ И ㅤㅤㅤㅤМАРЖИНАЛЬНОСТИ</span>
   </h2>
 </div>
 """
 st.markdown(html_block, unsafe_allow_html=True)
 
+# --- Настройка локали для вывода даты на русском языке ---
 try:
     locale.setlocale(locale.LC_TIME, 'ru_RU.UTF-8')
 except locale.Error:
@@ -112,6 +116,7 @@ except locale.Error:
 
 st.write("Основной контент сервиса...")
 
+# --- Кнопка "Выйти" ---
 if st.button("Выйти"):
     st.session_state["authenticated"] = False
     st.session_state["user"] = ""
