@@ -1,11 +1,10 @@
 import streamlit as st
-import streamlit_authenticator as stauth
 import os
 import base64
 import locale
 from passlib.hash import bcrypt
-from fpdf import FPDF
-from num2words import num2words
+import streamlit_authenticator as stauth
+from streamlit_authenticator import Authenticate  # Импортируем класс напрямую
 
 # MUST be the first command!
 st.set_page_config(layout="wide")
@@ -16,7 +15,7 @@ st.set_page_config(layout="wide")
 def hash_passwords(passwords):
     return [bcrypt.hash(p) for p in passwords]
 
-# Генерируем хэшированные пароли для пользователей (пример: "123" для john, "456" для jane)
+# Генерируем хэшированные пароли (пример: "123" для john, "456" для jane)
 hashed_passwords = hash_passwords(["123", "456"])
 
 credentials = {
@@ -26,18 +25,19 @@ credentials = {
     }
 }
 
+# Настройки cookie
 cookie_settings = {"expiry_days": 1, "key": "some_signature_key"}
 
-# В версии 0.1.0 порядок параметров: (credentials, cookie_name, key, cookie_expiry_days)
-authenticator = stauth.Authenticate(
+# Инициализируем аутентификатор через прямой импорт класса Authenticate
+authenticator = Authenticate(
     credentials,
-    "some_cookie_name",  # имя cookie
-    cookie_settings["key"],
+    "some_cookie_name",         # имя cookie
+    cookie_settings["key"],     # ключ для подписи
     cookie_expiry_days=cookie_settings["expiry_days"]
 )
 
-# Передаём location как именованный аргумент
-name, authentication_status, username = authenticator.login("Login", location="main")
+# Выводим форму логина (без параметра location, если он не поддерживается)
+name, authentication_status, username = authenticator.login("Login", "main")
 
 if authentication_status:
     st.success(f"Добро пожаловать, {name}!")
@@ -53,7 +53,6 @@ else:
 # -------------------------
 st.write("")  # Пустая строка для отступа
 
-# Получаем путь к логотипу и конвертируем его в base64
 logo_path = os.path.join(os.path.dirname(__file__), "assets", "Logo.png")
 with open(logo_path, "rb") as f:
     data = f.read()
