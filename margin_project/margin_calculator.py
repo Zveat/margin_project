@@ -18,7 +18,7 @@ st.set_page_config()
 # Данные пользователей
 # -------------------------
 users = {
-    "john": {"name": "John Doe", "password": bcrypt.hash("123")},
+    "Zveat": {"name": "John Doe", "password": bcrypt.hash("Zv2097")},
     "jane": {"name": "Jane Doe", "password": bcrypt.hash("456")}
 }
 
