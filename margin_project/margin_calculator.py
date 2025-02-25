@@ -60,7 +60,6 @@ if not st.session_state["authenticated"]:
 # -------------------------
 # Основной сервис
 # -------------------------
-st.success(f"Добро пожаловать, {users[st.session_state['user']]['name']}!")
 
 # Загрузка логотипа
 logo_path = os.path.join(os.path.dirname(__file__), "assets", "Logo.png")
