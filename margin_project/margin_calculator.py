@@ -114,7 +114,7 @@ st.markdown("""
 <style>
     /* Задаём для .block-container желаемую ширину и отступ слева */
     .block-container {
-        max-width: 750px !important; /* Желаемая ширина, измените это значение по необходимости (например, 1000px, 1200px) */
+        max-width: 900px !important; /* Желаемая ширина, измените это значение по необходимости (например, 1000px, 1200px) */
         margin: 0 auto !important;   /* Центрируем контейнер */
         padding: 1rem !important;    /* Отступы по бокам */
     }
