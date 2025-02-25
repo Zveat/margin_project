@@ -10,16 +10,30 @@ from fpdf import FPDF
 from num2words import num2words
 from passlib.hash import bcrypt
 
+# MUST be the first command!
 st.set_page_config(layout="wide")
 
+# Глобальный CSS для фиксированной ширины основного контейнера
+st.markdown("""
+<style>
+  .block-container {
+    max-width: 750px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+</style>
+""", unsafe_allow_html=True)
+
 # -------------------------
-# Данные пользователей
+# Данные пользователей (статичные хэши)
 # -------------------------
-# Логины должны быть в нижнем регистре:
-# Для "john" пароль "123", для "jane" пароль "456".
+# Для "john": пароль "123"
+# Для "jane": пароль "456"
+# Эти хэши можно получить один раз с помощью bcrypt.hash("123") и использовать в коде,
+# чтобы они не менялись при каждом запуске.
 users = {
-    "john": {"name": "John Doe", "password": bcrypt.hash("123")},
-    "jane": {"name": "Jane Doe", "password": bcrypt.hash("456")}
+    "john": {"name": "John Doe", "password": "$2b$12$zo5TEYz3gX9KkR8rFY7A0Oj0v0cOkQjg3ZLzQKyEKB2uwNZ2Xik1C"},
+    "jane": {"name": "Jane Doe", "password": "$2b$12$94yL5UohmRL3.1ghftqHmeZUr5ayb9iJ0nxKXAGDqLA1bzhQ.SN6u"}
 }
 
 def check_credentials(username, password):
@@ -34,28 +48,29 @@ if "authenticated" not in st.session_state:
     st.session_state["authenticated"] = False
 if "user" not in st.session_state:
     st.session_state["user"] = ""
+# Если у вас используется st.session_state.products где-то в расчётах, инициализируйте её:
+if "products" not in st.session_state:
+    st.session_state["products"] = []
 
 # -------------------------
-# Форма входа с использованием контейнера
+# Форма входа
 # -------------------------
-login_container = st.empty()  # Контейнер для формы входа
 if not st.session_state["authenticated"]:
-    with login_container.container():
-        st.title("Вход в сервис")
-        username_input = st.text_input("Логин").strip().lower()
-        password_input = st.text_input("Пароль", type="password").strip()
-        if st.button("Войти"):
-            if check_credentials(username_input, password_input):
-                st.session_state["authenticated"] = True
-                st.session_state["user"] = username_input
-                st.success(f"Добро пожаловать, {users[username_input]['name']}!")
-                # Очищаем контейнер формы входа
-                login_container.empty()
-            else:
-                st.error("Неверный логин или пароль")
-    st.stop()
-else:
-    st.success(f"Добро пожаловать, {users[st.session_state['user']]['name']}!")
+    st.title("Вход в сервис")
+    # Приводим логин к нижнему регистру и убираем лишние пробелы
+    username_input = st.text_input("Логин").strip().lower()
+    password_input = st.text_input("Пароль", type="password").strip()
+    if st.button("Войти"):
+        if check_credentials(username_input, password_input):
+            st.session_state["authenticated"] = True
+            st.session_state["user"] = username_input
+            st.success(f"Добро пожаловать, {users[username_input]['name']}!")
+        else:
+            st.error("Неверный логин или пароль")
+    st.stop()  # Если не аутентифицирован, останавливаем выполнение
+
+# Если пользователь аутентифицирован, продолжаем показывать основной контент:
+st.success(f"Добро пожаловать, {users[st.session_state['user']]['name']}!")
 
 # -------------------------
 # Основной контент сервиса
@@ -63,7 +78,7 @@ else:
 with st.container():
     st.write("")  # Отступ
 
-    # Загрузка логотипа из папки assets с использованием os.getcwd()
+    # Загрузка логотипа из папки assets
     logo_path = os.path.join(os.getcwd(), "assets", "Logo.png")
     with open(logo_path, "rb") as f:
         data = f.read()
@@ -145,13 +160,12 @@ with st.container():
                 file_name=pdf_file_name,
                 mime="application/pdf"
             )
-        
         st.write("Основной контент сервиса после расчёта...")
-
+    
     st.write("Основной контент сервиса...")
 
 # -------------------------
-# Настройка локали для вывода дат
+# Настройка локали для вывода дат на русском языке
 # -------------------------
 try:
     locale.setlocale(locale.LC_TIME, 'ru_RU.UTF-8')
