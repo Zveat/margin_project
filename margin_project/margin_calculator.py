@@ -13,10 +13,22 @@ from passlib.hash import bcrypt
 # MUST be the first command!
 st.set_page_config(layout="wide")
 
+# Глобальный CSS для контейнера (фиксированная ширина)
+st.markdown("""
+<style>
+  .block-container {
+    max-width: 750px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+</style>
+""", unsafe_allow_html=True)
+
 # -------------------------
 # Данные пользователей
 # -------------------------
-# Логины в нижнем регистре: для "john" пароль "123", для "jane" пароль "456".
+# Внимание: логины в словаре должны быть в нижнем регистре.
+# Для "john" пароль "123", для "jane" пароль "456".
 users = {
     "john": {"name": "John Doe", "password": bcrypt.hash("123")},
     "jane": {"name": "Jane Doe", "password": bcrypt.hash("456")}
@@ -35,13 +47,14 @@ if "authenticated" not in st.session_state:
 if "user" not in st.session_state:
     st.session_state["user"] = ""
 if "products" not in st.session_state:
-    st.session_state["products"] = []  # Если используется для расчёта
+    st.session_state["products"] = []  # Инициализируем, если используется в расчётах
 
 # -------------------------
 # Форма входа
 # -------------------------
 if not st.session_state["authenticated"]:
     st.title("Вход в сервис")
+    # Приводим логин к нижнему регистру и убираем лишние пробелы
     username_input = st.text_input("Логин").strip().lower()
     password_input = st.text_input("Пароль", type="password").strip()
     if st.button("Войти"):
@@ -49,7 +62,6 @@ if not st.session_state["authenticated"]:
             st.session_state["authenticated"] = True
             st.session_state["user"] = username_input
             st.success(f"Добро пожаловать, {users[username_input]['name']}!")
-            st.experimental_rerun()  # Перерисовываем страницу после входа
         else:
             st.error("Неверный логин или пароль")
     st.stop()
@@ -60,9 +72,9 @@ else:
 # Основной контент сервиса (отображается только после успешной авторизации)
 # -------------------------
 with st.container():
-    st.write("")  # Отступ
+    st.write("")  # Пустая строка для отступа
 
-    # Загрузка логотипа из папки assets
+    # Загрузка логотипа и его конвертация в base64
     logo_path = os.path.join(os.getcwd(), "assets", "Logo.png")
     with open(logo_path, "rb") as f:
         data = f.read()
@@ -109,10 +121,8 @@ with st.container():
     st.markdown(html_block, unsafe_allow_html=True)
 
     st.write("### Калькулятор маржинальности")
-    
-    # Пример расчёта маржинальности
     if st.button("Рассчитать маржинальность"):
-        # Пример: создаём DataFrame для демонстрации
+        # Демонстрация расчёта: создаём DataFrame
         df = pd.DataFrame({
             "Продукт": ["A", "B", "C"],
             "Цена": [1000, 2000, 3000],
@@ -146,7 +156,9 @@ with st.container():
                 file_name=pdf_file_name,
                 mime="application/pdf"
             )
-    
+        
+        st.write("Основной контент сервиса после расчёта...")
+
     st.write("Основной контент сервиса...")
 
 # -------------------------
@@ -167,8 +179,6 @@ if st.button("Выйти"):
     st.session_state["user"] = ""
     st.info("Вы вышли из сервиса. Обновите страницу или зайдите снова.")
     st.stop()
-
-
 
 ###############################################################################
 #                         БЛОК 1: КОД ЛОГИСТИЧЕСКОГО КАЛЬКУЛЯТОРА
