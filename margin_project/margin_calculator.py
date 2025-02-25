@@ -10,7 +10,6 @@ from fpdf import FPDF
 from num2words import num2words
 from passlib.hash import bcrypt
 
-# MUST be the first command!
 st.set_page_config(layout="wide")
 
 # Глобальный CSS для фиксированной ширины основного контейнера
@@ -25,12 +24,9 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # -------------------------
-# Данные пользователей (статичные хэши)
-# -------------------------
+# Данные пользователей (с заранее сгенерированными хэшами)
 # Для "john": пароль "123"
 # Для "jane": пароль "456"
-# Эти хэши можно получить один раз с помощью bcrypt.hash("123") и использовать в коде,
-# чтобы они не менялись при каждом запуске.
 users = {
     "john": {"name": "John Doe", "password": "$2b$12$zo5TEYz3gX9KkR8rFY7A0Oj0v0cOkQjg3ZLzQKyEKB2uwNZ2Xik1C"},
     "jane": {"name": "Jane Doe", "password": "$2b$12$94yL5UohmRL3.1ghftqHmeZUr5ayb9iJ0nxKXAGDqLA1bzhQ.SN6u"}
@@ -48,16 +44,14 @@ if "authenticated" not in st.session_state:
     st.session_state["authenticated"] = False
 if "user" not in st.session_state:
     st.session_state["user"] = ""
-# Если у вас используется st.session_state.products где-то в расчётах, инициализируйте её:
 if "products" not in st.session_state:
-    st.session_state["products"] = []
+    st.session_state["products"] = []  # Если используется для расчёта
 
 # -------------------------
 # Форма входа
 # -------------------------
 if not st.session_state["authenticated"]:
     st.title("Вход в сервис")
-    # Приводим логин к нижнему регистру и убираем лишние пробелы
     username_input = st.text_input("Логин").strip().lower()
     password_input = st.text_input("Пароль", type="password").strip()
     if st.button("Войти"):
@@ -67,13 +61,12 @@ if not st.session_state["authenticated"]:
             st.success(f"Добро пожаловать, {users[username_input]['name']}!")
         else:
             st.error("Неверный логин или пароль")
-    st.stop()  # Если не аутентифицирован, останавливаем выполнение
-
-# Если пользователь аутентифицирован, продолжаем показывать основной контент:
-st.success(f"Добро пожаловать, {users[st.session_state['user']]['name']}!")
+    st.stop()
+else:
+    st.success(f"Добро пожаловать, {users[st.session_state['user']]['name']}!")
 
 # -------------------------
-# Основной контент сервиса
+# Основной контент сервиса (отображается только после успешной авторизации)
 # -------------------------
 with st.container():
     st.write("")  # Отступ
@@ -160,6 +153,7 @@ with st.container():
                 file_name=pdf_file_name,
                 mime="application/pdf"
             )
+        
         st.write("Основной контент сервиса после расчёта...")
     
     st.write("Основной контент сервиса...")
