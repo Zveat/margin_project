@@ -6,18 +6,18 @@ from passlib.hash import bcrypt
 
 st.set_page_config(layout="wide")
 
-# --- Хэширование паролей ---
 def hash_passwords(passwords):
+    """Хэшируем список паролей."""
     return [bcrypt.hash(p) for p in passwords]
 
-# Словарь пользователей (логин -> { name, password_hash })
+# Словарь пользователей: логин -> { "name":..., "password": хэш пароля }
 users = {
     "john": {"name": "John Doe", "password": bcrypt.hash("123")},
     "jane": {"name": "Jane Doe", "password": bcrypt.hash("456")}
 }
 
 def check_credentials(username, password):
-    """Проверка логина и пароля (сравнение с хэшами)."""
+    """Проверяем логин и пароль (сравниваем с хэшами)."""
     if username in users:
         return bcrypt.verify(password, users[username]["password"])
     return False
@@ -28,7 +28,7 @@ if "authenticated" not in st.session_state:
 if "user" not in st.session_state:
     st.session_state["user"] = ""
 
-# Если пользователь ещё не авторизован, показываем форму логина
+# Если пользователь не авторизован, показываем форму логина
 if not st.session_state["authenticated"]:
     st.title("Вход в сервис")
     username_input = st.text_input("Логин")
@@ -38,16 +38,17 @@ if not st.session_state["authenticated"]:
         if check_credentials(username_input, password_input):
             st.session_state["authenticated"] = True
             st.session_state["user"] = username_input
-            # Выводим сообщение об успехе
-            st.success(f"Добро пожаловать, {users[username_input]['name']}! Перезагрузите страницу, если контент не отобразился.")
+            st.success(f"Добро пожаловать, {users[username_input]['name']}!")
+            # Перерендерим страницу, чтобы сразу отобразился основной контент
+            st.experimental_rerun()
         else:
             st.error("Неверный логин или пароль")
     st.stop()
 else:
-    # Пользователь авторизован
+    # Пользователь уже авторизован
     st.success(f"Добро пожаловать, {users[st.session_state['user']]['name']}!")
 
-# --- Ниже идёт основной контент (логотип, заголовок, и т.д.) ---
+# --- Ниже основной контент (логотип, заголовок, и т.д.) ---
 
 st.write("")  # Пустая строка
 
@@ -97,7 +98,6 @@ html_block = f"""
 """
 st.markdown(html_block, unsafe_allow_html=True)
 
-# Настройка локали
 try:
     locale.setlocale(locale.LC_TIME, 'ru_RU.UTF-8')
 except locale.Error:
@@ -109,7 +109,7 @@ st.write("Основной контент сервиса...")
 if st.button("Выйти"):
     st.session_state["authenticated"] = False
     st.session_state["user"] = ""
-    st.info("Вы вышли из сервиса. Обновите страницу или зайдите снова.")
+    st.info("Вы вышли из сервиса.")
     st.stop()
 
 
