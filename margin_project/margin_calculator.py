@@ -8,7 +8,8 @@ st.set_page_config(layout="wide")
 
 # -------------------------
 # Данные пользователей (логин -> {name, password})
-# Пароли в этом примере: для "john" — "123", для "jane" — "456".
+# Внимание: логины должны быть в нижнем регистре.
+# Для "john" пароль "123", для "jane" пароль "456".
 users = {
     "john": {"name": "John Doe", "password": bcrypt.hash("123")},
     "jane": {"name": "Jane Doe", "password": bcrypt.hash("456")}
@@ -39,20 +40,16 @@ if not st.session_state["authenticated"]:
             st.session_state["authenticated"] = True
             st.session_state["user"] = username_input
             st.success(f"Добро пожаловать, {users[username_input]['name']}!")
-            try:
-                st.experimental_rerun()
-            except Exception:
-                st.markdown('<meta http-equiv="refresh" content="0">', unsafe_allow_html=True)
         else:
             st.error("Неверный логин или пароль")
-    st.stop()
+    st.stop()  # Останавливаем выполнение, пока пользователь не авторизован
 else:
     st.success(f"Добро пожаловать, {users[st.session_state['user']]['name']}!")
 
 # -------------------------
-# Основной контент сервиса
+# Основной контент сервиса (появляется только при успешной авторизации)
 # -------------------------
-st.write("")  # Отступ
+st.write("")  # Пустая строка для отступа
 
 # Загрузка логотипа и его конвертация в base64
 logo_path = os.path.join(os.path.dirname(__file__), "assets", "Logo.png")
@@ -61,6 +58,7 @@ with open(logo_path, "rb") as f:
 encoded_logo = base64.b64encode(data).decode()
 logo_src = f"data:image/png;base64,{encoded_logo}"
 
+# Адаптивный HTML-блок с логотипом и заголовком
 html_block = f"""
 <style>
   .responsive-header {{
@@ -100,7 +98,9 @@ html_block = f"""
 """
 st.markdown(html_block, unsafe_allow_html=True)
 
+# -------------------------
 # Настройка локали для вывода дат на русском языке
+# -------------------------
 try:
     locale.setlocale(locale.LC_TIME, 'ru_RU.UTF-8')
 except locale.Error:
@@ -108,7 +108,9 @@ except locale.Error:
 
 st.write("Основной контент сервиса...")
 
+# -------------------------
 # Кнопка "Выйти"
+# -------------------------
 if st.button("Выйти"):
     st.session_state["authenticated"] = False
     st.session_state["user"] = ""
