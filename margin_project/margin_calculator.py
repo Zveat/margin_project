@@ -4,9 +4,11 @@ import base64
 import locale
 import io
 import pandas as pd
-from passlib.hash import bcrypt
+import math
+import datetime
 from fpdf import FPDF
 from num2words import num2words
+from passlib.hash import bcrypt
 
 # MUST be the first command!
 st.set_page_config(layout="wide")
@@ -47,6 +49,7 @@ if not st.session_state["authenticated"]:
             st.session_state["authenticated"] = True
             st.session_state["user"] = username_input
             st.success(f"Добро пожаловать, {users[username_input]['name']}!")
+            st.experimental_rerun()  # Перерисовываем страницу после входа
         else:
             st.error("Неверный логин или пароль")
     st.stop()
@@ -54,13 +57,13 @@ else:
     st.success(f"Добро пожаловать, {users[st.session_state['user']]['name']}!")
 
 # -------------------------
-# Основной контент сервиса (отображается только после успешного входа)
+# Основной контент сервиса (отображается только после успешной авторизации)
 # -------------------------
 with st.container():
     st.write("")  # Отступ
 
-    # Загрузка логотипа и его конвертация в base64
-    logo_path = os.path.join(os.path.dirname(__file__), "assets", "Logo.png")
+    # Загрузка логотипа из папки assets
+    logo_path = os.path.join(os.getcwd(), "assets", "Logo.png")
     with open(logo_path, "rb") as f:
         data = f.read()
     encoded_logo = base64.b64encode(data).decode()
@@ -109,7 +112,7 @@ with st.container():
     
     # Пример расчёта маржинальности
     if st.button("Рассчитать маржинальность"):
-        # Здесь демонстрационный расчёт: создаём DataFrame
+        # Пример: создаём DataFrame для демонстрации
         df = pd.DataFrame({
             "Продукт": ["A", "B", "C"],
             "Цена": [1000, 2000, 3000],
@@ -154,6 +157,8 @@ try:
 except locale.Error:
     locale.setlocale(locale.LC_TIME, '')
 
+st.write("Основной контент сервиса...")
+
 # -------------------------
 # Кнопка "Выйти"
 # -------------------------
@@ -162,6 +167,7 @@ if st.button("Выйти"):
     st.session_state["user"] = ""
     st.info("Вы вышли из сервиса. Обновите страницу или зайдите снова.")
     st.stop()
+
 
 
 ###############################################################################
