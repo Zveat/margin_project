@@ -2,66 +2,67 @@ import streamlit as st
 import os
 import base64
 import locale
+import pandas as pd
 from passlib.hash import bcrypt
 
-# Устанавливаем параметры страницы
 st.set_page_config(layout="wide")
 
 # -------------------------
-# Данные пользователей
+# Общий стиль контейнера (если нужно)
+st.markdown("""
+<style>
+  .block-container {
+      max-width: 750px !important;
+      margin: auto !important;
+  }
+</style>
+""", unsafe_allow_html=True)
+
 # -------------------------
+# Простейшая аутентификация (пример)
 users = {
     "john": {"name": "John Doe", "password": bcrypt.hash("123")},
     "jane": {"name": "Jane Doe", "password": bcrypt.hash("456")}
 }
 
 def check_credentials(username, password):
-    """Функция проверки логина и пароля"""
     if username in users:
         return bcrypt.verify(password, users[username]["password"])
     return False
 
-# -------------------------
-# Состояние сессии
-# -------------------------
 if "authenticated" not in st.session_state:
     st.session_state["authenticated"] = False
 if "user" not in st.session_state:
     st.session_state["user"] = ""
+if "products" not in st.session_state:  # Инициализируем переменную для товаров
+    st.session_state.products = []
 
-# -------------------------
-# Форма входа
-# -------------------------
 if not st.session_state["authenticated"]:
     st.title("Вход в сервис")
     username_input = st.text_input("Логин").strip().lower()
     password_input = st.text_input("Пароль", type="password").strip()
-    
     if st.button("Войти"):
         if check_credentials(username_input, password_input):
             st.session_state["authenticated"] = True
             st.session_state["user"] = username_input
-            st.rerun()  # Обновляем страницу, чтобы показать основной контент
+            st.success(f"Добро пожаловать, {users[username_input]['name']}!")
+            st.experimental_rerun()
         else:
             st.error("Неверный логин или пароль")
-    st.stop()  # Останавливаем выполнение кода, пока не будет авторизации
+    st.stop()
+else:
+    st.success(f"Добро пожаловать, {users[st.session_state['user']]['name']}!")
 
 # -------------------------
-# Основной сервис (отображается после входа)
-# -------------------------
-st.success(f"Добро пожаловать, {users[st.session_state['user']]['name']}!")
+# Блок с логотипом и заголовком
+st.write("")  # Отступ
 
-# Пустая строка для отступа
-st.write("")  
-
-# Загрузка логотипа из assets
 logo_path = os.path.join(os.path.dirname(__file__), "assets", "Logo.png")
 with open(logo_path, "rb") as f:
     data = f.read()
 encoded_logo = base64.b64encode(data).decode()
 logo_src = f"data:image/png;base64,{encoded_logo}"
 
-# HTML-блок с логотипом и заголовком
 html_block = f"""
 <style>
   .responsive-header {{
@@ -101,7 +102,6 @@ html_block = f"""
 """
 st.markdown(html_block, unsafe_allow_html=True)
 
-# Настройка локали
 try:
     locale.setlocale(locale.LC_TIME, 'ru_RU.UTF-8')
 except locale.Error:
@@ -109,11 +109,11 @@ except locale.Error:
 
 st.write("Основной контент сервиса...")
 
-# Кнопка выхода
 if st.button("Выйти"):
     st.session_state["authenticated"] = False
     st.session_state["user"] = ""
-    st.rerun()  # Обновляем страницу после выхода
+    st.info("Вы вышли из сервиса. Обновите страницу или зайдите снова.")
+    st.stop()
 
 ###############################################################################
 #                         БЛОК 1: КОД ЛОГИСТИЧЕСКОГО КАЛЬКУЛЯТОРА
