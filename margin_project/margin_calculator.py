@@ -19,7 +19,6 @@ def hash_passwords(passwords):
 # Генерируем хэшированные пароли для пользователей (пример: "123" для john, "456" для jane)
 hashed_passwords = hash_passwords(["123", "456"])
 
-# Настройка учётных данных
 credentials = {
     "usernames": {
         "john": {"name": "John Doe", "password": hashed_passwords[0]},
@@ -29,17 +28,16 @@ credentials = {
 
 cookie_settings = {"expiry_days": 1, "key": "some_signature_key"}
 
-# Инициализируем аутентификатор. В версии 0.1.0 порядок параметров:
-# Authenticate(credentials, cookie_name, key, expiry_days)
+# В версии 0.1.0 порядок параметров: (credentials, cookie_name, key, cookie_expiry_days)
 authenticator = stauth.Authenticate(
     credentials,
-    "some_cookie_name",  # Имя cookie
-    cookie_settings["key"],  # Ключ подписи
-    cookie_settings["expiry_days"]  # Срок действия cookie
+    "some_cookie_name",  # имя cookie
+    cookie_settings["key"],
+    cookie_expiry_days=cookie_settings["expiry_days"]
 )
 
-# Вызываем login, передавая позиционно "main" как местоположение
-name, authentication_status, username = authenticator.login("Login", "main")
+# Передаём location как именованный аргумент
+name, authentication_status, username = authenticator.login("Login", location="main")
 
 if authentication_status:
     st.success(f"Добро пожаловать, {name}!")
@@ -51,10 +49,11 @@ else:
     st.stop()
 
 # -------------------------
-# Блок с логотипом и заголовком (пример адаптивного блока)
+# Блок с логотипом и заголовком
 # -------------------------
 st.write("")  # Пустая строка для отступа
 
+# Получаем путь к логотипу и конвертируем его в base64
 logo_path = os.path.join(os.path.dirname(__file__), "assets", "Logo.png")
 with open(logo_path, "rb") as f:
     data = f.read()
