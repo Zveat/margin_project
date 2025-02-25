@@ -6,8 +6,11 @@ from passlib.hash import bcrypt
 
 st.set_page_config(layout="wide")
 
-# Пред-хэшированные пароли для пользователей
-# Здесь логины должны быть в нижнем регистре: "john" и "jane"
+# -------------------------
+# Пользовательские данные (логин и пароль)
+# -------------------------
+# Внимание: логины в словаре — это ключи в нижнем регистре.
+# Для john пароль "123", для jane — "456".
 users = {
     "john": {"name": "John Doe", "password": bcrypt.hash("123")},
     "jane": {"name": "Jane Doe", "password": bcrypt.hash("456")}
@@ -18,15 +21,20 @@ def check_credentials(username, password):
         return bcrypt.verify(password, users[username]["password"])
     return False
 
+# -------------------------
 # Инициализация состояния сессии
+# -------------------------
 if "authenticated" not in st.session_state:
     st.session_state["authenticated"] = False
 if "user" not in st.session_state:
     st.session_state["user"] = ""
 
+# -------------------------
 # Форма входа
+# -------------------------
 if not st.session_state["authenticated"]:
     st.title("Вход в сервис")
+    # Приводим логин к нижнему регистру и убираем пробелы
     username_input = st.text_input("Логин").strip().lower()
     password_input = st.text_input("Пароль", type="password").strip()
     if st.button("Войти"):
@@ -34,21 +42,18 @@ if not st.session_state["authenticated"]:
             st.session_state["authenticated"] = True
             st.session_state["user"] = username_input
             st.success(f"Добро пожаловать, {users[username_input]['name']}!")
-            try:
-                st.experimental_rerun()
-            except Exception:
-                st.markdown('<meta http-equiv="refresh" content="0">', unsafe_allow_html=True)
         else:
             st.error("Неверный логин или пароль")
     st.stop()
 else:
     st.success(f"Добро пожаловать, {users[st.session_state['user']]['name']}!")
 
-# --- Основной контент сервиса ---
+# -------------------------
+# Основной контент сервиса (появляется только при успешной авторизации)
+# -------------------------
+st.write("")  # Пустая строка для отступа
 
-st.write("")  # Отступ
-
-# Загрузка логотипа и его конвертация в base64
+# Загрузка логотипа из папки assets и его конвертация в base64
 logo_path = os.path.join(os.path.dirname(__file__), "assets", "Logo.png")
 with open(logo_path, "rb") as f:
     data = f.read()
@@ -102,6 +107,7 @@ except locale.Error:
 
 st.write("Основной контент сервиса...")
 
+# Кнопка "Выйти"
 if st.button("Выйти"):
     st.session_state["authenticated"] = False
     st.session_state["user"] = ""
