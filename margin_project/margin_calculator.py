@@ -23,6 +23,8 @@ if "authenticated" not in st.session_state:
     st.session_state["authenticated"] = False
 if "user" not in st.session_state:
     st.session_state["user"] = ""
+if "rerun_done" not in st.session_state:
+    st.session_state["rerun_done"] = False
 
 if not st.session_state["authenticated"]:
     st.title("Вход в сервис")
@@ -36,16 +38,28 @@ if not st.session_state["authenticated"]:
             try:
                 st.experimental_rerun()
             except Exception as e:
-                st.write("Автоматическая перезагрузка не удалась. Пожалуйста, обновите страницу вручную.")
+                st.write("Автоматическая перезагрузка не удалась. Будет выполнена JavaScript-перезагрузка.")
         else:
             st.error("Неверный логин или пароль")
     st.stop()
 else:
     st.success(f"Добро пожаловать, {users[st.session_state['user']]['name']}!")
 
-# Далее ваш основной контент
-st.write("")  # Пустая строка
+# Если пользователь авторизован и перезагрузка ещё не выполнена, попробуем через JavaScript:
+if st.session_state["authenticated"] and not st.session_state["rerun_done"]:
+    st.session_state["rerun_done"] = True
+    st.markdown(
+        """
+        <script>
+          setTimeout(function(){ window.location.reload(); }, 1000);
+        </script>
+        """,
+        unsafe_allow_html=True
+    )
 
+st.write("")  # Отступ
+
+# Блок с логотипом и заголовком
 logo_path = os.path.join(os.path.dirname(__file__), "assets", "Logo.png")
 with open(logo_path, "rb") as f:
     data = f.read()
