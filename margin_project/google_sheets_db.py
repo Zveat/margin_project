@@ -34,7 +34,11 @@ def get_or_create_spreadsheet(spreadsheet_id=None, spreadsheet_name="MarginCalcu
     """Получает или создаёт Google Таблицу."""
     client = connect_to_sheets()
     if spreadsheet_id:
-        return client.open_by_key(spreadsheet_id)
+        try:
+            return client.open_by_key(spreadsheet_id)
+        except gspread.exceptions.SpreadsheetNotFound:
+            print(f"Таблица с ID {spreadsheet_id} не найдена. Создаём новую таблицу с именем {spreadsheet_name}.")
+            return client.create(spreadsheet_name)
     else:
         return client.create(spreadsheet_name)
 
