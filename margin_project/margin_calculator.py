@@ -1,10 +1,7 @@
-# margin_calculator.py
-
 import streamlit as st
 import os
 import base64
 import locale
-import uuid
 from passlib.hash import bcrypt
 import pandas as pd
 import io
@@ -14,7 +11,7 @@ from fpdf import FPDF
 from num2words import num2words
 
 # НОВОЕ: Импорт для работы с Google Sheets
-from google_sheets_db import save_calculation, load_calculation, connect_to_sheets, save_auth_state, load_auth_state
+from google_sheets_db import save_calculation, load_calculation, connect_to_sheets
 
 # Устанавливаем параметры страницы
 st.set_page_config(page_title="Margin Calculator", page_icon="💰")
@@ -39,60 +36,12 @@ def check_credentials(username, password):
     return False
 
 # -------------------------
-# Состояние сессии и авторизации через Google Sheets
+# Состояние сессии
 # -------------------------
-spreadsheet_id = "1Z4-Moti7RVqyBQY5v4tcCwFQS3noOD84w9Q2liv9rI4"
-
-# Проверяем, является ли это новой сессией
-if "session_id" not in st.session_state:
-    print("session_id отсутствует в st.session_state, пытаемся восстановить из Google Sheets...")
-    try:
-        conn = connect_to_sheets()
-        sheet = conn.open_by_key(spreadsheet_id)
-        auth_worksheet = sheet.worksheet("AuthState")
-        all_auth = auth_worksheet.get_all_values()
-        print(f"Содержимое листа AuthState (с заголовками): {all_auth}")
-        
-        # Ищем последнюю запись с authenticated=True для восстановления session_id
-        for row in all_auth[1:]:  # Пропускаем заголовок
-            if row[1].strip().upper() == "TRUE":
-                st.session_state["session_id"] = row[0]  # Устанавливаем session_id из первой колонки
-                st.session_state["authenticated"] = True
-                st.session_state["user"] = row[2]  # Устанавливаем пользователя
-                st.session_state["initial_load"] = False  # Отмечаем, что это не новая сессия
-                print(f"Восстановлен session_id из Google Sheets: {st.session_state['session_id']}, authenticated=True, user={st.session_state['user']}")
-                break
-        if "session_id" not in st.session_state:
-            st.session_state["session_id"] = str(uuid.uuid4())
-            st.session_state["authenticated"] = False
-            st.session_state["user"] = ""
-            st.session_state["initial_load"] = True  # Это новая сессия
-            print(f"Сгенерирован новый session_id для новой сессии: {st.session_state['session_id']}")
-    except Exception as e:
-        print(f"Ошибка при восстановлении session_id: {e}")
-        st.session_state["session_id"] = str(uuid.uuid4())
-        st.session_state["authenticated"] = False
-        st.session_state["user"] = ""
-        st.session_state["initial_load"] = True  # Это новая сессия
-        print(f"Сгенерирован новый session_id из-за ошибки: {st.session_state['session_id']}")
-
-# Если это не новая сессия, пытаемся восстановить авторизацию
-if not st.session_state.get("initial_load", True):
-    if "authenticated" not in st.session_state or "user" not in st.session_state:
-        print(f"Попытка восстановить состояние авторизации для сессии {st.session_state['session_id']}...")
-        try:
-            auth_state = load_auth_state(spreadsheet_id, st.session_state["session_id"])
-            print(f"Загруженное состояние авторизации из Google Sheets: {auth_state}")
-            st.session_state["authenticated"] = auth_state.get("authenticated", False)
-            st.session_state["user"] = auth_state.get("user", "")
-            print(f"После восстановления: authenticated={st.session_state['authenticated']}, user={st.session_state['user']}")
-        except Exception as e:
-            print(f"Ошибка при восстановлении состояния авторизации: {e}")
-            st.session_state["authenticated"] = False
-            st.session_state["user"] = ""
-
-# Проверка состояния после восстановления (для отладки)
-print(f"Текущее состояние после проверки: authenticated={st.session_state['authenticated']}, user={st.session_state['user']}, session_id={st.session_state['session_id']}, initial_load={st.session_state['initial_load']}")
+if "authenticated" not in st.session_state:
+    st.session_state["authenticated"] = False
+if "user" not in st.session_state:
+    st.session_state["user"] = ""
 
 # -------------------------
 # Форма входа
@@ -106,32 +55,10 @@ if not st.session_state["authenticated"]:
         if check_credentials(username_input, password_input):
             st.session_state["authenticated"] = True
             st.session_state["user"] = username_input
-            st.session_state["initial_load"] = False  # Отмечаем, что сессия инициализирована
-            # Сохраняем состояние авторизации в Google Sheets с привязкой к сессии
-            save_auth_state(spreadsheet_id, st.session_state["session_id"], {
-                "authenticated": True,
-                "user": username_input,
-                "session_id": st.session_state["session_id"]
-            })
-            print(f"Login successful, saved auth state for session {st.session_state['session_id']} and user: {username_input}")
             st.rerun()
         else:
             st.error("Неверный логин или пароль")
     st.stop()
-
-# НОВОЕ: Кнопка выхода в Python
-if st.button("Выйти"):
-    st.session_state["authenticated"] = False
-    st.session_state["user"] = ""
-    st.session_state["initial_load"] = True  # Сбрасываем состояние для новой авторизации
-    # Удаляем состояние авторизации из Google Sheets для текущей сессии
-    save_auth_state(spreadsheet_id, st.session_state["session_id"], {
-        "authenticated": False,
-        "user": "",
-        "session_id": st.session_state["session_id"]
-    })
-    print(f"Logout initiated, cleared auth state for session {st.session_state['session_id']}")
-    st.rerun()
 
 # -------------------------
 # Основной сервис
@@ -925,7 +852,7 @@ def run_margin_service():
             st.error("Google Таблица не найдена. Убедитесь, что spreadsheet_id корректен и сервисный аккаунт имеет доступ.")
             return
 
-        # Загружаем историю расчётов из листа "History"
+        # Загружаем историю расчётов
         history_sheet = sheet.worksheet("History")
         all_history = history_sheet.get_all_values()[1:]  # Получаем все записи (кроме заголовка)
 
@@ -1213,3 +1140,4 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 """, unsafe_allow_html=True)
+
