@@ -45,12 +45,12 @@ if "authenticated" not in st.session_state:
 if "user" not in st.session_state:
     st.session_state["user"] = ""
 
-# НОВОЕ: Обработка сообщений от JavaScript
-if st.experimental_get_query_params().get("auth"):
-    auth_data = st.experimental_get_query_params()["auth"][0]
+# НОВОЕ: Обработка сообщений от JavaScript с использованием st.query_params
+if st.query_params.get("auth"):
+    auth_data = st.query_params["auth"][0]
     if auth_data == "loginSuccess":
         st.session_state["authenticated"] = True
-        st.session_state["user"] = st.experimental_get_query_params()["user"][0] if st.experimental_get_query_params().get("user") else ""
+        st.session_state["user"] = st.query_params["user"][0] if st.query_params.get("user") else ""
     elif auth_data == "logout":
         st.session_state["authenticated"] = False
         st.session_state["user"] = ""
@@ -67,7 +67,7 @@ if not st.session_state["authenticated"]:
         if check_credentials(username_input, password_input):
             st.session_state["authenticated"] = True
             st.session_state["user"] = username_input
-            st.experimental_set_query_params(auth="loginSuccess", user=username_input)  # Отправляем сообщение через URL
+            st.query_params.update({"auth": "loginSuccess", "user": username_input})  # Отправляем сообщение через URL
             st.rerun()
         else:
             st.error("Неверный логин или пароль")
