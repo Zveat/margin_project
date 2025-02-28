@@ -1085,11 +1085,85 @@ def run_margin_service():
                 final_data.to_excel(writer, index=False, sheet_name="Расчет+Расходы")
 
             st.download_button(
-                "📥 Скачать расчёт в Excel",
+                 "📥 Скачать расчёт в Excel",
                 data=output.getvalue(),
                 file_name=f"{file_name_base}.xlsx",
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             )
 
             # Генерация PDF
-            unique_invoice_number = get_next_invoice
+            unique_invoice_number = get_next_invoice_number(prefix="INV")
+            pdf_path = generate_invoice_gos(
+                invoice_number=unique_invoice_number,
+                invoice_date="placeholder",
+                supplier_name="ТОО OOK-STORE",
+                supplier_bin="170740032780",
+                supplier_address="г. Алматы, ул. Березовского 19",
+                supplier_bank_name="Kaspi Bank",
+                supplier_iik="KZ11722S000024087169",
+                supplier_bik="CASPKZKA",
+                client_name=client_name,
+                client_company=client_company,
+                client_bin=client_bin,
+                client_phone=client_phone,
+                client_address=client_address,
+                contract_number=client_contract,
+                df=df,
+                total_logistics=total_logistics,
+                kickback=kickback,
+                tax_delivery=tax_delivery,
+                tax_kickback=tax_kickback,
+                tax_nds=tax_nds,
+                net_margin=net_margin,
+            )
+            with open(pdf_path, "rb") as f:
+                st.download_button(
+                    "📥 Скачать счет (гос)",
+                    data=f,
+                    file_name=f"{file_name_base}.pdf",
+                    mime="application/pdf",
+                )
+
+            # НОВОЕ: Сохранение данных в Google Sheets
+            client_data = {
+                'name': client_name,
+                'company': client_company,
+                'bin': client_bin,
+                'phone': client_phone,
+                'address': client_address,
+                'contract': client_contract
+            }
+            deal_data = {
+                'total_logistics': total_logistics,
+                'kickback': kickback
+            }
+            try:
+                deal_id = save_calculation(spreadsheet_id, client_data, deal_data, st.session_state.products, True)
+                st.success(f"Расчёт сохранён в Google Sheets с ID сделки: {deal_id}")
+            except Exception as e:
+                st.error(f"Ошибка при сохранении в Google Sheets: {e}")
+
+# ... (оставляем остальной код — логистику, вкладки, JS — без изменений)
+###############################################################################
+#                     ОСНОВНОЙ БЛОК: ВКЛАДКИ (TABS)
+###############################################################################
+tab_margin, tab_logistics = st.tabs(["**Калькулятор маржинальности**", "**Калькулятор логистики**"])
+
+with tab_margin:
+    run_margin_service()
+
+with tab_logistics:
+    run_logistics_service()
+
+# --- В самом конце файла вставляем JS, отключающий автозаполнение ---
+st.markdown("""
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('input').forEach(function(el) {
+    el.setAttribute('autocomplete', 'off');
+    el.setAttribute('autocorrect', 'off');
+    el.setAttribute('autocapitalize', 'off');
+  });
+});
+</script>
+""", unsafe_allow_html=True)
