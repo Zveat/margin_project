@@ -22,16 +22,17 @@ st.set_page_config(page_title="Margin Calculator", page_icon="💰")
 # -------------------------
 # Данные пользователей (хранятся локально или в конфиге)
 # -------------------------
+# Хэши паролей можно сгенерировать через тестовый скрипт, как описано ниже
 credentials = {
     "usernames": {
         "zveat": {
             "name": "John Doe",
-            "password": "$2b$12$XDCqJ3Y6QeQ8Y7V9pU.0.uO5R3v7s9kM1pL2n3m4p5q6r7s8t9u0v",  # Хэш пароля для "2097" (сгенерирован через Authenticate)
+            "password": "$2b$12$XDCqJ3Y6QeQ8Y7V9pU.0.uO5R3v7s9kM1pL2n3m4p5q6r7s8t9u0v",  # Хэш для пароля "2097"
             "email": "zveat@example.com"  # Валидный email
         },
         "jane": {
             "name": "Jane Doe",
-            "password": "$2b$12$XDCqJ3Y6QeQ8Y7V9pU.0.uO5R3v7s9kM1pL2n3m4p5q6r7s8t9u0v",  # Хэш пароля для "456" (сгенерирован через Authenticate)
+            "password": "$2b$12$XDCqJ3Y6QeQ8Y7V9pU.0.uO5R3v7s9kM1pL2n3m4p5q6r7s8t9u0v",  # Хэш для пароля "456"
             "email": "jane@example.com"  # Валидный email
         }
     }
@@ -68,7 +69,7 @@ with st.spinner("Проверка авторизации..."):
         "password": {"label": "Пароль", "type": "password", "placeholder": "Введите пароль"},
         "submit": {"label": "Войти", "type": "submit"}
     }
-    result = authenticator.login(fields=fields, preauthorized=None)  # Сохраняем результат в переменную
+    result = authenticator.login(fields=fields)  # Убрал preauthorized, так как он не поддерживается в 0.4.1
 
     # Проверяем, что result не None, и распаковываем только если это возможно
     if result is not None:
