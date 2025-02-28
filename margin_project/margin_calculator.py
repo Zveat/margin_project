@@ -851,7 +851,7 @@ def run_margin_service():
                     st.rerun()
 
     # НОВОЕ: Блок "История расчётов" внизу страницы под экспандером "Список товаров"
-    with st.expander("📜 История расчётов", expanded=False):
+    with st.expander("📜 Архив расчетов", expanded=False):
         conn = connect_to_sheets()  # Подключаемся к Google Sheets
         try:
             sheet = conn.open_by_key(spreadsheet_id)
