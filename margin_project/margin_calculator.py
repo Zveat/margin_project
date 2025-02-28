@@ -46,14 +46,13 @@ if "user" not in st.session_state:
     st.session_state["user"] = ""
 
 # НОВОЕ: Обработка сообщений от JavaScript с использованием st.query_params
-if st.query_params.get("auth"):
-    auth_data = st.query_params["auth"][0]
-    if auth_data == "loginSuccess":
-        st.session_state["authenticated"] = True
-        st.session_state["user"] = st.query_params["user"][0] if st.query_params.get("user") else ""
-    elif auth_data == "logout":
-        st.session_state["authenticated"] = False
-        st.session_state["user"] = ""
+query_params = st.query_params.to_dict()
+if query_params.get("auth") == "loginSuccess":
+    st.session_state["authenticated"] = True
+    st.session_state["user"] = query_params.get("user", "")
+elif query_params.get("auth") == "logout":
+    st.session_state["authenticated"] = False
+    st.session_state["user"] = ""
 
 # -------------------------
 # Форма входа
@@ -1141,30 +1140,43 @@ with tab_margin:
 with tab_logistics:
     run_logistics_service()
 
-# --- В самом конце файла вставляем JS для управления авторизацией через localStorage ---
+# --- В самом конце файла вставляем JS для управления авторизацией через localStorage с отладкой ---
 st.markdown("""
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    console.log("Page loaded, checking localStorage...");
     // Восстановление состояния из localStorage при загрузке страницы
     const authData = localStorage.getItem('authData');
+    console.log("Auth data from localStorage:", authData);
     if (authData) {
-        const { authenticated, user } = JSON.parse(authData);
-        if (authenticated) {
-            // Устанавливаем состояние через Streamlit
-            window.parent.postMessage({
-                type: 'setSessionState',
-                authenticated: authenticated,
-                user: user
-            }, '*');
+        try {
+            const { authenticated, user } = JSON.parse(authData);
+            console.log("Parsed auth data:", { authenticated, user });
+            if (authenticated) {
+                // Устанавливаем состояние через Streamlit
+                window.parent.postMessage({
+                    type: 'setSessionState',
+                    authenticated: authenticated,
+                    user: user
+                }, '*');
+                console.log("Sent setSessionState message with:", { authenticated, user });
+            }
+        } catch (e) {
+            console.error("Error parsing authData from localStorage:", e);
         }
+    } else {
+        console.log("No auth data found in localStorage.");
     }
 
     // Обработка события авторизации
     window.addEventListener('message', function(event) {
+        console.log("Received message:", event.data);
         if (event.data.type === 'loginSuccess') {
             const { username } = event.data;
+            console.log("Login success, saving to localStorage:", { authenticated: true, user: username });
             localStorage.setItem('authData', JSON.stringify({ authenticated: true, user: username }));
         } else if (event.data.type === 'logout') {
+            console.log("Logout, removing from localStorage.");
             localStorage.removeItem('authData');
         }
     });
@@ -1173,19 +1185,26 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('button').forEach(button => {
         if (button.textContent === 'Войти') {
             button.addEventListener('click', function() {
+                console.log("Login button clicked.");
                 const username = document.querySelector('input[data-testid="stTextInput"]').value;
                 const password = document.querySelector('input[data-testid="stTextInput"][type="password"]').value;
+                console.log("Login attempt with username:", username, "password:", password);
                 if (username && password) {
                     window.parent.postMessage({
                         type: 'loginAttempt',
                         username: username.toLowerCase().trim(),
                         password: password.trim()
                     }, '*');
+                    console.log("Sent loginAttempt message with:", { username: username.toLowerCase().trim(), password: password.trim() });
+                } else {
+                    console.warn("Username or password is empty.");
                 }
             });
         } else if (button.textContent === 'Выйти') {
             button.addEventListener('click', function() {
+                console.log("Logout button clicked.");
                 window.parent.postMessage({ type: 'logout' }, '*');
+                console.log("Sent logout message.");
             });
         }
     });
