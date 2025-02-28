@@ -526,6 +526,20 @@ def run_margin_service():
              padding: 4px 6px !important;
              font-size: 14px !important;
         }
+        /* Стили для кнопок */
+        div.stButton > button {
+             background-color: #656dff;
+             color: #FFFFFF;
+             border: none;
+             border-radius: 4px;
+             padding: 2px 8px;
+             font-size: 6px;
+             cursor: pointer;
+             transition: background-color 0.3s ease;
+        }
+        div.stButton > button:hover {
+             background-color: #94db00;
+        }
         </style>
         """,
         unsafe_allow_html=True
@@ -549,13 +563,23 @@ def run_margin_service():
 
     if history:
         deal_ids = [row[0] for row in history]  # deal_id (индекс 0 в History)
-        # Исправляем format_func, чтобы использовать данные из history для отображения даты
+        # Обновляем format_func, чтобы отображать ФИО, Название компании и дату без времени
         def format_deal(deal_id):
             for row in history:
                 if row[0] == str(deal_id):
-                    return f"Расчёт #{deal_id} ({row[1]})"  # deal_id и дата (столбец 1 — дата)
-            return f"Расчёт #{deal_id}"
-        
+                    # Извлекаем ФИО клиента и название компании из данных
+                    client_name = row[2] if len(row) > 2 and row[2] else "Не указано"  # ФИО (столбец 3 в History)
+                    client_company = row[3] if len(row) > 3 and row[3] else "Не указано"  # Название компании (столбец 4 в History)
+                    # Дата из строки (столбец 2 в History), форматируем без времени
+                    try:
+                        date_str = row[1]  # Дата (столбец 2 в History)
+                        date_obj = datetime.datetime.strptime(date_str, "%Y-%m-%d %H:%M:%S")
+                        formatted_date = date_obj.strftime("%Y-%m-%d")  # Формат "ГГГГ-ММ-ДД"
+                    except (ValueError, IndexError):
+                        formatted_date = "Не указано"
+                    return f"{client_name}, {client_company}, {formatted_date}"
+            return f"Расчёт #{deal_id} (Не найдено)"
+
         selected_deal = st.selectbox("Выберите прошлый расчёт для восстановления", deal_ids, format_func=format_deal)
         if st.button("Восстановить расчёт"):
             try:
