@@ -43,59 +43,56 @@ def check_credentials(username, password):
 # -------------------------
 spreadsheet_id = "1Z4-Moti7RVqyBQY5v4tcCwFQS3noOD84w9Q2liv9rI4"
 
-# Проверяем, является ли это новой сессией (например, в инкогнито)
-if "session_id" not in st.session_state or "initial_load" not in st.session_state:
-    print("Новая сессия или сброс состояния, проверяем авторизацию...")
-    st.session_state["initial_load"] = True
-    st.session_state["authenticated"] = False
-    st.session_state["user"] = ""
-    st.session_state["session_id"] = str(uuid.uuid4())  # Генерируем новый session_id для новой сессии
-    print(f"Сгенерирован новый session_id для новой сессии: {st.session_state['session_id']}")
-
-    # Очищаем состояние авторизации в Google Sheets для нового session_id
+# Проверяем, является ли это новой сессией
+if "session_id" not in st.session_state:
+    print("session_id отсутствует в st.session_state, пытаемся восстановить из Google Sheets...")
     try:
-        save_auth_state(spreadsheet_id, st.session_state["session_id"], {
-            "authenticated": False,
-            "user": "",
-            "session_id": st.session_state["session_id"]
-        })
-        print(f"Очищено состояние авторизации для нового session_id: {st.session_state['session_id']}")
+        conn = connect_to_sheets()
+        sheet = conn.open_by_key(spreadsheet_id)
+        auth_worksheet = sheet.worksheet("AuthState")
+        all_auth = auth_worksheet.get_all_values()
+        print(f"Содержимое листа AuthState (с заголовками): {all_auth}")
+        
+        # Ищем последнюю запись с authenticated=True для восстановления session_id
+        for row in all_auth[1:]:  # Пропускаем заголовок
+            if row[1].strip().upper() == "TRUE":
+                st.session_state["session_id"] = row[0]  # Устанавливаем session_id из первой колонки
+                st.session_state["authenticated"] = True
+                st.session_state["user"] = row[2]  # Устанавливаем пользователя
+                st.session_state["initial_load"] = False  # Отмечаем, что это не новая сессия
+                print(f"Восстановлен session_id из Google Sheets: {st.session_state['session_id']}, authenticated=True, user={st.session_state['user']}")
+                break
+        if "session_id" not in st.session_state:
+            st.session_state["session_id"] = str(uuid.uuid4())
+            st.session_state["authenticated"] = False
+            st.session_state["user"] = ""
+            st.session_state["initial_load"] = True  # Это новая сессия
+            print(f"Сгенерирован новый session_id для новой сессии: {st.session_state['session_id']}")
     except Exception as e:
-        print(f"Ошибка при очистке состояния авторизации: {e}")
+        print(f"Ошибка при восстановлении session_id: {e}")
+        st.session_state["session_id"] = str(uuid.uuid4())
+        st.session_state["authenticated"] = False
+        st.session_state["user"] = ""
+        st.session_state["initial_load"] = True  # Это новая сессия
+        print(f"Сгенерирован новый session_id из-за ошибки: {st.session_state['session_id']}")
 
-# Пытаемся восстановить состояние авторизации для текущей сессии, только если это не новая сессия
-if st.session_state["initial_load"]:
-    print(f"Это новая сессия, требуем авторизацию для session_id: {st.session_state['session_id']}...")
-else:
+# Если это не новая сессия, пытаемся восстановить авторизацию
+if not st.session_state.get("initial_load", True):
     if "authenticated" not in st.session_state or "user" not in st.session_state:
         print(f"Попытка восстановить состояние авторизации для сессии {st.session_state['session_id']}...")
         try:
-            # Проверяем доступ к Google Sheets и лист "AuthState"
-            conn = connect_to_sheets()
-            sheet = conn.open_by_key(spreadsheet_id)
-            auth_worksheet = sheet.worksheet("AuthState")
-            all_auth = auth_worksheet.get_all_values()
-            print(f"Содержимое листа AuthState (с заголовками): {all_auth}")
-            
-            # Проверяем, есть ли заголовок "SessionID"
-            header = all_auth[0] if all_auth else []
-            if "SessionID" not in header:
-                print(f"Ошибка: Заголовок 'SessionID' не найден в листе AuthState. Текущие заголовки: {header}")
-                st.session_state["authenticated"] = False
-                st.session_state["user"] = ""
-            else:
-                auth_state = load_auth_state(spreadsheet_id, st.session_state["session_id"])
-                print(f"Загруженное состояние авторизации из Google Sheets: {auth_state}")
-                st.session_state["authenticated"] = auth_state.get("authenticated", False)
-                st.session_state["user"] = auth_state.get("user", "")
-                print(f"После восстановления: authenticated={st.session_state['authenticated']}, user={st.session_state['user']}")
+            auth_state = load_auth_state(spreadsheet_id, st.session_state["session_id"])
+            print(f"Загруженное состояние авторизации из Google Sheets: {auth_state}")
+            st.session_state["authenticated"] = auth_state.get("authenticated", False)
+            st.session_state["user"] = auth_state.get("user", "")
+            print(f"После восстановления: authenticated={st.session_state['authenticated']}, user={st.session_state['user']}")
         except Exception as e:
             print(f"Ошибка при восстановлении состояния авторизации: {e}")
             st.session_state["authenticated"] = False
             st.session_state["user"] = ""
 
 # Проверка состояния после восстановления (для отладки)
-print(f"Текущее состояние после проверки: authenticated={st.session_state['authenticated']}, user={st.session_state['user']}, session_id={st.session_state['session_id']}")
+print(f"Текущее состояние после проверки: authenticated={st.session_state['authenticated']}, user={st.session_state['user']}, session_id={st.session_state['session_id']}, initial_load={st.session_state['initial_load']}")
 
 # -------------------------
 # Форма входа
