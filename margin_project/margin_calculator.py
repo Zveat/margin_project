@@ -11,6 +11,7 @@ import math
 import datetime
 from fpdf import FPDF
 from num2words import num2words
+import random  # Добавляем для генерации уникального ключа
 
 # НОВОЕ: Импорт для работы с Google Sheets
 from google_sheets_db import save_calculation, load_calculation, connect_to_sheets
@@ -831,8 +832,10 @@ def run_margin_service():
                 st.success("Товар успешно отредактирован!")
                 st.rerun()
 
-            # Исправляем кнопку "Отмена", добавляя уникальный суффикс с временной меткой
-            if st.button("✖️ Отмена", key=f"cancel_edit_{st.session_state.edit_index}_{datetime.datetime.now().microsecond}"):
+            # Исправляем кнопку "Отмена", используя случайное число для уникальности ключа
+            unique_key = f"cancel_edit_{st.session_state.edit_index}_{random.randint(1, 1000000)}"
+            if st.button("✖️ Отмена", key=unique_key):
+                print(f"Кнопка 'Отмена' нажата с ключом: {unique_key}")
                 del st.session_state.edit_index
                 del st.session_state.edit_product
                 st.rerun()
