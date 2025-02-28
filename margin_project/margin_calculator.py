@@ -162,8 +162,8 @@ def run_logistics_service():
              color: #FFFFFF;
              border: none;
              border-radius: 5px;
-             padding: 4px 11px;
-             font-size: 8px;
+             padding: 2px 8px;
+             font-size: 6px;
              cursor: pointer;
              transition: background-color 0.3s ease;
         }
