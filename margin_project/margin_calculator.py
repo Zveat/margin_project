@@ -62,13 +62,19 @@ with st.spinner("Проверка авторизации..."):
     import time
     time.sleep(0.5)
     # Кастомизация полей формы авторизации с русскими метками
+    # Исправляем формат fields для версии 0.4.1: структура должна быть вложенной для совместимости
     fields = {
-        "form_name": "Вход в сервис",
-        "username": "Логин",
-        "password": "Пароль",
-        "submit": "Войти"
+        "username": {"label": "Логин", "type": "text"},
+        "password": {"label": "Пароль", "type": "password"},
+        "submit": {"label": "Войти", "type": "submit"}
     }
-    name, authentication_status, username = authenticator.login(fields=fields)
+    result = authenticator.login(fields=fields)  # Сохраняем результат в переменную
+
+    # Проверяем, что result не None, и распаковываем только если это возможно
+    if result is not None:
+        name, authentication_status, username = result
+    else:
+        name, authentication_status, username = None, None, None
 
 if authentication_status:
     st.session_state["authenticated"] = True
