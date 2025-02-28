@@ -842,17 +842,19 @@ def run_margin_service():
                 st.success("Товар успешно отредактирован!")
                 st.rerun()
 
-            # Исправляем кнопку "Отмена", используя UUID для гарантированной уникальности ключа
-            unique_key = f"cancel_edit_{st.session_state.edit_index}_{uuid.uuid4()}"
+            # Исправляем кнопку "Отмена", используя безопасный подход с уникальным ключом на основе UUID и индекса
+            unique_key = f"cancel_edit_{st.session_state.edit_index}_{str(uuid.uuid4())[:8]}"  # Используем первые 8 символов UUID для компактности
             print(f"Сгенерирован ключ для кнопки 'Отмена': {unique_key}")
-            if st.button("✖️ Отмена", key=unique_key):
-                print(f"Кнопка 'Отмена' нажата с ключом: {unique_key}")
-                # Проверяем, что edit_index и edit_product существуют перед удалением
-                if "edit_index" in st.session_state:
-                    del st.session_state.edit_index
-                if "edit_product" in st.session_state:
-                    del st.session_state.edit_product
-                st.rerun()
+            col_cancel, _ = st.columns([1, 1])  # Размещаем кнопку в отдельной колонке для гарантированного отображения
+            with col_cancel:
+                if st.button("✖️ Отмена", key=unique_key):
+                    print(f"Кнопка 'Отмена' нажата с ключом: {unique_key}")
+                    # Проверяем, что edit_index и edit_product существуют перед удалением
+                    if "edit_index" in st.session_state:
+                        del st.session_state.edit_index
+                    if "edit_product" in st.session_state:
+                        del st.session_state.edit_product
+                    st.rerun()
 
     # --- Кнопка «Рассчитать»
     if st.button("📊 Рассчитать маржинальность"):
