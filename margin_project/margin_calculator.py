@@ -76,7 +76,7 @@ if not st.session_state["authenticated"]:
             st.error("Неверный логин или пароль")
     st.stop()
 
-# НОВОЕ: Кнопка выхода (добавляем, чтобы не дублировать JavaScript)
+# НОВОЕ: Кнопка выхода в Python
 if st.button("Выйти"):
     st.session_state["authenticated"] = False
     st.session_state["user"] = ""
@@ -1152,7 +1152,7 @@ with tab_margin:
 with tab_logistics:
     run_logistics_service()
 
-# --- В самом конце файла вставляем JS для управления авторизацией через localStorage с улучшенной отладкой ---
+# --- В самом конце файла вставляем упрощённый JS для управления авторизацией через localStorage и URL ---
 st.markdown("""
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -1162,37 +1162,18 @@ document.addEventListener('DOMContentLoaded', function() {
         const authData = localStorage.getItem('authData');
         console.log("Auth data from localStorage:", authData);
         if (authData) {
-            const parsedData = JSON.parse(authData);
-            console.log("Parsed auth data:", parsedData);
-            if (parsedData.authenticated) {
-                // Устанавливаем состояние через Streamlit
-                window.parent.postMessage({
-                    type: 'setSessionState',
-                    authenticated: parsedData.authenticated,
-                    user: parsedData.user
-                }, '*');
-                console.log("Sent setSessionState message with:", parsedData);
-            } else {
-                console.log("Authenticated is false, not sending message.");
+            const data = JSON.parse(authData);
+            console.log("Parsed auth data:", data);
+            if (data.authenticated) {
+                // Перенаправляем на URL с параметрами авторизации
+                window.location.search = `?auth=loginSuccess&user=${encodeURIComponent(data.user)}`;
+                console.log("Redirected to URL with auth params:", window.location.search);
             }
         } else {
             console.log("No auth data found in localStorage.");
         }
 
-        // Обработка события авторизации
-        window.addEventListener('message', function(event) {
-            console.log("Received message:", event.data);
-            if (event.data.type === 'loginSuccess') {
-                const { username } = event.data;
-                console.log("Login success, saving to localStorage:", { authenticated: true, user: username });
-                localStorage.setItem('authData', JSON.stringify({ authenticated: true, user: username }));
-            } else if (event.data.type === 'logout') {
-                console.log("Logout, removing from localStorage.");
-                localStorage.removeItem('authData');
-            }
-        });
-
-        // Кнопка "Войти" — отправляем сообщение в Streamlit
+        // Кнопка "Войти" — обновляем URL напрямую
         const loginButton = document.querySelector('button:contains("Войти")');
         if (loginButton) {
             loginButton.addEventListener('click', function() {
@@ -1204,12 +1185,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     const password = passwordInput.value.trim();
                     console.log("Login attempt with username:", username, "password:", password);
                     if (username && password) {
-                        window.parent.postMessage({
-                            type: 'loginAttempt',
-                            username: username,
-                            password: password
-                        }, '*');
-                        console.log("Sent loginAttempt message with:", { username, password });
+                        // Сохраняем в localStorage и обновляем URL
+                        localStorage.setItem('authData', JSON.stringify({ authenticated: true, user: username }));
+                        window.location.search = `?auth=loginSuccess&user=${encodeURIComponent(username)}`;
+                        console.log("Saved to localStorage and redirected with:", { authenticated: true, user: username });
                     } else {
                         console.warn("Username or password is empty.");
                     }
@@ -1221,13 +1200,14 @@ document.addEventListener('DOMContentLoaded', function() {
             console.warn("Login button not found in DOM.");
         }
 
-        // Кнопка "Выйти" — отправляем сообщение в Streamlit
+        // Кнопка "Выйти" — очищаем localStorage и обновляем URL
         const logoutButton = document.querySelector('button:contains("Выйти")');
         if (logoutButton) {
             logoutButton.addEventListener('click', function() {
                 console.log("Logout button clicked.");
-                window.parent.postMessage({ type: 'logout' }, '*');
-                console.log("Sent logout message.");
+                localStorage.removeItem('authData');
+                window.location.search = "?auth=logout";
+                console.log("Removed from localStorage and redirected with auth=logout");
             });
         } else {
             console.warn("Logout button not found in DOM.");
