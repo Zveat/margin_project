@@ -45,7 +45,7 @@ authenticator = Authenticate(
 )
 
 # Проверка авторизации
-name, authentication_status, username = authenticator.login("Вход в сервис", "main")
+name, authentication_status, username = authenticator.login("Вход в сервис", location='main')
 
 if authentication_status:
     st.session_state["authenticated"] = True
@@ -59,7 +59,7 @@ elif authentication_status is None:
 
 # НОВОЕ: Кнопка выхода (через аутентификатор)
 if st.button("Выйти"):
-    authenticator.logout("Выйти", "main", key="logout")
+    authenticator.logout("Выйти", location='main', key="logout")
     st.session_state["authenticated"] = False
     st.session_state["user"] = ""
     st.rerun()
@@ -853,7 +853,7 @@ def run_margin_service():
                         del st.session_state.cancel_key
                     st.rerun()
 
-    # НОВОЕ: Блок "Архив расчетов" внизу страницы под экспандером "Список товаров" с улучшениями
+    # НОВOЕ: Блок "Архив расчетов" внизу страницы под экспандером "Список товаров" с улучшениями
     with st.expander("📜 Архив расчетов", expanded=False):
         conn = connect_to_sheets()  # Подключаемся к Google Sheets
         try:
