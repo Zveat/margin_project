@@ -2,28 +2,74 @@
 
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
-import datetime
+import os
+import json
+import base64
+from datetime import datetime
+
+# Настройка доступа к Google Sheets
+SCOPE = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
 
 def connect_to_sheets():
-    """Устанавливает соединение с Google Sheets с помощью сервисного аккаунта."""
-    scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-    credentials = ServiceAccountCredentials.from_json_keyfile_name('credentials.json', scope)
-    client = gspread.authorize(credentials)
-    return client
+    """Подключается к Google Sheets с использованием Base64-кодированных credentials из переменной окружения."""
+    try:
+        # Получаем закодированную строку Base64 из переменной окружения
+        credentials_b64 = os.getenv("GOOGLE_CREDENTIALS")
+        if not credentials_b64:
+            raise ValueError("Переменная окружения GOOGLE_CREDENTIALS не найдена")
+
+        # Декодируем Base64 в JSON
+        credentials_json = base64.b64decode(credentials_b64).decode('utf-8')
+
+        # Парсим JSON и создаём учётные данные
+        creds_dict = json.loads(credentials_json)
+        creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, SCOPE)
+        client = gspread.authorize(creds)
+        return client
+    except Exception as e:
+        print(f"Ошибка подключения к Google Sheets: {e}")
+        raise
+
+def get_or_create_spreadsheet(spreadsheet_id=None, spreadsheet_name="MarginCalculations"):
+    """Получает или создаёт Google Таблицу."""
+    client = connect_to_sheets()
+    if spreadsheet_id:
+        try:
+            return client.open_by_key(spreadsheet_id)
+        except gspread.exceptions.SpreadsheetNotFound:
+            print(f"Таблица с ID {spreadsheet_id} не найдена. Создаём новую таблицу с именем {spreadsheet_name}.")
+            return client.create(spreadsheet_name)
+    else:
+        return client.create(spreadsheet_name)
 
 def save_calculation(spreadsheet_id, client_data, deal_data, products, include_products=False):
-    """Сохраняет данные расчёта в Google Sheets: клиента, сделку и (опционально) товары."""
-    conn = connect_to_sheets()
-    sheet = conn.open_by_key(spreadsheet_id)
+    """Сохраняет расчёт в Google Sheets с отдельными листами: Clients, Deals, Products, History."""
+    sheet = get_or_create_spreadsheet(spreadsheet_id)
 
-    # Сохраняем в лист "History"
-    history_sheet = sheet.worksheet("History")
+    # Лист "Clients"
+    clients_sheet = sheet.worksheet("Clients")
+    # Проверяем, существует ли клиент с таким client_id или добавляем нового
+    client_id = f"client_{len(clients_sheet.get_all_values()) + 1}"  # Уникальный client_id на основе количества строк
+    client_exists = any(row[0] == client_id for row in clients_sheet.get_all_values()[1:])
+    if not client_exists:
+        clients_sheet.append_row([
+            client_id,
+            client_data['name'],
+            client_data['company'],
+            client_data['bin'],
+            client_data['phone'],
+            client_data['address'],
+            client_data['contract'],
+        ])
+
+    # Лист "Deals"
+    deals_sheet = sheet.worksheet("Deals")
     # Генерируем следующий deal_id (увеличиваем максимальный существующий)
-    existing_deals = [int(row[0]) for row in history_sheet.get_all_values()[1:] if row and row[0].isdigit()]
+    existing_deals = [int(row[0]) for row in deals_sheet.get_all_values()[1:] if row and row[0].isdigit()]
     deal_id = max(existing_deals) + 1 if existing_deals else 1
 
-    # Сохраняем данные клиента и сделки в History
-    history_sheet.append_row([
+    # Сохраняем данные сделки в Deals
+    deals_sheet.append_row([
         str(deal_id),
         datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),  # CalculationDate
         client_data['name'],  # client_name
@@ -31,13 +77,12 @@ def save_calculation(spreadsheet_id, client_data, deal_data, products, include_p
         client_data['bin'],  # client_bin
         client_data['phone'],  # client_phone
         client_data['address'],  # client_address
-        client_data['contract'],  # client_contract
         str(deal_data['total_logistics']),  # total_logistics
         str(deal_data['kickback']),  # kickback
     ])
 
+    # Лист "Products"
     if include_products:
-        # Сохраняем товары в лист "Products"
         products_sheet = sheet.worksheet("Products")
         for product in products:
             products_sheet.append_row([
@@ -58,25 +103,9 @@ def save_calculation(spreadsheet_id, client_data, deal_data, products, include_p
                 str(product['Наценка (%)']),  # Markup
             ])
 
-    # Опционально: сохраняем данные клиента в лист "Clients" (если нужно)
-    clients_sheet = sheet.worksheet("Clients")
-    # Проверяем, существует ли клиент с таким client_id или добавляем нового
-    client_id = f"client_{deal_id}"  # Уникальный client_id на основе deal_id
-    client_exists = any(row[0] == client_id for row in clients_sheet.get_all_values()[1:])
-    if not client_exists:
-        clients_sheet.append_row([
-            client_id,
-            client_data['name'],
-            client_data['company'],
-            client_data['bin'],
-            client_data['phone'],
-            client_data['address'],
-            client_data['contract'],
-        ])
-
-    # Опционально: сохраняем данные сделки в лист "Deals" (если нужно)
-    deals_sheet = sheet.worksheet("Deals")
-    deals_sheet.append_row([
+    # Лист "History"
+    history_sheet = sheet.worksheet("History")
+    history_sheet.append_row([
         str(deal_id),
         datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),  # CalculationDate
         client_data['name'],  # client_name
@@ -84,54 +113,64 @@ def save_calculation(spreadsheet_id, client_data, deal_data, products, include_p
         client_data['bin'],  # client_bin
         client_data['phone'],  # client_phone
         client_data['address'],  # client_address
+        client_data['contract'],  # client_contract
         str(deal_data['total_logistics']),  # total_logistics
         str(deal_data['kickback']),  # kickback
     ])
 
-    return deal_id
+    return deal_id  # Возвращаем ID сделки
 
 def load_calculation(spreadsheet_id, deal_id):
-    """Загружает данные расчёта из Google Sheets по deal_id."""
-    conn = connect_to_sheets()
-    sheet = conn.open_by_key(spreadsheet_id)
-    history_sheet = sheet.worksheet("History")
-    products_sheet = sheet.worksheet("Products")
+    """Восстанавливает расчёт по ID сделки (deal_id из Deals)."""
+    sheet = get_or_create_spreadsheet(spreadsheet_id)
 
-    # Ищем данные в History по deal_id (столбец A)
-    history_data = history_sheet.get_all_values()
-    for row in history_data[1:]:  # Пропускаем заголовок
+    # Загружаем сделку из листа "Deals"
+    deals_sheet = sheet.worksheet("Deals")
+    deal_data = None
+    for row in deals_sheet.get_all_values()[1:]:  # Пропускаем заголовок
         if row[0] == str(deal_id):
-            client_name = row[2]  # client_name (столбец C)
-            client_company = row[3]  # client_company (столбец D)
-            client_bin = row[4]  # client_bin (столбец E)
-            client_phone = row[5]  # client_phone (столбец F)
-            client_address = row[6]  # client_address (столбец G)
-            client_contract = row[7]  # client_contract (столбец H)
-            total_logistics = float(row[8]) if row[8] else 0  # total_logistics (столбец I)
-            kickback = float(row[9]) if row[9] else 0  # kickback (столбец J)
+            deal_data = row
+            break
+    if not deal_data:
+        return None, None, None
 
-            # Загружаем продукты для этого deal_id
-            products = []
-            for product_row in products_sheet.get_all_values()[1:]:  # Пропускаем заголовок
-                if product_row[1] == str(deal_id):  # deal_id в столбце B
-                    products.append({
-                        "Товар": product_row[2],  # ProductName (столбец C)
-                        "Ед_измерения": product_row[3],  # Unit (столбец D)
-                        "Количество": int(product_row[4]),  # Quantity (столбец E)
-                        "Вес (кг)": int(product_row[5]),  # Weight (столбец F)
-                        "Цена поставщика 1": float(product_row[6]) if product_row[6] else 0,  # PriceSupplier1 (столбец G)
-                        "Комментарий поставщика 1": product_row[7],  # CommentSupplier1 (столбец H)
-                        "Цена поставщика 2": float(product_row[8]) if product_row[8] else 0,  # PriceSupplier2 (столбец I)
-                        "Комментарий поставщика 2": product_row[9],  # CommentSupplier2 (столбец J)
-                        "Цена поставщика 3": float(product_row[10]) if product_row[10] else 0,  # PriceSupplier3 (столбец K)
-                        "Комментарий поставщика 3": product_row[11],  # CommentSupplier3 (столбец L)
-                        "Цена поставщика 4": float(product_row[12]) if product_row[12] else 0,  # PriceSupplier4 (столбец M)
-                        "Комментарий поставщика 4": product_row[13],  # CommentSupplier4 (столбец N)
-                        "Наценка (%)": float(product_row[14]) if product_row[14] else 0,  # Markup (столбец O)
-                    })
-            return (
-                (client_name, client_company, client_bin, client_phone, client_address, client_contract),
-                (total_logistics, kickback),
-                products
-            )
-    return None, None, None
+    # Извлекаем данные сделки
+    _, calculation_date, client_name, client_company, client_bin, client_phone, client_address, total_logistics, kickback = deal_data
+
+    # Загружаем клиента (опционально, для проверки, если нужно)
+    clients_sheet = sheet.worksheet("Clients")
+    client_data_verified = None
+    for row in clients_sheet.get_all_values()[1:]:  # Пропускаем заголовок
+        if row[1] == client_name and row[2] == client_company:  # Сравниваем Name и Company
+            client_data_verified = row
+            break
+    if not client_data_verified:
+        print(f"Клиент с именем {client_name} и компанией {client_company} не найден в Clients.")
+
+    # Загружаем товары из листа "Products"
+    products_sheet = sheet.worksheet("Products")
+    products = []
+    for row in products_sheet.get_all_values()[1:]:  # Пропускаем заголовок
+        if row[1] == str(deal_id):  # deal_id в столбце B
+            products.append({
+                "Товар": row[2],  # ProductName (столбец C)
+                "Ед_измерения": row[3],  # Unit (столбец D)
+                "Количество": int(float(row[4])) if row[4] else 0,  # Quantity (столбец E)
+                "Вес (кг)": int(float(row[5])) if row[5] else 0,  # Weight (столбец F)
+                "Цена поставщика 1": int(float(row[6])) if row[6] else 0,  # PriceSupplier1 (столбец G)
+                "Комментарий поставщика 1": row[7],  # CommentSupplier1 (столбец H)
+                "Цена поставщика 2": int(float(row[8])) if row[8] else 0,  # PriceSupplier2 (столбец I)
+                "Комментарий поставщика 2": row[9],  # CommentSupplier2 (столбец J)
+                "Цена поставщика 3": int(float(row[10])) if row[10] else 0,  # PriceSupplier3 (столбец K)
+                "Комментарий поставщика 3": row[11],  # CommentSupplier3 (столбец L)
+                "Цена поставщика 4": int(float(row[12])) if row[12] else 0,  # PriceSupplier4 (столбец M)
+                "Комментарий поставщика 4": row[13],  # CommentSupplier4 (столбец N)
+                "Наценка (%)": int(float(row[14])) if row[14] else 0,  # Markup (столбец O)
+            })
+    print(f"Восстановленные продукты для deal_id {deal_id}: {products}")  # Отладка
+
+    return (
+        (client_name, client_company, client_bin, client_phone, client_address, ""),
+        (total_logistics, kickback),
+        products
+    )
