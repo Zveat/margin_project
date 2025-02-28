@@ -859,7 +859,7 @@ def run_margin_service():
         all_history = history_sheet.get_all_values()[1:]  # Получаем все записи (кроме заголовка)
 
         # Фильтруем записи, которым не больше месяца
-        one_month_ago = datetime.datetime.now() - datetime.timedelta(days=30)
+        one_month_ago = datetime.datetime.now() - datetime.timedelta(days=60)
         filtered_history = [
             row for row in all_history
             if datetime.datetime.strptime(row[1], "%Y-%m-%d %H:%M:%S") > one_month_ago
@@ -870,9 +870,9 @@ def run_margin_service():
         sorted_history = sorted(filtered_history, key=lambda x: datetime.datetime.strptime(x[1], "%Y-%m-%d %H:%M:%S"), reverse=True)
         print(f"Количество отсортированных записей: {len(sorted_history)}")  # Отладка
 
-        # Ограничиваем до 200 записей
-        limited_history = sorted_history[:200]
-        print(f"Ограничено до 200 записей: {len(limited_history)}")  # Отладка
+        # Ограничиваем до 300 записей
+        limited_history = sorted_history[:300]
+        print(f"Ограничено до 300 записей: {len(limited_history)}")  # Отладка
 
         # Поиск по client_name и client_company
         search_query = st.text_input("Поиск по ФИО или компании", "")
