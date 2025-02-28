@@ -526,6 +526,10 @@ def run_margin_service():
              padding: 4px 6px !important;
              font-size: 14px !important;
         }
+        /* Добавляем отступ под списком товаров */
+        .stExpander > div[data-testid="stVerticalBlock"] {
+            margin-bottom: 20px; /* Отступ под каждым экспандером */
+        }
         </style>
         """,
         unsafe_allow_html=True
@@ -737,9 +741,9 @@ def run_margin_service():
                     st.write(f"**Цена поставщика (мин – макс):** {int(min_supplier_price):,} – {int(max_supplier_price):,} ₸")
                     st.write(f"**Цена для клиента (за ед.):** {int(price_for_client):,} ₸")
                 
-                # Кнопки "Редактировать" и "Удалить"
-                col_btn, _ = st.columns([1, 1])
-                with col_btn:
+                # Кнопки "Редактировать" и "Удалить" в одну линию
+                col_btn_edit, col_btn_delete = st.columns([1, 1])
+                with col_btn_edit:
                     if st.button(f"✏️ Редактировать товар_{index}", key=f"edit_{index}"):
                         # Открываем форму редактирования для выбранного товара
                         st.session_state.edit_index = index
@@ -750,6 +754,7 @@ def run_margin_service():
                         print(f"Сгенерирован и сохранён ключ для кнопки 'Отмена': {st.session_state.cancel_key}")
                         st.rerun()
 
+                with col_btn_delete:
                     if st.button(f"❌ Удалить товар_{index}", key=f"del_{index}"):
                         st.session_state.products.pop(index)
                         st.rerun()
@@ -889,6 +894,9 @@ def run_margin_service():
                     if "cancel_key" in st.session_state:
                         del st.session_state.cancel_key
                     st.rerun()
+
+    # Добавляем отступ перед блоком расчётов
+    st.markdown("---")  # Горизонтальная линия для визуального разделения
 
     # --- Кнопка «Рассчитать»
     if st.button("📊 Рассчитать маржинальность"):
