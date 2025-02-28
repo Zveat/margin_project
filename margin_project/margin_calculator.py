@@ -39,12 +39,16 @@ def check_credentials(username, password):
     return False
 
 # -------------------------
-# Состояние сессии
+# Состояние сессии и куки
 # -------------------------
+cookie_controller = CookieController()  # Инициализируем CookieController
+
+# Проверяем куки для состояния авторизации
 if "authenticated" not in st.session_state:
-    st.session_state["authenticated"] = False
-if "user" not in st.session_state:
-    st.session_state["user"] = ""
+    auth_cookie = cookie_controller.get("authenticated")
+    user_cookie = cookie_controller.get("user")
+    st.session_state["authenticated"] = bool(auth_cookie) if auth_cookie else False
+    st.session_state["user"] = user_cookie if user_cookie else ""
 
 # -------------------------
 # Форма входа
@@ -58,6 +62,9 @@ if not st.session_state["authenticated"]:
         if check_credentials(username_input, password_input):
             st.session_state["authenticated"] = True
             st.session_state["user"] = username_input
+            # Сохраняем состояние в куки через CookieController
+            cookie_controller.set("authenticated", "true", expires=30 * 24 * 60 * 60)  # Сохраняем на 30 дней (в секундах)
+            cookie_controller.set("user", username_input, expires=30 * 24 * 60 * 60)  # Сохраняем на 30 дней (в секундах)
             st.rerun()
         else:
             st.error("Неверный логин или пароль")
