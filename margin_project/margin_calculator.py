@@ -13,7 +13,7 @@ from fpdf import FPDF
 from num2words import num2words
 
 # НОВОЕ: Импорт для работы с Google Sheets
-from google_sheets_db import save_calculation, load_calculation, connect_to_sheets
+from google_sheets_db import save_calculation, load_calculation, connect_to_sheets, save_auth_state, load_auth_state
 
 # Устанавливаем параметры страницы
 st.set_page_config(page_title="Margin Calculator", page_icon="💰")
@@ -38,24 +38,15 @@ def check_credentials(username, password):
     return False
 
 # -------------------------
-# Состояние сессии
+# Состояние сессии и авторизации через Google Sheets
 # -------------------------
-if "authenticated" not in st.session_state:
-    st.session_state["authenticated"] = False
-if "user" not in st.session_state:
-    st.session_state["user"] = ""
+spreadsheet_id = "1Z4-Moti7RVqyBQY5v4tcCwFQS3noOD84w9Q2liv9rI4"
 
-# НОВОЕ: Обработка сообщений от JavaScript с использованием st.query_params
-query_params = st.query_params.to_dict()
-print(f"Query params on load: {query_params}")  # Отладка
-if query_params.get("auth") == "loginSuccess":
-    st.session_state["authenticated"] = True
-    st.session_state["user"] = query_params.get("user", "")
-    print(f"Restored session state: authenticated={st.session_state['authenticated']}, user={st.session_state['user']}")
-elif query_params.get("auth") == "logout":
-    st.session_state["authenticated"] = False
-    st.session_state["user"] = ""
-    print("Logged out, resetting session state")
+if "authenticated" not in st.session_state:
+    # Пытаемся восстановить состояние из Google Sheets
+    auth_state = load_auth_state(spreadsheet_id, st.session_state.get("user", ""))
+    st.session_state["authenticated"] = auth_state.get("authenticated", False)
+    st.session_state["user"] = auth_state.get("user", "")
 
 # -------------------------
 # Форма входа
@@ -69,8 +60,9 @@ if not st.session_state["authenticated"]:
         if check_credentials(username_input, password_input):
             st.session_state["authenticated"] = True
             st.session_state["user"] = username_input
-            st.query_params.update({"auth": "loginSuccess", "user": username_input})  # Отправляем сообщение через URL
-            print(f"Login successful, setting query params: auth=loginSuccess, user={username_input}")
+            # Сохраняем состояние авторизации в Google Sheets
+            save_auth_state(spreadsheet_id, username_input, {"authenticated": True, "user": username_input})
+            print(f"Login successful, saved auth state for user: {username_input}")
             st.rerun()
         else:
             st.error("Неверный логин или пароль")
@@ -80,8 +72,9 @@ if not st.session_state["authenticated"]:
 if st.button("Выйти"):
     st.session_state["authenticated"] = False
     st.session_state["user"] = ""
-    st.query_params.update({"auth": "logout"})  # Отправляем сообщение через URL
-    print("Logout initiated, setting query params: auth=logout")
+    # Удаляем состояние авторизации из Google Sheets
+    save_auth_state(spreadsheet_id, st.session_state["user"], {"authenticated": False, "user": ""})
+    print("Logout initiated, cleared auth state")
     st.rerun()
 
 # -------------------------
@@ -1151,70 +1144,3 @@ with tab_margin:
 
 with tab_logistics:
     run_logistics_service()
-
-# --- В самом конце файла вставляем упрощённый JS для управления авторизацией через localStorage и URL ---
-st.markdown("""
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    console.log("Page loaded, checking localStorage...");
-    try {
-        // Восстановление состояния из localStorage при загрузке страницы
-        const authData = localStorage.getItem('authData');
-        console.log("Auth data from localStorage:", authData);
-        if (authData) {
-            const data = JSON.parse(authData);
-            console.log("Parsed auth data:", data);
-            if (data.authenticated) {
-                // Перенаправляем на URL с параметрами авторизации
-                window.location.search = `?auth=loginSuccess&user=${encodeURIComponent(data.user)}`;
-                console.log("Redirected to URL with auth params:", window.location.search);
-            }
-        } else {
-            console.log("No auth data found in localStorage.");
-        }
-
-        // Кнопка "Войти" — обновляем URL напрямую
-        const loginButton = document.querySelector('button:contains("Войти")');
-        if (loginButton) {
-            loginButton.addEventListener('click', function() {
-                console.log("Login button clicked.");
-                const usernameInput = document.querySelector('input[data-testid="stTextInput"]');
-                const passwordInput = document.querySelector('input[data-testid="stTextInput"][type="password"]');
-                if (usernameInput && passwordInput) {
-                    const username = usernameInput.value.trim().toLowerCase();
-                    const password = passwordInput.value.trim();
-                    console.log("Login attempt with username:", username, "password:", password);
-                    if (username && password) {
-                        // Сохраняем в localStorage и обновляем URL
-                        localStorage.setItem('authData', JSON.stringify({ authenticated: true, user: username }));
-                        window.location.search = `?auth=loginSuccess&user=${encodeURIComponent(username)}`;
-                        console.log("Saved to localStorage and redirected with:", { authenticated: true, user: username });
-                    } else {
-                        console.warn("Username or password is empty.");
-                    }
-                } else {
-                    console.error("Login inputs not found in DOM.");
-                }
-            });
-        } else {
-            console.warn("Login button not found in DOM.");
-        }
-
-        // Кнопка "Выйти" — очищаем localStorage и обновляем URL
-        const logoutButton = document.querySelector('button:contains("Выйти")');
-        if (logoutButton) {
-            logoutButton.addEventListener('click', function() {
-                console.log("Logout button clicked.");
-                localStorage.removeItem('authData');
-                window.location.search = "?auth=logout";
-                console.log("Removed from localStorage and redirected with auth=logout");
-            });
-        } else {
-            console.warn("Logout button not found in DOM.");
-        }
-    } catch (error) {
-        console.error("JavaScript error:", error);
-    }
-});
-</script>
-""", unsafe_allow_html=True)
