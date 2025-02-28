@@ -527,6 +527,9 @@ def run_margin_service():
              font-size: 14px !important;
         }
         /* Скрываем суффикс _X в кнопках "Редактировать товар_X" и "Удалить товар_X" с помощью цвета фона кнопок (#007bff) */
+        .stButton > button[data-label^="✏️ Редактировать товар_"] {
+            position: relative;
+        }
         .stButton > button[data-label^="✏️ Редактировать товар_"]:after {
             content: attr(data-label);
             color: #007bff; /* Цвет фона кнопок, чтобы суффикс стал незаметным */
@@ -535,6 +538,7 @@ def run_margin_service():
             top: 0;
             width: 100%;
             height: 100%;
+            z-index: 1;
         }
         .stButton > button[data-label^="✏️ Редактировать товар_"]:before {
             content: "✏️ Редактировать товар"; /* Отображаем только нужный текст */
@@ -548,6 +552,10 @@ def run_margin_service():
             justify-content: center;
             font-size: 16px; /* Убедимся, что размер текста совпадает */
             color: #fff; /* Цвет текста кнопки */
+            z-index: 2;
+        }
+        .stButton > button[data-label^="❌ Удалить товар_"] {
+            position: relative;
         }
         .stButton > button[data-label^="❌ Удалить товар_"]:after {
             content: attr(data-label);
@@ -557,6 +565,7 @@ def run_margin_service():
             top: 0;
             width: 100%;
             height: 100%;
+            z-index: 1;
         }
         .stButton > button[data-label^="❌ Удалить товар_"]:before {
             content: "❌ Удалить товар"; /* Отображаем только нужный текст */
@@ -570,6 +579,7 @@ def run_margin_service():
             justify-content: center;
             font-size: 16px; /* Убедимся, что размер текста совпадает */
             color: #fff; /* Цвет текста кнопки */
+            z-index: 2;
         }
         /* Оставляем другие кнопки (Войти, Выйти, Рассчитать) без изменений */
         .stButton > button:not([data-label^="✏️ Редактировать товар_"]):not([data-label^="❌ Удалить товар_"]) {
