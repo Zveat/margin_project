@@ -251,7 +251,7 @@ def run_logistics_service():
             else:
                 tariff = intercity_data[direction]
                 capacity = 20  # Допустим, фура может перевозить до 20 тонн
-                coef = 2       # Коэффициент догруза
+                coef = 2       # Коэффициент догруza
                 cost = (tariff / capacity) * weight_tonn * coef
                 st.success(f"Стоимость перевозки: **{round(cost)} тг**")
 
@@ -1114,7 +1114,7 @@ def run_margin_service():
                     mime="application/pdf",
                 )
 
-            # НОВOЕ: Сохранение данных в Google Sheets
+            # НОВОЕ: Сохранение данных в Google Sheets
             client_data = {
                 'name': client_name,
                 'company': client_company,
@@ -1144,3 +1144,16 @@ with tab_margin:
 
 with tab_logistics:
     run_logistics_service()
+
+# --- В самом конце файла вставляем JS, отключающий автозаполнение ---
+st.markdown("""
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('input').forEach(function(el) {
+    el.setAttribute('autocomplete', 'off');
+    el.setAttribute('autocorrect', 'off');
+    el.setAttribute('autocapitalize', 'off');
+  });
+});
+</script>
+""", unsafe_allow_html=True)
