@@ -187,14 +187,14 @@ def save_auth_state(spreadsheet_id, username, auth_state):
         if row[0] == username:
             # Обновляем существующую запись
             auth_worksheet.update_cell(i, 1, username)
-            auth_worksheet.update_cell(i, 2, str(auth_state["authenticated"]))
+            auth_worksheet.update_cell(i, 2, str(auth_state["authenticated"]).upper())  # Сохраняем как "TRUE" или "FALSE"
             auth_worksheet.update_cell(i, 3, auth_state["user"] or "")
             user_found = True
             break
 
     if not user_found:
         # Добавляем новую запись
-        auth_worksheet.append_row([username, str(auth_state["authenticated"]), auth_state["user"] or ""])
+        auth_worksheet.append_row([username, str(auth_state["authenticated"]).upper(), auth_state["user"] or ""])
 
 def load_auth_state(spreadsheet_id, username):
     """Загружает состояние авторизации из Google Sheets."""
@@ -204,8 +204,13 @@ def load_auth_state(spreadsheet_id, username):
     all_auth = auth_worksheet.get_all_values()
     for row in all_auth:
         if row[0] == username:
+            # Улучшенная обработка значения Authenticated (учитываем "TRUE", "True", "true")
+            authenticated = row[1].strip().upper() in ["TRUE", "True", "true"]
+            user = row[2].strip() if row[2] else ""
+            print(f"Найдена запись для {username}: authenticated={authenticated}, user={user}")
             return {
-                "authenticated": row[1].lower() == "true",
-                "user": row[2] or ""
+                "authenticated": authenticated,
+                "user": user
             }
+    print(f"Запись для {username} не найдена, возвращаем состояние по умолчанию")
     return {"authenticated": False, "user": ""}
