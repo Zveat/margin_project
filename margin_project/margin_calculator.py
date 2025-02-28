@@ -1,9 +1,10 @@
-# margin_calculator.py (упрощённая версия без Google Sheets для авторизации)
+# margin_calculator.py
 
 import streamlit as st
 import os
 import base64
 import locale
+import uuid
 from passlib.hash import bcrypt
 import pandas as pd
 import io
@@ -11,6 +12,9 @@ import math
 import datetime
 from fpdf import FPDF
 from num2words import num2words
+
+# НОВОЕ: Импорт для работы с Google Sheets
+from google_sheets_db import save_calculation, load_calculation, connect_to_sheets, save_auth_state, load_auth_state
 
 # Устанавливаем параметры страницы
 st.set_page_config(page_title="Margin Calculator", page_icon="💰")
@@ -35,12 +39,30 @@ def check_credentials(username, password):
     return False
 
 # -------------------------
-# Состояние сессии (без Google Sheets)
+# Состояние сессии и авторизации через Google Sheets
 # -------------------------
-if "authenticated" not in st.session_state:
-    st.session_state["authenticated"] = False
-if "user" not in st.session_state:
-    st.session_state["user"] = ""
+spreadsheet_id = "1Z4-Moti7RVqyBQY5v4tcCwFQS3noOD84w9Q2liv9rI4"
+
+# Генерируем уникальный идентификатор сессии, если его ещё нет
+if "session_id" not in st.session_state:
+    st.session_state["session_id"] = str(uuid.uuid4())
+
+# Пытаемся восстановить состояние из Google Sheets при запуске для текущей сессии
+if "authenticated" not in st.session_state or "user" not in st.session_state:
+    print(f"Попытка восстановить состояние авторизации для сессии {st.session_state['session_id']}...")
+    try:
+        auth_state = load_auth_state(spreadsheet_id, st.session_state["session_id"])
+        print(f"Загруженное состояние авторизации из Google Sheets: {auth_state}")
+        st.session_state["authenticated"] = auth_state.get("authenticated", False)
+        st.session_state["user"] = auth_state.get("user", "")
+        print(f"После восстановления: authenticated={st.session_state['authenticated']}, user={st.session_state['user']}")
+    except Exception as e:
+        print(f"Ошибка при восстановлении состояния авторизации: {e}")
+        st.session_state["authenticated"] = False
+        st.session_state["user"] = ""
+
+# Проверка состояния после восстановления (для отладки)
+print(f"Текущее состояние после проверки: authenticated={st.session_state['authenticated']}, user={st.session_state['user']}, session_id={st.session_state['session_id']}")
 
 # -------------------------
 # Форма входа
@@ -54,7 +76,13 @@ if not st.session_state["authenticated"]:
         if check_credentials(username_input, password_input):
             st.session_state["authenticated"] = True
             st.session_state["user"] = username_input
-            print(f"Login successful for user: {username_input}")
+            # Сохраняем состояние авторизации в Google Sheets с привязкой к сессии
+            save_auth_state(spreadsheet_id, st.session_state["session_id"], {
+                "authenticated": True,
+                "user": username_input,
+                "session_id": st.session_state["session_id"]
+            })
+            print(f"Login successful, saved auth state for session {st.session_state['session_id']} and user: {username_input}")
             st.rerun()
         else:
             st.error("Неверный логин или пароль")
@@ -64,7 +92,13 @@ if not st.session_state["authenticated"]:
 if st.button("Выйти"):
     st.session_state["authenticated"] = False
     st.session_state["user"] = ""
-    print("Logout initiated, cleared auth state")
+    # Удаляем состояние авторизации из Google Sheets для текущей сессии
+    save_auth_state(spreadsheet_id, st.session_state["session_id"], {
+        "authenticated": False,
+        "user": "",
+        "session_id": st.session_state["session_id"]
+    })
+    print(f"Logout initiated, cleared auth state for session {st.session_state['session_id']}")
     st.rerun()
 
 # -------------------------
@@ -545,6 +579,9 @@ def run_margin_service():
         unsafe_allow_html=True
     )
 
+    # НОВОЕ: Фиксированный spreadsheet_id для вашей Google Таблицы
+    spreadsheet_id = "1Z4-Moti7RVqyBQY5v4tcCwFQS3noOD84w9Q2liv9rI4"
+
     # --- Блок "Данные клиента"
     # Если данные восстановлены, используем их; иначе — пустые значения
     client_name = st.session_state.get('client_name', '')
@@ -849,8 +886,102 @@ def run_margin_service():
 
     # НОВОЕ: Блок "Архив расчетов" внизу страницы под экспандером "Список товаров" с улучшениями
     with st.expander("📜 Архив расчетов", expanded=False):
-        # Временно убираем интеграцию с Google Sheets для тестирования
-        st.warning("Архив расчётов временно недоступен из-за тестирования.")
+        conn = connect_to_sheets()  # Подключаемся к Google Sheets
+        try:
+            sheet = conn.open_by_key(spreadsheet_id)
+        except gspread.exceptions.SpreadsheetNotFound:
+            st.error("Google Таблица не найдена. Убедитесь, что spreadsheet_id корректен и сервисный аккаунт имеет доступ.")
+            return
+
+        # Загружаем историю расчётов
+        history_sheet = sheet.worksheet("History")
+        all_history = history_sheet.get_all_values()[1:]  # Получаем все записи (кроме заголовка)
+
+        # Фильтруем записи, которым не больше месяца
+        one_month_ago = datetime.datetime.now() - datetime.timedelta(days=60)
+        filtered_history = [
+            row for row in all_history
+            if datetime.datetime.strptime(row[1], "%Y-%m-%d %H:%M:%S") > one_month_ago
+        ]
+        print(f"Количество записей после фильтрации по дате (менее месяца): {len(filtered_history)}")  # Отладка
+
+        # Сортируем записи по дате (CalculationDate) в порядке убывания (новые сверху)
+        sorted_history = sorted(filtered_history, key=lambda x: datetime.datetime.strptime(x[1], "%Y-%m-%d %H:%M:%S"), reverse=True)
+        print(f"Количество отсортированных записей: {len(sorted_history)}")  # Отладка
+
+        # Ограничиваем до 300 записей
+        limited_history = sorted_history[:300]
+        print(f"Ограничено до 300 записей: {len(limited_history)}")  # Отладка
+
+        # Поиск по client_name и client_company
+        search_query = st.text_input("Поиск по ФИО или компании", "")
+        if search_query:
+            searched_history = [
+                row for row in limited_history
+                if search_query.lower() in row[2].lower() or search_query.lower() in row[3].lower()  # client_name (столбец C), client_company (столбец D)
+            ]
+            print(f"Найдено записей после поиска '{search_query}': {len(searched_history)}")  # Отладка
+        else:
+            searched_history = limited_history
+
+        if searched_history:
+            deal_ids = [row[0] for row in searched_history if row and row[0].isdigit()]  # deal_id (столбец A), фильтруем только числовые значения
+            if not deal_ids:
+                st.warning("Нет валидных deal_id в архиве расчетов.")
+            else:
+                # Обновляем format_func, чтобы отображать ФИО, Название компании и дату в формате "ДД.ММ.ГГ",
+                # с пустыми полями, если ФИО или Название компании отсутствуют
+                def format_deal(deal_id):
+                    for row in searched_history:
+                        if row[0] == str(deal_id):
+                            # Извлекаем ФИО клиента и название компании из данных
+                            client_name = row[2].strip() if len(row) > 2 and row[2] and row[2].lower() not in ["не указано", "завершён"] else ""  # ФИО (столбец 3 в History)
+                            client_company = row[3].strip() if len(row) > 3 and row[3] and row[3].lower() not in ["не указано", "завершён"] else ""  # Название компании (столбец 4 в History)
+                            # Проверяем CalculationDate (столбец 2 в History) и форматируем дату в "ДД.ММ.ГГ"
+                            try:
+                                date_str = row[1]  # Дата (столбец 2 в History)
+                                if date_str.lower() in ["завершён", "не указано"]:
+                                    formatted_date = ""
+                                else:
+                                    date_obj = datetime.datetime.strptime(date_str, "%Y-%m-%d %H:%M:%S")
+                                    formatted_date = date_obj.strftime("%d.%m.%y")  # Формат "ДД.ММ.ГГ"
+                            except (ValueError, IndexError):
+                                formatted_date = ""
+                            # Формируем строку: "ФИО, КОМПАНИЯ, ДАТА" с пустыми полями, если данные отсутствуют
+                            return f"{client_name}, {client_company}, {formatted_date}".rstrip(", ")
+                    return f"Расчёт #{deal_id} (Не найдено)"
+
+                selected_deal = st.selectbox("Выберите прошлый расчёт", deal_ids, format_func=format_deal)
+                if st.button("Восстановить архив"):
+                    try:
+                        # Отладка: выведем, что возвращает load_calculation
+                        print(f"Попытка восстановить расчёт с deal_id: {selected_deal}")
+                        client_data_restored, deal_data_restored, products_restored = load_calculation(spreadsheet_id, int(selected_deal))
+                        if client_data_restored:
+                            client_name, client_company, client_bin, client_phone, client_address, client_contract = client_data_restored
+                            total_logistics, kickback = deal_data_restored
+
+                            # Отладка: выведем восстановленные продукты
+                            print(f"Восстановленные продукты: {products_restored}")
+
+                            st.session_state.client_name = client_name
+                            st.session_state.client_company = client_company
+                            st.session_state.client_bin = client_bin
+                            st.session_state.client_phone = client_phone
+                            st.session_state.client_address = client_address
+                            st.session_state.client_contract = client_contract
+                            st.session_state.total_logistics = int(total_logistics) if total_logistics else 0
+                            st.session_state.kickback = int(kickback) if kickback else 0
+                            st.session_state.products = products_restored if products_restored else []
+                            st.success("Расчёт восстановлен!")
+                            st.rerun()
+                        else:
+                            st.error("Расчёт с указанным ID не найден.")
+                    except Exception as e:
+                        st.error(f"Ошибка при восстановлении расчёта: {e}")
+                        print(f"Ошибка в восстановлении: {e}")
+        else:
+            st.info("История расчётов пуста.")
 
     # --- Кнопка «Рассчитать»
     if st.button("📊 Рассчитать маржинальность"):
@@ -876,8 +1007,6 @@ def run_margin_service():
             df["Маржинальность (%)"] = df["Прибыль"] / df["Выручка"] * 100
 
             # Расходы
-            total_logistics = st.session_state.get('total_logistics', 0)
-            kickback = st.session_state.get('kickback', 0)
             tax_delivery = total_logistics * 0.15
             tax_kickback = kickback * 0.32
             tax_nds = df["Прибыль"].sum() * 12 / 112  # Примерный расчет НДС
@@ -1008,6 +1137,25 @@ def run_margin_service():
                     file_name=f"{file_name_base}.pdf",
                     mime="application/pdf",
                 )
+
+            # НОВОЕ: Сохранение данных в Google Sheets
+            client_data = {
+                'name': client_name,
+                'company': client_company,
+                'bin': client_bin,
+                'phone': client_phone,
+                'address': client_address,
+                'contract': client_contract
+            }
+            deal_data = {
+                'total_logistics': total_logistics,
+                'kickback': kickback
+            }
+            try:
+                deal_id = save_calculation(spreadsheet_id, client_data, deal_data, st.session_state.products, True)
+                st.success(f"Расчёт сохранён в Google Sheets с ID сделки: {deal_id}")
+            except Exception as e:
+                st.error(f"Ошибка при сохранении в Google Sheets: {e}")
 
 # ... (оставляем остальной код — логистику, вкладки, JS — без изменений)
 ###############################################################################
