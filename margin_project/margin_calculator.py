@@ -745,10 +745,10 @@ def run_margin_service():
                     st.write(f"**Цена поставщика (мин – макс):** {int(min_supplier_price):,} – {int(max_supplier_price):,} ₸")
                     st.write(f"**Цена для клиента (за ед.):** {int(price_for_client):,} ₸")
                 
-                # Кнопки "Редактировать" и "Удалить" с выравниванием: "Редактировать" слева, "Удалить" максимально справа
+                # Кнопки "Редактировать" и "Удалить" без суффикса _index в тексте, но с уникальными ключами
                 col_btn_edit, col_btn_delete = st.columns([4, 1])  # Сохраняем пропорцию для выравнивания
                 with col_btn_edit:
-                    if st.button(f"✏️ Редактировать_{index}", key=f"edit_{index}"):
+                    if st.button("✏️ Редактировать товар", key=f"edit_{index}"):
                         # Открываем форму редактирования для выбранного товара
                         st.session_state.edit_index = index
                         st.session_state.edit_product = product.copy()
@@ -759,7 +759,7 @@ def run_margin_service():
                         st.rerun()
 
                 with col_btn_delete:
-                    if st.button(f"❌ Удалить товар_{index}", key=f"del_{index}"):
+                    if st.button("❌ Удалить товар", key=f"del_{index}"):
                         st.session_state.products.pop(index)
                         st.rerun()
 
