@@ -36,24 +36,45 @@ credentials = {
     }
 }
 
-# Инициализация аутентификатора (базовая конфигурация для 0.2.3)
+# НОВОЕ: Кастомные метки для формы авторизации на русском (для версии >=0.3.0)
+authenticator_config = {
+    "credentials": credentials,
+    "cookie": {
+        "name": "margin_calculator",
+        "expiry_days": 30,
+        "key": "random_key"
+    },
+    "labels": {
+        "login": {
+            "username_label": "Логин",
+            "password_label": "Пароль",
+            "button_label": "Войти"
+        }
+    }
+}
+
+# Инициализация аутентификатора с кастомными метками (для версии >=0.3.0)
 authenticator = Authenticate(
-    credentials,
-    cookie_name="margin_calculator",
-    key="random_key",
-    cookie_expiry_days=30
+    **authenticator_config
 )
 
-# Проверка авторизации с индикатором загрузки
+# Проверка авторизации с улучшенным спиннером и минимизацией мигания формы
+if "authenticated" not in st.session_state:
+    st.session_state["authenticated"] = False
+    st.session_state["user"] = ""
+
 with st.spinner("Проверка авторизации..."):
+    # Задержка 0.5 секунды для имитации проверки куки (можно убрать в реальном приложении)
+    import time
+    time.sleep(0.5)
     name, authentication_status, username = authenticator.login("Вход в сервис", location='main')
 
 if authentication_status:
     st.session_state["authenticated"] = True
     st.session_state["user"] = username
     # Очищаем возможное автозаполнение имени в других полях
-    if "name" not in st.session_state:
-        st.session_state["name"] = ""  # Инициализация пустого значения для поля "Наименование товара"
+    if "product_name" not in st.session_state:
+        st.session_state["product_name"] = ""  # Инициализация пустого значения для поля "Наименование товара"
 elif authentication_status is False:
     st.error("Неверный логин или пароль")
     st.stop()
@@ -66,14 +87,10 @@ if st.button("Выйти"):
     authenticator.logout("Выйти", location='main', key="logout")
     st.session_state["authenticated"] = False
     st.session_state["user"] = ""
-    st.session_state["name"] = ""  # Очищаем имя после выхода
+    st.session_state["product_name"] = ""  # Очищаем имя после выхода
     st.rerun()
 
 # Убедимся, что st.session_state сохраняет авторизацию между обновлениями
-if "authenticated" not in st.session_state:
-    st.session_state["authenticated"] = False
-if "user" not in st.session_state:
-    st.session_state["user"] = ""
 if "products" not in st.session_state:
     st.session_state.products = []
 
@@ -601,7 +618,7 @@ def run_margin_service():
         with col_left:
             st.markdown("Наименование товара")
             # НОВОЕ: Убедимся, что поле "Наименование товара" всегда пустое при загрузке
-            name = st.text_input("", key="product_name", value="", label_visibility="collapsed")
+            name = st.text_input("", key="product_name", value=st.session_state.get("product_name", ""), label_visibility="collapsed")
             st.markdown("Ед. измерения")
             unit = st.selectbox("", ["шт", "м", "кг", "км", "бухта", "рулон", "м²", "тонна"], 
                                 key="unit", label_visibility="collapsed")
