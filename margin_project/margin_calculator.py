@@ -509,7 +509,7 @@ def generate_invoice_gos(
     return pdf_path
 
 def run_margin_service():
-    # CSS для единообразия в «Калькуляторе маржинальности» (без изменений, так как используем JavaScript для скрытия)
+    # CSS для единообразия в «Калькуляторе маржинальности» (без изменений, так как управляем текстом в Python)
     st.markdown(
         """
         <style>
@@ -737,10 +737,10 @@ def run_margin_service():
                     st.write(f"**Цена поставщика (мин – макс):** {int(min_supplier_price):,} – {int(max_supplier_price):,} ₸")
                     st.write(f"**Цена для клиента (за ед.):** {int(price_for_client):,} ₸")
                 
-                # Кнопки "Редактировать" и "Удалить" в одной колонке, как в исходном коде
+                # Кнопки "Редактировать" и "Удалить" с видимым текстом без _X, но с оригинальным текстом в key
                 col_btn, _ = st.columns([1, 1])
                 with col_btn:
-                    if st.button(f"✏️ Редактировать товар_{index}", key=f"edit_{index}"):
+                    if st.button("✏️ Редактировать товар", key=f"edit_product_{index}"):
                         # Открываем форму редактирования для выбранного товара
                         st.session_state.edit_index = index
                         st.session_state.edit_product = product.copy()
@@ -750,7 +750,7 @@ def run_margin_service():
                         print(f"Сгенерирован и сохранён ключ для кнопки 'Отмена': {st.session_state.cancel_key}")
                         st.rerun()
 
-                    if st.button(f"❌ Удалить товар_{index}", key=f"del_{index}"):
+                    if st.button("❌ Удалить товар", key=f"delete_product_{index}"):
                         st.session_state.products.pop(index)
                         st.rerun()
 
@@ -1053,23 +1053,6 @@ def run_margin_service():
                 st.success(f"Расчёт сохранён в Google Sheets с ID сделки: {deal_id}")
             except Exception as e:
                 st.error(f"Ошибка при сохранении в Google Sheets: {e}")
-
-    # Добавляем JavaScript для скрытия суффикса _X в кнопках
-    st.markdown("""
-    <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Находим все кнопки с текстом, начинающимся с "✏️ Редактировать товар_" или "❌ Удалить товар_"
-        const buttons = document.querySelectorAll('button[data-label^="✏️ Редактировать товар_"], button[data-label^="❌ Удалить товар_"]');
-        
-        buttons.forEach(button => {
-            const originalLabel = button.getAttribute('data-label'); // Сохраняем оригинальный текст для функциональности
-            const newLabel = originalLabel.replace(/_\d+$/, ''); // Убираем суффикс вроде "_0", "_1" и т.д.
-            button.textContent = newLabel; // Меняем видимый текст кнопки
-            button.setAttribute('data-label', originalLabel); // Сохраняем оригинальный текст в data-label
-        });
-    });
-    </script>
-    """, unsafe_allow_html=True)
 
 # ... (оставляем остальной код — логистику, вкладки, JS — без изменений)
 ###############################################################################
