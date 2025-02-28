@@ -509,7 +509,7 @@ def generate_invoice_gos(
     return pdf_path
 
 def run_margin_service():
-    # CSS для единообразия в «Калькуляторе маржинальности»
+    # CSS для единообразия в «Калькуляторе маржинальности» с добавлением скрытия суффикса _X для кнопок
     st.markdown(
         """
         <style>
@@ -525,6 +525,45 @@ def run_margin_service():
              min-height: 35px !important;
              padding: 4px 6px !important;
              font-size: 14px !important;
+        }
+        /* Скрываем суффикс _X в кнопках "Редактировать товар_X" и "Удалить товар_X" */
+        .stButton > button[data-label^="✏️ Редактировать товар_"]::after {
+            content: attr(data-label); /* Оригинальный текст */
+            visibility: hidden; /* Скрываем оригинальный текст */
+        }
+        .stButton > button[data-label^="✏️ Редактировать товар_"]::before {
+            content: "✏️ Редактировать товар"; /* Отображаем только нужный текст */
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px; /* Убедимся, что размер текста совпадает */
+            color: #fff; /* Цвет текста кнопки */
+        }
+        .stButton > button[data-label^="❌ Удалить товар_"]::after {
+            content: attr(data-label); /* Оригинальный текст */
+            visibility: hidden; /* Скрываем оригинальный текст */
+        }
+        .stButton > button[data-label^="❌ Удалить товар_"]::before {
+            content: "❌ Удалить товар"; /* Отображаем только нужный текст */
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px; /* Убедимся, что размер текста совпадает */
+            color: #fff; /* Цвет текста кнопки */
+        }
+        /* Оставляем другие кнопки (Войти, Выйти, Рассчитать) без изменений */
+        .stButton > button:not([data-label^="✏️ Редактировать товар_"]):not([data-label^="❌ Удалить товар_"]) {
+            /* Без изменений для других кнопок */
         }
         </style>
         """,
@@ -737,19 +776,20 @@ def run_margin_service():
                     st.write(f"**Цена поставщика (мин – макс):** {int(min_supplier_price):,} – {int(max_supplier_price):,} ₸")
                     st.write(f"**Цена для клиента (за ед.):** {int(price_for_client):,} ₸")
                 
-                # Кнопки "Редактировать" и "Удалить"
-                col_btn, _ = st.columns([1, 1])
-                with col_btn:
+                # Кнопки "Редактировать" и "Удалить" с суффиксом _index
+                col_btn_edit, col_btn_delete = st.columns([4, 1])  # Сохраняем пропорцию для выравнивания
+                with col_btn_edit:
                     if st.button(f"✏️ Редактировать товар_{index}", key=f"edit_{index}"):
-                        # Открываем форму редактирования для выбранного товара
+                        # Убедимся, что индекс и продукт корректно сохраняются в сессии
                         st.session_state.edit_index = index
                         st.session_state.edit_product = product.copy()
                         # Убедимся, что cancel_key существует и инициализирован
                         if "cancel_key" not in st.session_state:
                             st.session_state.cancel_key = f"cancel_edit_{index}"
-                        print(f"Сгенерирован и сохранён ключ для кнопки 'Отмена': {st.session_state.cancel_key}")
+                        print(f"Нажата кнопка 'Редактировать товар' для индекса: {index}")
                         st.rerun()
 
+                with col_btn_delete:
                     if st.button(f"❌ Удалить товар_{index}", key=f"del_{index}"):
                         st.session_state.products.pop(index)
                         st.rerun()
