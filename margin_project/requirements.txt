@@ -56,3 +56,4 @@ gspread
 oauth2client
 gspread==5.12.4
 oauth2client==4.1.3
+uuid
