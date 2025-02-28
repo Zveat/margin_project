@@ -12,6 +12,7 @@ import datetime
 from fpdf import FPDF
 from num2words import num2words
 import random  # Добавляем для генерации уникального ключа
+import uuid  # Добавляем для генерации уникального идентификатора
 
 # НОВОЕ: Импорт для работы с Google Sheets
 from google_sheets_db import save_calculation, load_calculation, connect_to_sheets
@@ -757,10 +758,12 @@ def run_margin_service():
         print(f"Редактируется товар с индексом: {st.session_state.edit_index}")
         
         # Проверяем, что edit_index в пределах допустимого диапазона
-        if st.session_state.edit_index < 0 or st.session_state.edit_index >= len(st.session_state.products):
+        if st.session_state.edit_index < 0 or st.session_state.edit_index >= len(st.session_state.get("products", [])):
             st.error("Ошибка: Индекс товара для редактирования некорректен. Пожалуйста, попробуйте снова.")
-            del st.session_state.edit_index
-            del st.session_state.edit_product
+            if "edit_index" in st.session_state:
+                del st.session_state.edit_index
+            if "edit_product" in st.session_state:
+                del st.session_state.edit_product
             st.rerun()
 
         st.subheader("🛠 Редактирование товара")
@@ -839,11 +842,12 @@ def run_margin_service():
                 st.success("Товар успешно отредактирован!")
                 st.rerun()
 
-            # Исправляем кнопку "Отмена", добавляя уникальный суффикс с фиксированным случайным числом
-            unique_key = f"cancel_edit_{st.session_state.edit_index}_{random.randint(1, 1000000)}"
+            # Исправляем кнопку "Отмена", используя UUID для гарантированной уникальности ключа
+            unique_key = f"cancel_edit_{st.session_state.edit_index}_{uuid.uuid4()}"
+            print(f"Сгенерирован ключ для кнопки 'Отмена': {unique_key}")
             if st.button("✖️ Отмена", key=unique_key):
                 print(f"Кнопка 'Отмена' нажата с ключом: {unique_key}")
-                # Проверяем, что edit_index существует перед удалением
+                # Проверяем, что edit_index и edit_product существуют перед удалением
                 if "edit_index" in st.session_state:
                     del st.session_state.edit_index
                 if "edit_product" in st.session_state:
