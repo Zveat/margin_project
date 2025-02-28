@@ -509,7 +509,7 @@ def generate_invoice_gos(
     return pdf_path
 
 def run_margin_service():
-    # CSS для единообразия в «Калькуляторе маржинальности» с добавлением скрытия суффикса _X цветом фона кнопок
+    # CSS для единообразия в «Калькуляторе маржинальности» с добавлением скрытия суффикса _X с помощью text-indent
     st.markdown(
         """
         <style>
@@ -526,19 +526,12 @@ def run_margin_service():
              padding: 4px 6px !important;
              font-size: 14px !important;
         }
-        /* Скрываем суффикс _X в кнопках "Редактировать товар_X" и "Удалить товар_X" с помощью цвета фона кнопок (#007bff) */
+        /* Скрываем суффикс _X в кнопках "Редактировать товар_X" и "Удалить товар_X" с помощью text-indent и overflow */
         .stButton > button[data-label^="✏️ Редактировать товар_"] {
+            text-indent: -9999px; /* Сдвигаем текст влево за пределы видимой области */
+            overflow: hidden; /* Скрываем текст, который выходит за пределы */
             position: relative;
-        }
-        .stButton > button[data-label^="✏️ Редактировать товар_"]:after {
-            content: attr(data-label);
-            color: #007bff; /* Цвет фона кнопок, чтобы суффикс стал незаметным */
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 1;
+            white-space: nowrap; /* Предотвращаем перенос текста */
         }
         .stButton > button[data-label^="✏️ Редактировать товар_"]:before {
             content: "✏️ Редактировать товар"; /* Отображаем только нужный текст */
@@ -552,20 +545,13 @@ def run_margin_service():
             justify-content: center;
             font-size: 16px; /* Убедимся, что размер текста совпадает */
             color: #fff; /* Цвет текста кнопки */
-            z-index: 2;
+            text-indent: 0; /* Сбрасываем отступ для видимого текста */
         }
         .stButton > button[data-label^="❌ Удалить товар_"] {
+            text-indent: -9999px; /* Сдвигаем текст влево за пределы видимой области */
+            overflow: hidden; /* Скрываем текст, который выходит за пределы */
             position: relative;
-        }
-        .stButton > button[data-label^="❌ Удалить товар_"]:after {
-            content: attr(data-label);
-            color: #007bff; /* Цвет фона кнопок, чтобы суффикс стал незаметным */
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 1;
+            white-space: nowrap; /* Предотвращаем перенос текста */
         }
         .stButton > button[data-label^="❌ Удалить товар_"]:before {
             content: "❌ Удалить товар"; /* Отображаем только нужный текст */
@@ -579,7 +565,7 @@ def run_margin_service():
             justify-content: center;
             font-size: 16px; /* Убедимся, что размер текста совпадает */
             color: #fff; /* Цвет текста кнопки */
-            z-index: 2;
+            text-indent: 0; /* Сбрасываем отступ для видимого текста */
         }
         /* Оставляем другие кнопки (Войти, Выйти, Рассчитать) без изменений */
         .stButton > button:not([data-label^="✏️ Редактировать товар_"]):not([data-label^="❌ Удалить товар_"]) {
