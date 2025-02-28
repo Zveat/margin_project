@@ -36,12 +36,19 @@ credentials = {
     }
 }
 
-# Инициализация аутентификатора (базовая конфигурация для 0.3.1)
+# НОВОЕ: Конфигурация с кастомными метками для формы авторизации на русском (для версии >=0.4.0)
+config = {
+    "credentials": credentials,
+    "cookie": {
+        "name": "margin_calculator",
+        "key": "random_key",
+        "expiry_days": 30
+    }
+}
+
+# Инициализация аутентификатора с конфигурацией для версии >=0.4.0
 authenticator = Authenticate(
-    credentials=credentials,
-    cookie_name="margin_calculator",
-    key="random_key",
-    cookie_expiry_days=30
+    config=config
 )
 
 # Проверка авторизации с улучшенным спиннером и минимизацией мигания формы
@@ -53,7 +60,14 @@ with st.spinner("Проверка авторизации..."):
     # Задержка 0.5 секунды для имитации проверки куки (можно убрать в реальном приложении)
     import time
     time.sleep(0.5)
-    name, authentication_status, username = authenticator.login("Вход в сервис")
+    # Кастомизация полей формы авторизации с русскими метками
+    fields = {
+        "form_name": "Вход в сервис",
+        "username": "Логин",
+        "password": "Пароль",
+        "submit": "Войти"
+    }
+    name, authentication_status, username = authenticator.login(fields=fields)
 
 if authentication_status:
     st.session_state["authenticated"] = True
@@ -70,7 +84,7 @@ elif authentication_status is None:
 
 # НОВОЕ: Кнопка выхода (через аутентификатор)
 if st.button("Выйти"):
-    authenticator.logout("Выйти", "main", key="logout")
+    authenticator.logout("Выйти", location="main", key="logout")
     st.session_state["authenticated"] = False
     st.session_state["user"] = ""
     st.session_state["product_name"] = ""  # Очищаем имя после выхода
@@ -125,7 +139,7 @@ html_block = f"""
 <div class="responsive-header">
   <img src="{logo_src}" alt="Logo" />
   <h2>
-    <span style="color:#007bff;">СЕРВСИС РАСЧЕТА ЛОГИСТИКИ И МАРЖИНАЛЬНОСТИ</span>
+    <span style="color:#007bff;">СЕРВИС РАСЧЕТА ЛОГИСТИКИ И МАРЖИНАЛЬНОСТИ</span>
   </h2>
 </div>
 """
