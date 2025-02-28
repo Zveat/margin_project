@@ -11,7 +11,6 @@ import math
 import datetime
 from fpdf import FPDF
 from num2words import num2words
-from streamlit_cookies_controller import CookieController
 
 # НОВОЕ: Импорт для работы с Google Sheets
 from google_sheets_db import save_calculation, load_calculation, connect_to_sheets
@@ -39,16 +38,22 @@ def check_credentials(username, password):
     return False
 
 # -------------------------
-# Состояние сессии и куки
+# Состояние сессии
 # -------------------------
-cookie_controller = CookieController()  # Инициализируем CookieController
-
-# Проверяем куки для состояния авторизации
 if "authenticated" not in st.session_state:
-    auth_cookie = cookie_controller.get("authenticated")
-    user_cookie = cookie_controller.get("user")
-    st.session_state["authenticated"] = bool(auth_cookie) if auth_cookie else False
-    st.session_state["user"] = user_cookie if user_cookie else ""
+    st.session_state["authenticated"] = False
+if "user" not in st.session_state:
+    st.session_state["user"] = ""
+
+# НОВОЕ: Обработка сообщений от JavaScript
+if st.experimental_get_query_params().get("auth"):
+    auth_data = st.experimental_get_query_params()["auth"][0]
+    if auth_data == "loginSuccess":
+        st.session_state["authenticated"] = True
+        st.session_state["user"] = st.experimental_get_query_params()["user"][0] if st.experimental_get_query_params().get("user") else ""
+    elif auth_data == "logout":
+        st.session_state["authenticated"] = False
+        st.session_state["user"] = ""
 
 # -------------------------
 # Форма входа
@@ -62,12 +67,7 @@ if not st.session_state["authenticated"]:
         if check_credentials(username_input, password_input):
             st.session_state["authenticated"] = True
             st.session_state["user"] = username_input
-            # Сохраняем состояние в куки через CookieController
-            cookie_controller.set("authenticated", "true", expires=datetime.datetime.now() + datetime.timedelta(days=30))  # Сохраняем на 30 дней
-            cookie_controller.set("user", username_input, expires=datetime.datetime.now() + datetime.timedelta(days=30))  # Сохраняем на 30 дней
-            # Отладочные сообщения
-            print(f"Auth cookie after set: {cookie_controller.get('authenticated')}")
-            print(f"User cookie after set: {cookie_controller.get('user')}")
+            st.experimental_set_query_params(auth="loginSuccess", user=username_input)  # Отправляем сообщение через URL
             st.rerun()
         else:
             st.error("Неверный логин или пароль")
@@ -1129,7 +1129,7 @@ def run_margin_service():
             except Exception as e:
                 st.error(f"Ошибка при сохранении в Google Sheets: {e}")
 
-# ... (оставляем остальной код — логистику, вкладки, JS — без изменений)
+# ... (оставляем остальной код — логистику, вкладки — без изменений)
 ###############################################################################
 #                     ОСНОВНОЙ БЛОК: ВКЛАДКИ (TABS)
 ###############################################################################
@@ -1141,15 +1141,54 @@ with tab_margin:
 with tab_logistics:
     run_logistics_service()
 
-# --- В самом конце файла вставляем JS, отключающий автозаполнение ---
+# --- В самом конце файла вставляем JS для управления авторизацией через localStorage ---
 st.markdown("""
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-  document.querySelectorAll('input').forEach(function(el) {
-    el.setAttribute('autocomplete', 'off');
-    el.setAttribute('autocorrect', 'off');
-    el.setAttribute('autocapitalize', 'off');
-  });
+    // Восстановление состояния из localStorage при загрузке страницы
+    const authData = localStorage.getItem('authData');
+    if (authData) {
+        const { authenticated, user } = JSON.parse(authData);
+        if (authenticated) {
+            // Устанавливаем состояние через Streamlit
+            window.parent.postMessage({
+                type: 'setSessionState',
+                authenticated: authenticated,
+                user: user
+            }, '*');
+        }
+    }
+
+    // Обработка события авторизации
+    window.addEventListener('message', function(event) {
+        if (event.data.type === 'loginSuccess') {
+            const { username } = event.data;
+            localStorage.setItem('authData', JSON.stringify({ authenticated: true, user: username }));
+        } else if (event.data.type === 'logout') {
+            localStorage.removeItem('authData');
+        }
+    });
+
+    // Кнопка "Войти" — отправляем сообщение в Streamlit
+    document.querySelectorAll('button').forEach(button => {
+        if (button.textContent === 'Войти') {
+            button.addEventListener('click', function() {
+                const username = document.querySelector('input[data-testid="stTextInput"]').value;
+                const password = document.querySelector('input[data-testid="stTextInput"][type="password"]').value;
+                if (username && password) {
+                    window.parent.postMessage({
+                        type: 'loginAttempt',
+                        username: username.toLowerCase().trim(),
+                        password: password.trim()
+                    }, '*');
+                }
+            });
+        } else if (button.textContent === 'Выйти') {
+            button.addEventListener('click', function() {
+                window.parent.postMessage({ type: 'logout' }, '*');
+            });
+        }
+    });
 });
 </script>
 """, unsafe_allow_html=True)
