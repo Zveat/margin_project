@@ -28,12 +28,12 @@ credentials = {
         "zveat": {
             "name": "John Doe",
             "password": bcrypt.hash("2097"),  # Хэшированный пароль
-            "email": "zveat@example.com"  # Добавляем email (может быть пустым или None, если не используется)
+            "email": "zveat@example.com"  # Убедимся, что email всегда заполнен
         },
         "jane": {
             "name": "Jane Doe",
             "password": bcrypt.hash("456"),  # Хэшированный пароль
-            "email": "jane@example.com"  # Добавляем email (может быть пустым или None, если не используется)
+            "email": "jane@example.com"  # Убедимся, что email всегда заполнен
         }
     }
 }
@@ -72,11 +72,20 @@ with st.spinner("Проверка авторизации..."):
     }
     result = authenticator.login(fields=fields)  # Сохраняем результат в переменную
 
+    # Отладка: выводим результат для диагностики
+    st.write("Debug: Login result:", result)  # Добавляем отладочный вывод (удалите или закомментируйте после тестирования)
+
     # Проверяем, что result не None, и распаковываем только если это возможно
     if result is not None:
         name, authentication_status, username = result
     else:
         name, authentication_status, username = None, None, None
+
+    # Дополнительная отладка для диагностики
+    if authentication_status is None:
+        st.write("Debug: Authentication failed, status is None")
+    elif authentication_status is False:
+        st.write("Debug: Authentication failed, invalid credentials")
 
 if authentication_status:
     st.session_state["authenticated"] = True
