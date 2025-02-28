@@ -1,8 +1,12 @@
+# margin_calculator.py
+
 import streamlit as st
 import os
 import base64
 import locale
+import uuid
 from passlib.hash import bcrypt
+from streamlit_authenticator import Authenticate
 import pandas as pd
 import io
 import math
@@ -10,58 +14,64 @@ import datetime
 from fpdf import FPDF
 from num2words import num2words
 
-# НОВОЕ: Импорт для работы с Google Sheets
+# НОВОЕ: Импорт для работы с Google Sheets для архива расчётов
 from google_sheets_db import save_calculation, load_calculation, connect_to_sheets
 
 # Устанавливаем параметры страницы
 st.set_page_config(page_title="Margin Calculator", page_icon="💰")
 
 # -------------------------
-# Данные пользователей
+# Данные пользователей (хранятся локально или в конфиге)
 # -------------------------
-users = {
-    "zveat": {"name": "John Doe", "password": bcrypt.hash("2097")},
-    "jane": {"name": "Jane Doe", "password": bcrypt.hash("456")}
+credentials = {
+    "usernames": {
+        "zveat": {
+            "name": "John Doe",
+            "password": bcrypt.hash("2097")  # Хэшированный пароль
+        },
+        "jane": {
+            "name": "Jane Doe",
+            "password": bcrypt.hash("456")  # Хэшированный пароль
+        }
+    }
 }
 
-def check_credentials(username, password):
-    """Функция проверки логина и пароля с отладочными выводами"""
-    print(f"Проверка логина: {username}, пароль: {password}")  # Отладка
-    if username in users:
-        print(f"Найден пользователь, проверка пароля: {password}")
-        result = bcrypt.verify(password, users[username]["password"])
-        print(f"Результат проверки пароля: {result}")
-        return result
-    print("Пользователь не найден")
-    return False
+# Инициализация аутентификатора
+authenticator = Authenticate(
+    credentials,
+    cookie_name="margin_calculator",
+    key="random_key",
+    cookie_expiry_days=30
+)
 
-# -------------------------
-# Состояние сессии
-# -------------------------
+# Проверка авторизации
+name, authentication_status, username = authenticator.login("Вход в сервис", "main")
+
+if authentication_status:
+    st.session_state["authenticated"] = True
+    st.session_state["user"] = username
+elif authentication_status is False:
+    st.error("Неверный логин или пароль")
+    st.stop()
+elif authentication_status is None:
+    st.warning("Пожалуйста, введите логин и пароль")
+    st.stop()
+
+# НОВОЕ: Кнопка выхода (через аутентификатор)
+if st.button("Выйти"):
+    authenticator.logout("Выйти", "main", key="logout")
+    st.session_state["authenticated"] = False
+    st.session_state["user"] = ""
+    st.rerun()
+
+# Убедимся, что st.session_state сохраняет авторизацию между обновлениями
 if "authenticated" not in st.session_state:
     st.session_state["authenticated"] = False
 if "user" not in st.session_state:
     st.session_state["user"] = ""
 
 # -------------------------
-# Форма входа
-# -------------------------
-if not st.session_state["authenticated"]:
-    st.title("Вход в сервис")
-    username_input = st.text_input("Логин").strip().lower()
-    password_input = st.text_input("Пароль", type="password").strip()
-    
-    if st.button("Войти"):
-        if check_credentials(username_input, password_input):
-            st.session_state["authenticated"] = True
-            st.session_state["user"] = username_input
-            st.rerun()
-        else:
-            st.error("Неверный логин или пароль")
-    st.stop()
-
-# -------------------------
-# Основной сервис
+# Основной сервис (доступен только авторизованным пользователям)
 # -------------------------
 
 # Загрузка логотипа
@@ -538,7 +548,7 @@ def run_margin_service():
         unsafe_allow_html=True
     )
 
-    # НОВОЕ: Фиксированный spreadsheet_id для вашей Google Таблицы
+    # НОВОЕ: Фиксированный spreadsheet_id для вашей Google Таблицы (для архива расчётов)
     spreadsheet_id = "1Z4-Moti7RVqyBQY5v4tcCwFQS3noOD84w9Q2liv9rI4"
 
     # --- Блок "Данные клиента"
@@ -852,7 +862,7 @@ def run_margin_service():
             st.error("Google Таблица не найдена. Убедитесь, что spreadsheet_id корректен и сервисный аккаунт имеет доступ.")
             return
 
-        # Загружаем историю расчётов
+        # Загружаем историю расчётов из листа "History"
         history_sheet = sheet.worksheet("History")
         all_history = history_sheet.get_all_values()[1:]  # Получаем все записи (кроме заголовка)
 
@@ -1097,7 +1107,7 @@ def run_margin_service():
                     mime="application/pdf",
                 )
 
-            # НОВОЕ: Сохранение данных в Google Sheets
+            # НОВОЕ: Сохранение данных в Google Sheets (для архива расчётов)
             client_data = {
                 'name': client_name,
                 'company': client_company,
@@ -1140,4 +1150,3 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 """, unsafe_allow_html=True)
-
