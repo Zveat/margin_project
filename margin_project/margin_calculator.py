@@ -63,8 +63,8 @@ if not st.session_state["authenticated"]:
             st.session_state["authenticated"] = True
             st.session_state["user"] = username_input
             # Сохраняем состояние в куки через CookieController
-            cookie_controller.set("authenticated", "true", expires=30 * 24 * 60 * 60)  # Сохраняем на 30 дней (в секундах)
-            cookie_controller.set("user", username_input, expires=30 * 24 * 60 * 60)  # Сохраняем на 30 дней (в секундах)
+            cookie_controller.set("authenticated", "true", expires=datetime.datetime.now() + datetime.timedelta(days=30))  # Сохраняем на 30 дней
+            cookie_controller.set("user", username_input, expires=datetime.datetime.now() + datetime.timedelta(days=30))  # Сохраняем на 30 дней
             st.rerun()
         else:
             st.error("Неверный логин или пароль")
@@ -1107,7 +1107,7 @@ def run_margin_service():
                     mime="application/pdf",
                 )
 
-            # НОВОЕ: Сохранение данных в Google Sheets
+            # НОВOЕ: Сохранение данных в Google Sheets
             client_data = {
                 'name': client_name,
                 'company': client_company,
