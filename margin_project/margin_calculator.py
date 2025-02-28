@@ -42,19 +42,26 @@ def check_credentials(username, password):
 # -------------------------
 spreadsheet_id = "1Z4-Moti7RVqyBQY5v4tcCwFQS3noOD84w9Q2liv9rI4"
 
-# Пытаемся восстановить состояние из Google Sheets при запуске
+# Пытаемся восстановить состояние из Google Sheets при запуске для всех известных пользователей
 if "authenticated" not in st.session_state or "user" not in st.session_state:
-    print("Попытка восстановить состояние авторизации из Google Sheets...")
-    try:
-        auth_state = load_auth_state(spreadsheet_id, st.session_state.get("user", ""))
-        print(f"Загруженное состояние авторизации из Google Sheets: {auth_state}")
-        st.session_state["authenticated"] = auth_state.get("authenticated", False)
-        st.session_state["user"] = auth_state.get("user", "")
-        print(f"После восстановления: authenticated={st.session_state['authenticated']}, user={st.session_state['user']}")
-    except Exception as e:
-        print(f"Ошибка при восстановлении состояния авторизации: {e}")
+    print("Попытка восстановить состояние авторизации из Google Sheets для всех пользователей...")
+    found_auth = False
+    for username in users.keys():
+        try:
+            auth_state = load_auth_state(spreadsheet_id, username)
+            print(f"Проверка состояния для {username}: {auth_state}")
+            if auth_state.get("authenticated", False):
+                st.session_state["authenticated"] = True
+                st.session_state["user"] = username
+                found_auth = True
+                print(f"Восстановлено состояние для пользователя {username}: authenticated={st.session_state['authenticated']}, user={st.session_state['user']}")
+                break
+        except Exception as e:
+            print(f"Ошибка при восстановлении состояния для {username}: {e}")
+    if not found_auth:
         st.session_state["authenticated"] = False
         st.session_state["user"] = ""
+        print("Не найдено активных сессий, авторизация сброшена")
 
 # Проверка состояния после восстановления (для отладки)
 print(f"Текущее состояние после проверки: authenticated={st.session_state['authenticated']}, user={st.session_state['user']}")
