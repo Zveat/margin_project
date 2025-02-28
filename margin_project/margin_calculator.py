@@ -27,11 +27,13 @@ credentials = {
     "usernames": {
         "zveat": {
             "name": "John Doe",
-            "password": bcrypt.hash("2097")  # Хэшированный пароль
+            "password": bcrypt.hash("2097"),  # Хэшированный пароль
+            "email": "zveat@example.com"  # Добавляем email (может быть пустым или None, если не используется)
         },
         "jane": {
             "name": "Jane Doe",
-            "password": bcrypt.hash("456")  # Хэшированный пароль
+            "password": bcrypt.hash("456"),  # Хэшированный пароль
+            "email": "jane@example.com"  # Добавляем email (может быть пустым или None, если не используется)
         }
     }
 }
