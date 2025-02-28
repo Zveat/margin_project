@@ -45,7 +45,7 @@ authenticator = Authenticate(
 )
 
 # Проверка авторизации
-name, authentication_status, username = authenticator.login(title="Вход в сервис", location='main')
+name, authentication_status, username = authenticator.login("Вход в сервис", location='main')
 
 if authentication_status:
     st.session_state["authenticated"] = True
