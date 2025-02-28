@@ -1,3 +1,5 @@
+
+
 # margin_calculator.py
 
 import streamlit as st
@@ -13,7 +15,7 @@ from fpdf import FPDF
 from num2words import num2words
 
 # НОВОЕ: Импорт для работы с Google Sheets
-from google_sheets_db import save_calculation, load_calculation, connect_to_sheets, save_auth_state, load_auth_state
+from google_sheets_db import save_calculation, load_calculation, connect_to_sheets
 
 # Устанавливаем параметры страницы
 st.set_page_config(page_title="Margin Calculator", page_icon="💰")
@@ -38,26 +40,12 @@ def check_credentials(username, password):
     return False
 
 # -------------------------
-# Состояние сессии и авторизации через Google Sheets
+# Состояние сессии
 # -------------------------
-spreadsheet_id = "1Z4-Moti7RVqyBQY5v4tcCwFQS3noOD84w9Q2liv9rI4"
-
-# Пытаемся восстановить состояние из Google Sheets при запуске
-if "authenticated" not in st.session_state or "user" not in st.session_state:
-    print("Попытка восстановить состояние авторизации из Google Sheets...")
-    try:
-        auth_state = load_auth_state(spreadsheet_id, st.session_state.get("user", ""))
-        print(f"Загруженное состояние авторизации из Google Sheets: {auth_state}")
-        st.session_state["authenticated"] = auth_state.get("authenticated", False)
-        st.session_state["user"] = auth_state.get("user", "")
-        print(f"После восстановления: authenticated={st.session_state['authenticated']}, user={st.session_state['user']}")
-    except Exception as e:
-        print(f"Ошибка при восстановлении состояния авторизации: {e}")
-        st.session_state["authenticated"] = False
-        st.session_state["user"] = ""
-
-# Проверка состояния после восстановления (для отладки)
-print(f"Текущее состояние после проверки: authenticated={st.session_state['authenticated']}, user={st.session_state['user']}")
+if "authenticated" not in st.session_state:
+    st.session_state["authenticated"] = False
+if "user" not in st.session_state:
+    st.session_state["user"] = ""
 
 # -------------------------
 # Форма входа
@@ -71,22 +59,10 @@ if not st.session_state["authenticated"]:
         if check_credentials(username_input, password_input):
             st.session_state["authenticated"] = True
             st.session_state["user"] = username_input
-            # Сохраняем состояние авторизации в Google Sheets
-            save_auth_state(spreadsheet_id, username_input, {"authenticated": True, "user": username_input})
-            print(f"Login successful, saved auth state for user: {username_input}")
             st.rerun()
         else:
             st.error("Неверный логин или пароль")
     st.stop()
-
-# НОВОЕ: Кнопка выхода в Python
-if st.button("Выйти"):
-    st.session_state["authenticated"] = False
-    st.session_state["user"] = ""
-    # Удаляем состояние авторизации из Google Sheets
-    save_auth_state(spreadsheet_id, st.session_state["user"], {"authenticated": False, "user": ""})
-    print("Logout initiated, cleared auth state")
-    st.rerun()
 
 # -------------------------
 # Основной сервис
@@ -611,57 +587,57 @@ def run_margin_service():
         col_left, col_right = st.columns(2)
         with col_left:
             st.markdown("Наименование товара")
-            name = st.text_input("Наименование товара", key="name", label_visibility="visible")  # Изменил на visible для устранения предупреждений
+            name = st.text_input("", key="name", label_visibility="collapsed")
             st.markdown("Ед. измерения")
-            unit = st.selectbox("Ед. измерения", ["шт", "м", "кг", "км", "бухта", "рулон", "м²", "тонна"], 
-                                key="unit", label_visibility="visible")  # Изменил на visible
+            unit = st.selectbox("", ["шт", "м", "кг", "км", "бухта", "рулон", "м²", "тонна"], 
+                                key="unit", label_visibility="collapsed")
             st.markdown("Количество")
-            quantity = st.number_input("Количество", min_value=1, value=1, key="quantity", label_visibility="visible")  # Изменил на visible
+            quantity = st.number_input("", min_value=1, value=1, key="quantity", label_visibility="collapsed")
             st.markdown("Вес (кг)")
-            weight = st.number_input("Вес (кг)", min_value=0, value=0, format="%d", key="weight", label_visibility="visible")  # Изменил на visible
+            weight = st.number_input("", min_value=0, value=0, format="%d", key="weight", label_visibility="collapsed")
 
         with col_right:
             # Цена поставщика 1
             row1_col1, row1_col2 = st.columns(2)
             with row1_col1:
                 st.markdown('<p style="font-size:16px; margin-bottom:0px;">Цена поставщика 1 (₸)</p>', unsafe_allow_html=True)
-                price1 = st.number_input("Цена поставщика 1", min_value=0, value=0, format="%d", key="price_1", label_visibility="visible")  # Изменил на visible
+                price1 = st.number_input("", min_value=0, value=0, format="%d", key="price_1", label_visibility="collapsed")
             with row1_col2:
-                st.markdown("Комментарий")
-                comment1 = st.text_input("Комментарий", placeholder="Комментарий", key="comm_1", label_visibility="visible")  # Изменил на visible
+                st.markdown("⠀")
+                comment1 = st.text_input("", placeholder="Комментарий", key="comm_1", label_visibility="collapsed")
 
             # Цена поставщика 2
             row2_col1, row2_col2 = st.columns(2)
             with row2_col1:
                 st.markdown('<p style="font-size:16px; margin-bottom:0px;">Цена поставщика 2 (₸)</p>', unsafe_allow_html=True)
-                price2 = st.number_input("Цена поставщика 2", min_value=0, value=0, format="%d", key="price_2", label_visibility="visible")  # Изменил на visible
+                price2 = st.number_input("", min_value=0, value=0, format="%d", key="price_2", label_visibility="collapsed")
             with row2_col2:
-                st.markdown("Комментарий")
-                comment2 = st.text_input("Комментарий", placeholder="Комментарий", key="comm_2", label_visibility="visible")  # Изменил на visible
+                st.markdown("⠀")
+                comment2 = st.text_input("", placeholder="Комментарий", key="comm_2", label_visibility="collapsed")
 
             # Цена поставщика 3
             row3_col1, row3_col2 = st.columns(2)
             with row3_col1:
                 st.markdown('<p style="font-size:16px; margin-bottom:0px;">Цена поставщика 3 (₸)</p>', unsafe_allow_html=True)
-                price3 = st.number_input("Цена поставщика 3", min_value=0, value=0, format="%d", key="price_3", label_visibility="visible")  # Изменил на visible
+                price3 = st.number_input("", min_value=0, value=0, format="%d", key="price_3", label_visibility="collapsed")
             with row3_col2:
-                st.markdown("Комментарий")
-                comment3 = st.text_input("Комментарий", placeholder="Комментарий", key="comm_3", label_visibility="visible")  # Изменил на visible
+                st.markdown("⠀")
+                comment3 = st.text_input("", placeholder="Комментарий", key="comm_3", label_visibility="collapsed")
 
             # Цена поставщика 4
             row4_col1, row4_col2 = st.columns(2)
             with row4_col1:
                 st.markdown('<p style="font-size:16px; margin-bottom:0px;">Цена поставщика 4 (₸)</p>', unsafe_allow_html=True)
-                price4 = st.number_input("Цена поставщика 4", min_value=0, value=0, format="%d", key="price_4", label_visibility="visible")  # Изменил на visible
+                price4 = st.number_input("", min_value=0, value=0, format="%d", key="price_4", label_visibility="collapsed")
             with row4_col2:
-                st.markdown("Комментарий")
-                comment4 = st.text_input("Комментарий", placeholder="Комментарий", key="comm_4", label_visibility="visible")  # Изменил на visible
+                st.markdown("⠀")
+                comment4 = st.text_input("", placeholder="Комментарий", key="comm_4", label_visibility="collapsed")
 
             # Наценка
             row5_col1, _, _ = st.columns([2,1,2])
             with row5_col1:
                 st.markdown("Наценка (%)")
-                markup = st.number_input("Наценка", min_value=0, value=20, format="%d", key="markup", label_visibility="visible")  # Изменил на visible
+                markup = st.number_input("", min_value=0, value=20, format="%d", key="markup", label_visibility="collapsed")
 
         submit_btn = st.form_submit_button("➕ Добавить товар")
 
@@ -770,43 +746,43 @@ def run_margin_service():
                 row1_col1, row1_col2 = st.columns(2)
                 with row1_col1:
                     st.markdown('<p style="font-size:16px; margin-bottom:0px;">Цена поставщика 1 (₸)</p>', unsafe_allow_html=True)
-                    price1 = st.number_input("Цена поставщика 1", min_value=0, value=int(st.session_state.edit_product["Цена поставщика 1"]), format="%d", key=f"edit_price_1_{st.session_state.edit_index}", label_visibility="visible")  # Изменил на visible
+                    price1 = st.number_input("", min_value=0, value=int(st.session_state.edit_product["Цена поставщика 1"]), format="%d", key=f"edit_price_1_{st.session_state.edit_index}", label_visibility="collapsed")
                 with row1_col2:
-                    st.markdown("Комментарий")
-                    comment1 = st.text_input("Комментарий", placeholder="Комментарий", value=st.session_state.edit_product["Комментарий поставщика 1"], key=f"edit_comm_1_{st.session_state.edit_index}", label_visibility="visible")  # Изменил на visible
+                    st.markdown("⠀")
+                    comment1 = st.text_input("", placeholder="Комментарий", value=st.session_state.edit_product["Комментарий поставщика 1"], key=f"edit_comm_1_{st.session_state.edit_index}", label_visibility="collapsed")
 
                 # Цена поставщика 2
                 row2_col1, row2_col2 = st.columns(2)
                 with row2_col1:
                     st.markdown('<p style="font-size:16px; margin-bottom:0px;">Цена поставщика 2 (₸)</p>', unsafe_allow_html=True)
-                    price2 = st.number_input("Цена поставщика 2", min_value=0, value=int(st.session_state.edit_product["Цена поставщика 2"]), format="%d", key=f"edit_price_2_{st.session_state.edit_index}", label_visibility="visible")  # Изменил на visible
+                    price2 = st.number_input("", min_value=0, value=int(st.session_state.edit_product["Цена поставщика 2"]), format="%d", key=f"edit_price_2_{st.session_state.edit_index}", label_visibility="collapsed")
                 with row2_col2:
-                    st.markdown("Комментарий")
-                    comment2 = st.text_input("Комментарий", placeholder="Комментарий", value=st.session_state.edit_product["Комментарий поставщика 2"], key=f"edit_comm_2_{st.session_state.edit_index}", label_visibility="visible")  # Изменил на visible
+                    st.markdown("⠀")
+                    comment2 = st.text_input("", placeholder="Комментарий", value=st.session_state.edit_product["Комментарий поставщика 2"], key=f"edit_comm_2_{st.session_state.edit_index}", label_visibility="collapsed")
 
                 # Цена поставщика 3
                 row3_col1, row3_col2 = st.columns(2)
                 with row3_col1:
                     st.markdown('<p style="font-size:16px; margin-bottom:0px;">Цена поставщика 3 (₸)</p>', unsafe_allow_html=True)
-                    price3 = st.number_input("Цена поставщика 3", min_value=0, value=int(st.session_state.edit_product["Цена поставщика 3"]), format="%d", key=f"edit_price_3_{st.session_state.edit_index}", label_visibility="visible")  # Изменил на visible
+                    price3 = st.number_input("", min_value=0, value=int(st.session_state.edit_product["Цена поставщика 3"]), format="%d", key=f"edit_price_3_{st.session_state.edit_index}", label_visibility="collapsed")
                 with row3_col2:
-                    st.markdown("Комментарий")
-                    comment3 = st.text_input("Комментарий", placeholder="Комментарий", value=st.session_state.edit_product["Комментарий поставщика 3"], key=f"edit_comm_3_{st.session_state.edit_index}", label_visibility="visible")  # Изменил на visible
+                    st.markdown("⠀")
+                    comment3 = st.text_input("", placeholder="Комментарий", value=st.session_state.edit_product["Комментарий поставщика 3"], key=f"edit_comm_3_{st.session_state.edit_index}", label_visibility="collapsed")
 
                 # Цена поставщика 4
                 row4_col1, row4_col2 = st.columns(2)
                 with row4_col1:
                     st.markdown('<p style="font-size:16px; margin-bottom:0px;">Цена поставщика 4 (₸)</p>', unsafe_allow_html=True)
-                    price4 = st.number_input("Цена поставщика 4", min_value=0, value=int(st.session_state.edit_product["Цена поставщика 4"]), format="%d", key=f"edit_price_4_{st.session_state.edit_index}", label_visibility="visible")  # Изменил на visible
+                    price4 = st.number_input("", min_value=0, value=int(st.session_state.edit_product["Цена поставщика 4"]), format="%d", key=f"edit_price_4_{st.session_state.edit_index}", label_visibility="collapsed")
                 with row4_col2:
-                    st.markdown("Комментарий")
-                    comment4 = st.text_input("Комментарий", placeholder="Комментарий", value=st.session_state.edit_product["Комментарий поставщика 4"], key=f"edit_comm_4_{st.session_state.edit_index}", label_visibility="visible")  # Изменил на visible
+                    st.markdown("⠀")
+                    comment4 = st.text_input("", placeholder="Комментарий", value=st.session_state.edit_product["Комментарий поставщика 4"], key=f"edit_comm_4_{st.session_state.edit_index}", label_visibility="collapsed")
 
                 # Наценка
                 row5_col1, _, _ = st.columns([2,1,2])
                 with row5_col1:
                     st.markdown("Наценка (%)")
-                    markup = st.number_input("Наценка", min_value=0, value=int(st.session_state.edit_product["Наценка (%)"]), format="%d", key=f"edit_markup_{st.session_state.edit_index}", label_visibility="visible")  # Изменил на visible
+                    markup = st.number_input("", min_value=0, value=int(st.session_state.edit_product["Наценка (%)"]), format="%d", key=f"edit_markup_{st.session_state.edit_index}", label_visibility="collapsed")
 
             # Отладка нажатия кнопки "Сохранить изменения" с проверкой значений
             if st.form_submit_button("💾 Сохранить изменения"):
@@ -1144,7 +1120,7 @@ def run_margin_service():
             except Exception as e:
                 st.error(f"Ошибка при сохранении в Google Sheets: {e}")
 
-# ... (оставляем остальной код — логистику, вкладки — без изменений)
+# ... (оставляем остальной код — логистику, вкладки, JS — без изменений)
 ###############################################################################
 #                     ОСНОВНОЙ БЛОК: ВКЛАДКИ (TABS)
 ###############################################################################
@@ -1168,3 +1144,4 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 """, unsafe_allow_html=True)
+
