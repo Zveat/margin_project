@@ -189,7 +189,7 @@ def run_logistics_service():
     intercity_data = {
         "Алматы-Aстана": 500000,
         "Алматы-Шымкент": 300000,
-        "Алматы-Aктау": 1200000,
+        "Алматы-Aктаu": 1200000,
         "Алматы-Aтыраu": 800000,
         "Алматы-города1": 1,
         "Алматы-города2": 1,
@@ -509,7 +509,7 @@ def generate_invoice_gos(
     return pdf_path
 
 def run_margin_service():
-    # CSS для единообразия в «Калькуляторе маржинальности» с добавлением скрытия суффикса _X с помощью text-indent
+    # CSS для единообразия в «Калькуляторе маржинальности» (без изменений, так как используем JavaScript для скрытия)
     st.markdown(
         """
         <style>
@@ -525,51 +525,6 @@ def run_margin_service():
              min-height: 35px !important;
              padding: 4px 6px !important;
              font-size: 14px !important;
-        }
-        /* Скрываем суффикс _X в кнопках "Редактировать товар_X" и "Удалить товар_X" с помощью text-indent и overflow */
-        .stButton > button[data-label^="✏️ Редактировать товар_"] {
-            text-indent: -9999px; /* Сдвигаем текст влево за пределы видимой области */
-            overflow: hidden; /* Скрываем текст, который выходит за пределы */
-            position: relative;
-            white-space: nowrap; /* Предотвращаем перенос текста */
-        }
-        .stButton > button[data-label^="✏️ Редактировать товар_"]:before {
-            content: "✏️ Редактировать товар"; /* Отображаем только нужный текст */
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 16px; /* Убедимся, что размер текста совпадает */
-            color: #fff; /* Цвет текста кнопки */
-            text-indent: 0; /* Сбрасываем отступ для видимого текста */
-        }
-        .stButton > button[data-label^="❌ Удалить товар_"] {
-            text-indent: -9999px; /* Сдвигаем текст влево за пределы видимой области */
-            overflow: hidden; /* Скрываем текст, который выходит за пределы */
-            position: relative;
-            white-space: nowrap; /* Предотвращаем перенос текста */
-        }
-        .stButton > button[data-label^="❌ Удалить товар_"]:before {
-            content: "❌ Удалить товар"; /* Отображаем только нужный текст */
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 16px; /* Убедимся, что размер текста совпадает */
-            color: #fff; /* Цвет текста кнопки */
-            text-indent: 0; /* Сбрасываем отступ для видимого текста */
-        }
-        /* Оставляем другие кнопки (Войти, Выйти, Рассчитать) без изменений */
-        .stButton > button:not([data-label^="✏️ Редактировать товар_"]):not([data-label^="❌ Удалить товар_"]) {
-            /* Без изменений для других кнопок */
         }
         </style>
         """,
@@ -1098,6 +1053,23 @@ def run_margin_service():
                 st.success(f"Расчёт сохранён в Google Sheets с ID сделки: {deal_id}")
             except Exception as e:
                 st.error(f"Ошибка при сохранении в Google Sheets: {e}")
+
+    # Добавляем JavaScript для скрытия суффикса _X в кнопках
+    st.markdown("""
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Находим все кнопки с текстом, начинающимся с "✏️ Редактировать товар_" или "❌ Удалить товар_"
+        const buttons = document.querySelectorAll('button[data-label^="✏️ Редактировать товар_"], button[data-label^="❌ Удалить товар_"]');
+        
+        buttons.forEach(button => {
+            const originalLabel = button.getAttribute('data-label'); // Сохраняем оригинальный текст для функциональности
+            const newLabel = originalLabel.replace(/_\d+$/, ''); // Убираем суффикс вроде "_0", "_1" и т.д.
+            button.textContent = newLabel; // Меняем видимый текст кнопки
+            button.setAttribute('data-label', originalLabel); // Сохраняем оригинальный текст в data-label
+        });
+    });
+    </script>
+    """, unsafe_allow_html=True)
 
 # ... (оставляем остальной код — логистику, вкладки, JS — без изменений)
 ###############################################################################
