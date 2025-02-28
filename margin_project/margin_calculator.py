@@ -1,3 +1,5 @@
+# margin_calculator.py
+
 import streamlit as st
 import os
 import base64
@@ -14,7 +16,7 @@ from num2words import num2words
 from google_sheets_db import save_calculation, load_calculation, connect_to_sheets
 
 # Устанавливаем параметры страницы
-st.set_page_config()
+st.set_page_config(page_title="Margin Calculator", page_icon="💰")
 
 # -------------------------
 # Данные пользователей
@@ -529,37 +531,47 @@ def run_margin_service():
         unsafe_allow_html=True
     )
 
+    # НОВОЕ: Фиксированный spreadsheet_id для вашей Google Таблицы
+    spreadsheet_id = "1Z4-Moti7RVqyBQY5v4tcCwFQS3noOD84w9Q2liv9rI4"
+
     # НОВОЕ: Блок с историей расчётов
     st.subheader("📜 История расчётов")
-    spreadsheet_id = "https://docs.google.com/spreadsheets/d/1Z4-Moti7RVqyBQY5v4tcCwFQS3noOD84w9Q2liv9rI4/edit?gid=1060521947#gid=1060521947"  # Замените на ID вашей Google Таблицы
     conn = connect_to_sheets()  # Подключаемся к Google Sheets
-    sheet = conn.open_by_key(spreadsheet_id)
+    try:
+        sheet = conn.open_by_key(spreadsheet_id)
+    except gspread.exceptions.SpreadsheetNotFound:
+        st.error("Google Таблица не найдена. Убедитесь, что spreadsheet_id корректен и сервисный аккаунт имеет доступ.")
+        return
 
     # Загружаем историю расчётов
     history_sheet = sheet.worksheet("History")
     history = history_sheet.get_all_values()[1:]  # Пропускаем заголовок
 
     if history:
-        deal_ids = [row[1] for row in history]  # deal_id
-        selected_deal = st.selectbox("Выберите прошлый расчёт для восстановления", deal_ids, format_func=lambda x: f"Расчёт #{x} ({row[2]})")  # CalculationDate
+        deal_ids = [row[0] for row in history]  # deal_id (индекс 0 в History)
+        selected_deal = st.selectbox("Выберите прошлый расчёт для восстановления", deal_ids, format_func=lambda x: f"Расчёт #{x} ({row[1]})")  # deal_id и дата
         if st.button("Восстановить расчёт"):
-            result = load_calculation(spreadsheet_id, int(selected_deal))
-            if result:
-                client_data, deal_data, products = result
-                client_name, client_company, client_bin, client_phone, client_address, client_contract = client_data
-                total_logistics, kickback = deal_data
-                st.session_state.products = products
+            try:
+                client_data_restored, deal_data_restored, products_restored = load_calculation(spreadsheet_id, int(selected_deal))
+                if client_data_restored:
+                    client_name, client_company, client_bin, client_phone, client_address, client_contract = client_data_restored
+                    total_logistics, kickback = deal_data_restored
 
-                # Обновляем сессионные данные
-                st.session_state.client_name = client_name
-                st.session_state.client_company = client_company
-                st.session_state.client_bin = client_bin
-                st.session_state.client_phone = client_phone
-                st.session_state.client_address = client_address
-                st.session_state.client_contract = client_contract
-                st.session_state.total_logistics = int(total_logistics) if total_logistics else 0
-                st.session_state.kickback = int(kickback) if kickback else 0
-                st.rerun()
+                    st.session_state.client_name = client_name
+                    st.session_state.client_company = client_company
+                    st.session_state.client_bin = client_bin
+                    st.session_state.client_phone = client_phone
+                    st.session_state.client_address = client_address
+                    st.session_state.client_contract = client_contract
+                    st.session_state.total_logistics = int(total_logistics) if total_logistics else 0
+                    st.session_state.kickback = int(kickback) if kickback else 0
+                    st.session_state.products = products_restored
+                    st.success("Расчёт восстановлен!")
+                    st.rerun()
+                else:
+                    st.error("Расчёт с указанным ID не найден.")
+            except Exception as e:
+                st.error(f"Ошибка при восстановлении расчёта: {e}")
     else:
         st.info("История расчётов пуста.")
 
@@ -860,21 +872,24 @@ def run_margin_service():
                     mime="application/pdf",
                 )
 
-    # НОВОЕ: Сохранение данных в Google Sheets
-    # Сохранение данных в Google Sheets
-    client_data = {
-        'name': client_name,
-        'company': client_company,
-        'bin': client_bin,
-        'phone': client_phone,
-        'address': client_address,
-        'contract': client_contract
-    }
-    deal_data = {
-        'total_logistics': total_logistics,
-        'kickback': kickback
-    }
-    save_calculation(spreadsheet_id, client_data, deal_data, st.session_state.products, True)
+            # НОВОЕ: Сохранение данных в Google Sheets
+            client_data = {
+                'name': client_name,
+                'company': client_company,
+                'bin': client_bin,
+                'phone': client_phone,
+                'address': client_address,
+                'contract': client_contract
+            }
+            deal_data = {
+                'total_logistics': total_logistics,
+                'kickback': kickback
+            }
+            try:
+                deal_id = save_calculation(spreadsheet_id, client_data, deal_data, st.session_state.products, True)
+                st.success(f"Расчёт сохранён в Google Sheets с ID сделки: {deal_id}")
+            except Exception as e:
+                st.error(f"Ошибка при сохранении в Google Sheets: {e}")
 
 ###############################################################################
 #                     ОСНОВНОЙ БЛОК: ВКЛАДКИ (TABS)
