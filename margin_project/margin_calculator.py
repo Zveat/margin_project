@@ -161,14 +161,14 @@ def run_logistics_service():
              background-color: #656dff;
              color: #FFFFFF;
              border: none;
-             border-radius: 3px;
+             border-radius: 5px;
              padding: 10px 20px;
              font-size: 16px;
              cursor: pointer;
              transition: background-color 0.3s ease;
         }
         div.stButton > button:hover {
-             background-color: #ff8686;
+             background-color: #70a600;
         }
         </style>
         """,
