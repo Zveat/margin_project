@@ -109,16 +109,18 @@ def load_calculation(spreadsheet_id, deal_id):
     products_sheet = sheet.worksheet("Products")
     all_products = products_sheet.get_all_values()
     products = []
+    print(f"Все данные из Products: {all_products}")  # Отладка
     for row in all_products[1:]:  # Пропускаем заголовок
-        if row[1] == str(deal_id):  # deal_id
+        if row[0] == str(deal_id):  # deal_id (первый столбец — deal_id)
             products.append({
-                "Товар": row[2], "Ед_измерения": row[3], "Количество": int(row[4]) if row[4] else 0,
-                "Вес (кг)": int(row[5]) if row[5] else 0, "Цена поставщика 1": int(row[6]) if row[6] else 0,
-                "Комментарий поставщика 1": row[7], "Цена поставщика 2": int(row[8]) if row[8] else 0,
-                "Комментарий поставщика 2": row[9], "Цена поставщика 3": int(row[10]) if row[10] else 0,
-                "Комментарий поставщика 3": row[11], "Цена поставщика 4": int(row[12]) if row[12] else 0,
-                "Комментарий поставщика 4": row[13], "Наценка (%)": int(row[14]) if row[14] else 0
+                "Товар": row[1], "Ед_измерения": row[2], "Количество": int(float(row[3])) if row[3] else 0,
+                "Вес (кг)": int(float(row[4])) if row[4] else 0, "Цена поставщика 1": int(float(row[5])) if row[5] else 0,
+                "Комментарий поставщика 1": row[6], "Цена поставщика 2": int(float(row[7])) if row[7] else 0,
+                "Комментарий поставщика 2": row[8], "Цена поставщика 3": int(float(row[9])) if row[9] else 0,
+                "Комментарий поставщика 3": row[10], "Цена поставщика 4": int(float(row[11])) if row[11] else 0,
+                "Комментарий поставщика 4": row[12], "Наценка (%)": int(float(row[13])) if row[13] else 0
             })
+    print(f"Восстановленные продукты: {products}")  # Отладка
 
     return (client_name, client_company, client_bin, client_phone, client_address, client_contract), \
            (total_logistics, kickback), products
