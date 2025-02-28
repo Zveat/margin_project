@@ -161,7 +161,7 @@ def run_logistics_service():
              background-color: #656dff;
              color: #FFFFFF;
              border: none;
-             border-radius: 5px;
+             border-radius: 3px;
              padding: 10px 20px;
              font-size: 16px;
              cursor: pointer;
