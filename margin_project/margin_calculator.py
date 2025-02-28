@@ -887,8 +887,8 @@ def run_margin_service():
                         return f"{client_name}, {client_company}, {formatted_date}".rstrip(", ")
                 return f"Расчёт #{deal_id} (Не найдено)"
 
-            selected_deal = st.selectbox("Выберите прошлый расчёт для восстановления", deal_ids, format_func=format_deal)
-            if st.button("Восстановить расчёт"):
+            selected_deal = st.selectbox("Выберите прошлый расчёт", deal_ids, format_func=format_deal)
+            if st.button("Восстановить архив"):
                 try:
                     # Отладка: выведем, что возвращает load_calculation
                     print(f"Попытка восстановить расчёт с deal_id: {selected_deal}")
