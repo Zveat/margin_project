@@ -509,7 +509,7 @@ def generate_invoice_gos(
     return pdf_path
 
 def run_margin_service():
-    # CSS для единообразия в «Калькуляторе маржинальности» с добавлением скрытия суффикса _X для кнопок
+    # CSS для единообразия в «Калькуляторе маржинальности» с добавлением скрытия суффикса _X для кнопок с цветом
     st.markdown(
         """
         <style>
@@ -526,12 +526,17 @@ def run_margin_service():
              padding: 4px 6px !important;
              font-size: 14px !important;
         }
-        /* Скрываем суффикс _X в кнопках "Редактировать товар_X" и "Удалить товар_X" */
-        .stButton > button[data-label^="✏️ Редактировать товар_"]::after {
-            content: attr(data-label); /* Оригинальный текст */
-            visibility: hidden; /* Скрываем оригинальный текст */
+        /* Скрываем суффикс _X в кнопках "Редактировать товар_X" и "Удалить товар_X" с помощью прозрачного цвета */
+        .stButton > button[data-label^="✏️ Редактировать товар_"]:after {
+            content: attr(data-label);
+            color: transparent; /* Делаем суффикс прозрачным */
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
         }
-        .stButton > button[data-label^="✏️ Редактировать товар_"]::before {
+        .stButton > button[data-label^="✏️ Редактировать товар_"]:before {
             content: "✏️ Редактировать товар"; /* Отображаем только нужный текст */
             position: absolute;
             left: 0;
@@ -544,11 +549,16 @@ def run_margin_service():
             font-size: 16px; /* Убедимся, что размер текста совпадает */
             color: #fff; /* Цвет текста кнопки */
         }
-        .stButton > button[data-label^="❌ Удалить товар_"]::after {
-            content: attr(data-label); /* Оригинальный текст */
-            visibility: hidden; /* Скрываем оригинальный текст */
+        .stButton > button[data-label^="❌ Удалить товар_"]:after {
+            content: attr(data-label);
+            color: transparent; /* Делаем суффикс прозрачным */
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
         }
-        .stButton > button[data-label^="❌ Удалить товар_"]::before {
+        .stButton > button[data-label^="❌ Удалить товар_"]:before {
             content: "❌ Удалить товар"; /* Отображаем только нужный текст */
             position: absolute;
             left: 0;
@@ -776,20 +786,19 @@ def run_margin_service():
                     st.write(f"**Цена поставщика (мин – макс):** {int(min_supplier_price):,} – {int(max_supplier_price):,} ₸")
                     st.write(f"**Цена для клиента (за ед.):** {int(price_for_client):,} ₸")
                 
-                # Кнопки "Редактировать" и "Удалить" с суффиксом _index
-                col_btn_edit, col_btn_delete = st.columns([4, 1])  # Сохраняем пропорцию для выравнивания
-                with col_btn_edit:
+                # Кнопки "Редактировать" и "Удалить" в одной колонке, как в исходном коде
+                col_btn, _ = st.columns([1, 1])
+                with col_btn:
                     if st.button(f"✏️ Редактировать товар_{index}", key=f"edit_{index}"):
-                        # Убедимся, что индекс и продукт корректно сохраняются в сессии
+                        # Открываем форму редактирования для выбранного товара
                         st.session_state.edit_index = index
                         st.session_state.edit_product = product.copy()
                         # Убедимся, что cancel_key существует и инициализирован
                         if "cancel_key" not in st.session_state:
                             st.session_state.cancel_key = f"cancel_edit_{index}"
-                        print(f"Нажата кнопка 'Редактировать товар' для индекса: {index}")
+                        print(f"Сгенерирован и сохранён ключ для кнопки 'Отмена': {st.session_state.cancel_key}")
                         st.rerun()
 
-                with col_btn_delete:
                     if st.button(f"❌ Удалить товар_{index}", key=f"del_{index}"):
                         st.session_state.products.pop(index)
                         st.rerun()
