@@ -752,6 +752,9 @@ def run_margin_service():
 
     # --- Форма редактирования товара (если выбрано редактирование)
     if "edit_index" in st.session_state and "edit_product" in st.session_state:
+        # Отладка: выведем текущий edit_index
+        print(f"Редактируется товар с индексом: {st.session_state.edit_index}")
+        
         st.subheader("🛠 Редактирование товара")
         with st.form(f"edit_product_form_{st.session_state.edit_index}"):
             col_left, col_right = st.columns(2)
@@ -828,8 +831,8 @@ def run_margin_service():
                 st.success("Товар успешно отредактирован!")
                 st.rerun()
 
-            # Исправляем кнопку "Отмена", добавляя уникальный суффикс к ключу
-            if st.button("✖️ Отмена", key=f"cancel_edit_{st.session_state.edit_index}_unique"):
+            # Исправляем кнопку "Отмена", добавляя уникальный суффикс с временной меткой
+            if st.button("✖️ Отмена", key=f"cancel_edit_{st.session_state.edit_index}_{datetime.datetime.now().microsecond}"):
                 del st.session_state.edit_index
                 del st.session_state.edit_product
                 st.rerun()
