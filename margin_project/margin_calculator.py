@@ -36,26 +36,12 @@ credentials = {
     }
 }
 
-# НОВОЕ: Кастомные метки для формы авторизации на русском
-authenticator_config = {
-    "credentials": credentials,
-    "cookie": {
-        "name": "margin_calculator",
-        "expiry_days": 30,
-        "key": "random_key"
-    },
-    "labels": {
-        "login": {
-            "username_label": "Логин",
-            "password_label": "Пароль",
-            "button_label": "Войти"
-        }
-    }
-}
-
-# Инициализация аутентификатора с кастомными метками
+# Инициализация аутентификатора (базовая конфигурация для 0.2.3)
 authenticator = Authenticate(
-    **authenticator_config
+    credentials,
+    cookie_name="margin_calculator",
+    key="random_key",
+    cookie_expiry_days=30
 )
 
 # Проверка авторизации с индикатором загрузки
