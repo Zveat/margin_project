@@ -53,7 +53,7 @@ with st.spinner("Проверка авторизации..."):
     # Задержка 0.5 секунды для имитации проверки куки (можно убрать в реальном приложении)
     import time
     time.sleep(0.5)
-    name, authentication_status, username = authenticator.login("Вход в сервис", location='main')
+    name, authentication_status, username = authenticator.login("Вход в сервис")
 
 if authentication_status:
     st.session_state["authenticated"] = True
@@ -70,7 +70,7 @@ elif authentication_status is None:
 
 # НОВОЕ: Кнопка выхода (через аутентификатор)
 if st.button("Выйти"):
-    authenticator.logout("Выйти", location='main', key="logout")
+    authenticator.logout("Выйти", "main", key="logout")
     st.session_state["authenticated"] = False
     st.session_state["user"] = ""
     st.session_state["product_name"] = ""  # Очищаем имя после выхода
