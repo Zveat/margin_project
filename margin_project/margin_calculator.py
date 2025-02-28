@@ -158,7 +158,7 @@ def run_logistics_service():
         }
         /* Стили для кнопок */
         div.stButton > button {
-             background-color: #d0ece7;
+             background-color: #aed6f1;
              color: #000000;
              border: none;
              border-radius: 5px;
