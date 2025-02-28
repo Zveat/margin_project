@@ -145,7 +145,7 @@ def run_logistics_service():
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
         }
         body {
-            background-color: #f8f9fa;
+            background-color: #f1c40f;
         }
         /* Стили для полей ввода */
         div[data-testid="stNumberInput"] input,
