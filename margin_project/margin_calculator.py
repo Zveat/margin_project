@@ -509,7 +509,7 @@ def generate_invoice_gos(
     return pdf_path
 
 def run_margin_service():
-    # CSS для единообразия в «Калькуляторе маржинальности» с добавлением скрытия суффикса _X для кнопок с цветом
+    # CSS для единообразия в «Калькуляторе маржинальности» с добавлением скрытия суффикса _X цветом фона кнопок
     st.markdown(
         """
         <style>
@@ -526,10 +526,10 @@ def run_margin_service():
              padding: 4px 6px !important;
              font-size: 14px !important;
         }
-        /* Скрываем суффикс _X в кнопках "Редактировать товар_X" и "Удалить товар_X" с помощью прозрачного цвета */
+        /* Скрываем суффикс _X в кнопках "Редактировать товар_X" и "Удалить товар_X" с помощью цвета фона кнопок (#007bff) */
         .stButton > button[data-label^="✏️ Редактировать товар_"]:after {
             content: attr(data-label);
-            color: transparent; /* Делаем суффикс прозрачным */
+            color: #007bff; /* Цвет фона кнопок, чтобы суффикс стал незаметным */
             position: absolute;
             left: 0;
             top: 0;
@@ -551,7 +551,7 @@ def run_margin_service():
         }
         .stButton > button[data-label^="❌ Удалить товар_"]:after {
             content: attr(data-label);
-            color: transparent; /* Делаем суффикс прозрачным */
+            color: #007bff; /* Цвет фона кнопок, чтобы суффикс стал незаметным */
             position: absolute;
             left: 0;
             top: 0;
