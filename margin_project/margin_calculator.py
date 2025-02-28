@@ -509,7 +509,7 @@ def generate_invoice_gos(
     return pdf_path
 
 def run_margin_service():
-    # CSS для единообразия в «Калькуляторе маржинальности»
+    # CSS для единообразия в «Калькуляторе маржинальности» с увеличенным отступом
     st.markdown(
         """
         <style>
@@ -528,7 +528,7 @@ def run_margin_service():
         }
         /* Добавляем отступ под списком товаров */
         .stExpander > div[data-testid="stVerticalBlock"] {
-            margin-bottom: 20px; /* Отступ под каждым экспандером */
+            margin-bottom: 40px; /* Увеличенный отступ под каждым экспандером для большего пространства */
         }
         </style>
         """,
@@ -741,8 +741,8 @@ def run_margin_service():
                     st.write(f"**Цена поставщика (мин – макс):** {int(min_supplier_price):,} – {int(max_supplier_price):,} ₸")
                     st.write(f"**Цена для клиента (за ед.):** {int(price_for_client):,} ₸")
                 
-                # Кнопки "Редактировать" и "Удалить" в одну линию
-                col_btn_edit, col_btn_delete = st.columns([1, 1])
+                # Кнопки "Редактировать" и "Удалить" с выравниванием: "Редактировать" слева, "Удалить" справа
+                col_btn_edit, col_btn_delete = st.columns([2, 1])  # Увеличиваем пропорцию для левой колонки
                 with col_btn_edit:
                     if st.button(f"✏️ Редактировать товар_{index}", key=f"edit_{index}"):
                         # Открываем форму редактирования для выбранного товара
@@ -759,144 +759,9 @@ def run_margin_service():
                         st.session_state.products.pop(index)
                         st.rerun()
 
-    # --- Форма редактирования товара (если выбрано редактирование)
-    if "edit_index" in st.session_state and "edit_product" in st.session_state:
-        # Отладка: выведем текущий edit_index
-        print(f"Редактируется товар с индексом: {st.session_state.edit_index}")
-        
-        # Проверяем, что edit_index в пределах допустимого диапазона
-        if st.session_state.edit_index < 0 or st.session_state.edit_index >= len(st.session_state.get("products", [])):
-            st.error("Ошибка: Индекс товара для редактирования некорректен. Пожалуйста, попробуйте снова.")
-            if "edit_index" in st.session_state:
-                del st.session_state.edit_index
-            if "edit_product" in st.session_state:
-                del st.session_state.edit_product
-            if "cancel_key" in st.session_state:
-                del st.session_state.cancel_key
-            st.rerun()
-
-        st.subheader("🛠 Редактирование товара")
-        # Используем фиксированный ключ для формы, основанный на edit_index
-        form_key = f"edit_product_form_{st.session_state.edit_index}"
-        print(f"Используется ключ для формы редактирования: {form_key}")
-        with st.form(form_key):
-            col_left, col_right = st.columns(2)
-            with col_left:
-                name = st.text_input("Наименование товара", value=st.session_state.edit_product["Товар"], key=f"edit_name_{st.session_state.edit_index}")
-                unit = st.selectbox("Ед. измерения", ["шт", "м", "кг", "км", "бухта", "рулон", "м²", "тонна"], 
-                                    index=["шт", "м", "кг", "км", "бухта", "рулон", "м²", "тонна"].index(st.session_state.edit_product["Ед_измерения"]),
-                                    key=f"edit_unit_{st.session_state.edit_index}")
-                quantity = st.number_input("Количество", min_value=1, value=int(st.session_state.edit_product["Количество"]), key=f"edit_quantity_{st.session_state.edit_index}")
-                weight = st.number_input("Вес (кг)", min_value=0, value=int(st.session_state.edit_product["Вес (кг)"]), format="%d", key=f"edit_weight_{st.session_state.edit_index}")
-
-            with col_right:
-                # Цена поставщика 1
-                row1_col1, row1_col2 = st.columns(2)
-                with row1_col1:
-                    st.markdown('<p style="font-size:16px; margin-bottom:0px;">Цена поставщика 1 (₸)</p>', unsafe_allow_html=True)
-                    price1 = st.number_input("", min_value=0, value=int(st.session_state.edit_product["Цена поставщика 1"]), format="%d", key=f"edit_price_1_{st.session_state.edit_index}", label_visibility="collapsed")
-                with row1_col2:
-                    st.markdown("⠀")
-                    comment1 = st.text_input("", placeholder="Комментарий", value=st.session_state.edit_product["Комментарий поставщика 1"], key=f"edit_comm_1_{st.session_state.edit_index}", label_visibility="collapsed")
-
-                # Цена поставщика 2
-                row2_col1, row2_col2 = st.columns(2)
-                with row2_col1:
-                    st.markdown('<p style="font-size:16px; margin-bottom:0px;">Цена поставщика 2 (₸)</p>', unsafe_allow_html=True)
-                    price2 = st.number_input("", min_value=0, value=int(st.session_state.edit_product["Цена поставщика 2"]), format="%d", key=f"edit_price_2_{st.session_state.edit_index}", label_visibility="collapsed")
-                with row2_col2:
-                    st.markdown("⠀")
-                    comment2 = st.text_input("", placeholder="Комментарий", value=st.session_state.edit_product["Комментарий поставщика 2"], key=f"edit_comm_2_{st.session_state.edit_index}", label_visibility="collapsed")
-
-                # Цена поставщика 3
-                row3_col1, row3_col2 = st.columns(2)
-                with row3_col1:
-                    st.markdown('<p style="font-size:16px; margin-bottom:0px;">Цена поставщика 3 (₸)</p>', unsafe_allow_html=True)
-                    price3 = st.number_input("", min_value=0, value=int(st.session_state.edit_product["Цена поставщика 3"]), format="%d", key=f"edit_price_3_{st.session_state.edit_index}", label_visibility="collapsed")
-                with row3_col2:
-                    st.markdown("⠀")
-                    comment3 = st.text_input("", placeholder="Комментарий", value=st.session_state.edit_product["Комментарий поставщика 3"], key=f"edit_comm_3_{st.session_state.edit_index}", label_visibility="collapsed")
-
-                # Цена поставщика 4
-                row4_col1, row4_col2 = st.columns(2)
-                with row4_col1:
-                    st.markdown('<p style="font-size:16px; margin-bottom:0px;">Цена поставщика 4 (₸)</p>', unsafe_allow_html=True)
-                    price4 = st.number_input("", min_value=0, value=int(st.session_state.edit_product["Цена поставщика 4"]), format="%d", key=f"edit_price_4_{st.session_state.edit_index}", label_visibility="collapsed")
-                with row4_col2:
-                    st.markdown("⠀")
-                    comment4 = st.text_input("", placeholder="Комментарий", value=st.session_state.edit_product["Комментарий поставщика 4"], key=f"edit_comm_4_{st.session_state.edit_index}", label_visibility="collapsed")
-
-                # Наценка
-                row5_col1, _, _ = st.columns([2,1,2])
-                with row5_col1:
-                    st.markdown("Наценка (%)")
-                    markup = st.number_input("", min_value=0, value=int(st.session_state.edit_product["Наценка (%)"]), format="%d", key=f"edit_markup_{st.session_state.edit_index}", label_visibility="collapsed")
-
-            # Отладка нажатия кнопки "Сохранить изменения" с проверкой значений
-            if st.form_submit_button("💾 Сохранить изменения"):
-                print(f"Кнопка 'Сохранить изменения' нажата для товара с индексом: {st.session_state.edit_index}")
-                print(f"Текущие значения формы: name={name}, unit={unit}, quantity={quantity}, weight={weight}, price1={price1}, price2={price2}, price3={price3}, price4={price4}, markup={markup}")
-                # Проверяем, что значения не пустые
-                if name.strip():
-                    # Обновляем товар в st.session_state.products
-                    st.session_state.products[st.session_state.edit_index] = {
-                        "Товар": name,
-                        "Ед_измерения": unit,
-                        "Количество": quantity,
-                        "Вес (кг)": weight,
-                        "Цена поставщика 1": price1,
-                        "Комментарий поставщика 1": comment1,
-                        "Цена поставщика 2": price2,
-                        "Комментарий поставщика 2": comment2,
-                        "Цена поставщика 3": price3,
-                        "Комментарий поставщика 3": comment3,
-                        "Цена поставщика 4": price4,
-                        "Комментарий поставщика 4": comment4,
-                        "Наценка (%)": markup,
-                    }
-                    del st.session_state.edit_index
-                    del st.session_state.edit_product
-                    if "cancel_key" in st.session_state:
-                        del st.session_state.cancel_key
-                    st.success("Товар успешно отредактирован!")
-                    st.rerun()
-                else:
-                    st.error("Название товара не может быть пустым. Пожалуйста, введите название.")
-
-        # Кнопка "Отмена" использует сохранённый ключ из сессии
-        if "cancel_key" in st.session_state:
-            print(f"Используется сохранённый ключ для кнопки 'Отмена': {st.session_state.cancel_key}")
-            col_cancel, _ = st.columns([1, 1])  # Размещаем кнопку в отдельной колонке
-            with col_cancel:
-                if st.button("✖️ Отмена", key=st.session_state.cancel_key):
-                    print(f"Кнопка 'Отмена' нажата с ключом: {st.session_state.cancel_key}")
-                    # Проверяем, что edit_index и edit_product существуют перед удалением
-                    if "edit_index" in st.session_state:
-                        del st.session_state.edit_index
-                    if "edit_product" in st.session_state:
-                        del st.session_state.edit_product
-                    if "cancel_key" in st.session_state:
-                        del st.session_state.cancel_key
-                    st.rerun()
-        else:
-            # Если ключ отсутствует, генерируем новый и сохраняем его
-            st.session_state.cancel_key = f"cancel_edit_{st.session_state.edit_index}"
-            print(f"Сгенерирован новый ключ для кнопки 'Отмена', так как предыдущий не найден: {st.session_state.cancel_key}")
-            col_cancel, _ = st.columns([1, 1])  # Размещаем кнопку в отдельной колонке
-            with col_cancel:
-                if st.button("✖️ Отмена", key=st.session_state.cancel_key):
-                    print(f"Кнопка 'Отмена' нажата с ключом: {st.session_state.cancel_key}")
-                    # Проверяем, что edit_index и edit_product существуют перед удалением
-                    if "edit_index" in st.session_state:
-                        del st.session_state.edit_index
-                    if "edit_product" in st.session_state:
-                        del st.session_state.edit_product
-                    if "cancel_key" in st.session_state:
-                        del st.session_state.cancel_key
-                    st.rerun()
-
-    # Добавляем отступ перед блоком расчётов
-    st.markdown("---")  # Горизонтальная линия для визуального разделения
+    # Добавляем явный отступ перед блоком расчётов
+    st.write(" ")  # Добавляем пустую строку для визуального пространства
+    st.markdown("---")  # Горизонтальная линия для дополнительного разделения
 
     # --- Кнопка «Рассчитать»
     if st.button("📊 Рассчитать маржинальность"):
