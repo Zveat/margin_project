@@ -1,5 +1,3 @@
-
-
 # margin_calculator.py
 
 import streamlit as st
@@ -15,7 +13,7 @@ from fpdf import FPDF
 from num2words import num2words
 
 # НОВОЕ: Импорт для работы с Google Sheets
-from google_sheets_db import save_calculation, load_calculation, connect_to_sheets
+from google_sheets_db import save_calculation, load_calculation, connect_to_sheets, save_auth_state, load_auth_state
 
 # Устанавливаем параметры страницы
 st.set_page_config(page_title="Margin Calculator", page_icon="💰")
@@ -40,12 +38,26 @@ def check_credentials(username, password):
     return False
 
 # -------------------------
-# Состояние сессии
+# Состояние сессии и авторизации через Google Sheets
 # -------------------------
-if "authenticated" not in st.session_state:
-    st.session_state["authenticated"] = False
-if "user" not in st.session_state:
-    st.session_state["user"] = ""
+spreadsheet_id = "1Z4-Moti7RVqyBQY5v4tcCwFQS3noOD84w9Q2liv9rI4"
+
+# Пытаемся восстановить состояние из Google Sheets при запуске
+if "authenticated" not in st.session_state or "user" not in st.session_state:
+    print("Попытка восстановить состояние авторизации из Google Sheets...")
+    try:
+        auth_state = load_auth_state(spreadsheet_id, st.session_state.get("user", ""))
+        print(f"Загруженное состояние авторизации из Google Sheets: {auth_state}")
+        st.session_state["authenticated"] = auth_state.get("authenticated", False)
+        st.session_state["user"] = auth_state.get("user", "")
+        print(f"После восстановления: authenticated={st.session_state['authenticated']}, user={st.session_state['user']}")
+    except Exception as e:
+        print(f"Ошибка при восстановлении состояния авторизации: {e}")
+        st.session_state["authenticated"] = False
+        st.session_state["user"] = ""
+
+# Проверка состояния после восстановления (для отладки)
+print(f"Текущее состояние после проверки: authenticated={st.session_state['authenticated']}, user={st.session_state['user']}")
 
 # -------------------------
 # Форма входа
@@ -59,10 +71,22 @@ if not st.session_state["authenticated"]:
         if check_credentials(username_input, password_input):
             st.session_state["authenticated"] = True
             st.session_state["user"] = username_input
+            # Сохраняем состояние авторизации в Google Sheets
+            save_auth_state(spreadsheet_id, username_input, {"authenticated": True, "user": username_input})
+            print(f"Login successful, saved auth state for user: {username_input}")
             st.rerun()
         else:
             st.error("Неверный логин или пароль")
     st.stop()
+
+# НОВОЕ: Кнопка выхода в Python
+if st.button("Выйти"):
+    st.session_state["authenticated"] = False
+    st.session_state["user"] = ""
+    # Удаляем состояние авторизации из Google Sheets
+    save_auth_state(spreadsheet_id, st.session_state["user"], {"authenticated": False, "user": ""})
+    print("Logout initiated, cleared auth state")
+    st.rerun()
 
 # -------------------------
 # Основной сервис
@@ -1144,4 +1168,3 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 """, unsafe_allow_html=True)
-
