@@ -52,4 +52,5 @@ XlsxWriter==3.2.2
 streamlit==1.42.1
 streamlit-authenticator==0.1.0
 passlib[bcrypt]
-
+gspread
+oauth2client
