@@ -740,7 +740,7 @@ def run_margin_service():
                 # Кнопки "Редактировать" и "Удалить" с видимым текстом без _X, но с оригинальным текстом в key
                 col_btn, _ = st.columns([1, 1])
                 with col_btn:
-                    if st.button("✏️ Редактировать товар", key=f"edit_product_{index}"):
+                    if st.button("✏️ Редактировать", key=f"edit_product_{index}"):
                         # Открываем форму редактирования для выбранного товара
                         st.session_state.edit_index = index
                         st.session_state.edit_product = product.copy()
@@ -750,7 +750,7 @@ def run_margin_service():
                         print(f"Сгенерирован и сохранён ключ для кнопки 'Отмена': {st.session_state.cancel_key}")
                         st.rerun()
 
-                    if st.button("❌ Удалить товар", key=f"delete_product_{index}"):
+                    if st.button("❌ Удалить", key=f"delete_product_{index}"):
                         st.session_state.products.pop(index)
                         st.rerun()
 
