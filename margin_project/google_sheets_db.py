@@ -1,18 +1,36 @@
 # google_sheets_db.py
 
 import gspread
+import json
 from oauth2client.service_account import ServiceAccountCredentials
 import datetime
+import streamlit as st  # Импортируем streamlit для доступа к секретам
 
 # Настройка доступа к Google Sheets
 SCOPE = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-CREDS_PATH = "credentials.json"  # Убедитесь, что файл credentials.json доступен
 
 def connect_to_sheets():
-    """Устанавливает соединение с Google Sheets."""
-    creds = ServiceAccountCredentials.from_json_keyfile_name(CREDS_PATH, SCOPE)
-    client = gspread.authorize(creds)
-    return client
+    """Устанавливает соединение с Google Sheets, используя секреты Streamlit Cloud или локальный файл."""
+    try:
+        # Проверяем, доступны ли секреты Streamlit Cloud
+        credentials_json = st.secrets.get("GOOGLE_CREDENTIALS")
+        if credentials_json:
+            # Парсим JSON из секрета
+            creds_dict = json.loads(credentials_json)
+            creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, SCOPE)
+        else:
+            # Если секреты недоступны, пытаемся использовать локальный файл
+            CREDS_PATH = "credentials.json"
+            try:
+                creds = ServiceAccountCredentials.from_json_keyfile_name(CREDS_PATH, SCOPE)
+            except FileNotFoundError:
+                st.error("Файл credentials.json не найден и секреты Streamlit Cloud не настроены. Убедитесь, что секрет GOOGLE_CREDENTIALS настроен в Streamlit Cloud или файл credentials.json доступен локально.")
+                raise
+        client = gspread.authorize(creds)
+        return client
+    except Exception as e:
+        st.error(f"Ошибка подключения к Google Sheets: {e}")
+        raise
 
 def save_calculation(spreadsheet_id, client_data, deal_data, products, is_active=True):
     """Сохраняет расчёт в Google Sheets."""
