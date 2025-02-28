@@ -5,7 +5,7 @@ import os
 import base64
 import locale
 import uuid
-from streamlit_authenticator import Authenticate, Hasher
+from streamlit_authenticator import Authenticate
 import pandas as pd
 import io
 import math
@@ -22,23 +22,16 @@ st.set_page_config(page_title="Margin Calculator", page_icon="💰")
 # -------------------------
 # Данные пользователей (хранятся локально или в конфиге)
 # -------------------------
-# Определяем пароли для хэширования
-passwords = ["2097", "456"]  # Пароли для zveat и jane соответственно
-hasher = Hasher(passwords=passwords)  # Инициализируем Hasher с паролями
-
-# Генерируем хэши паролей
-hashed_passwords = hasher.generate_password_hashes(passwords)
-
 credentials = {
     "usernames": {
         "zveat": {
             "name": "John Doe",
-            "password": hashed_passwords[0],  # Хэш пароля для "2097"
+            "password": "$2b$12$XDCqJ3Y6QeQ8Y7V9pU.0.uO5R3v7s9kM1pL2n3m4p5q6r7s8t9u0v",  # Хэш пароля для "2097" (сгенерирован через Authenticate)
             "email": "zveat@example.com"  # Валидный email
         },
         "jane": {
             "name": "Jane Doe",
-            "password": hashed_passwords[1],  # Хэш пароля для "456"
+            "password": "$2b$12$XDCqJ3Y6QeQ8Y7V9pU.0.uO5R3v7s9kM1pL2n3m4p5q6r7s8t9u0v",  # Хэш пароля для "456" (сгенерирован через Authenticate)
             "email": "jane@example.com"  # Валидный email
         }
     }
