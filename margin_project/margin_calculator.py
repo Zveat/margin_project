@@ -168,7 +168,7 @@ def run_logistics_service():
              transition: background-color 0.3s ease;
         }
         div.stButton > button:hover {
-             background-color: #70a600;
+             background-color: #94db00;
         }
         </style>
         """,
