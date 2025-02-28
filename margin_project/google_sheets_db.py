@@ -5,7 +5,7 @@ from oauth2client.service_account import ServiceAccountCredentials
 import os
 import json
 import base64
-from datetime import datetime
+from datetime import datetime  # Импортируем datetime напрямую
 
 # Настройка доступа к Google Sheets
 SCOPE = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
@@ -71,7 +71,7 @@ def save_calculation(spreadsheet_id, client_data, deal_data, products, include_p
     # Сохраняем данные сделки в Deals
     deals_sheet.append_row([
         str(deal_id),
-        datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),  # CalculationDate
+        datetime.now().strftime("%Y-%m-%d %H:%M:%S"),  # Используем datetime.now() вместо datetime.datetime.now()
         client_data['name'],  # client_name
         client_data['company'],  # client_company
         client_data['bin'],  # client_bin
@@ -107,7 +107,7 @@ def save_calculation(spreadsheet_id, client_data, deal_data, products, include_p
     history_sheet = sheet.worksheet("History")
     history_sheet.append_row([
         str(deal_id),
-        datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),  # CalculationDate
+        datetime.now().strftime("%Y-%m-%d %H:%M:%S"),  # Используем datetime.now() вместо datetime.datetime.now()
         client_data['name'],  # client_name
         client_data['company'],  # client_company
         client_data['bin'],  # client_bin
