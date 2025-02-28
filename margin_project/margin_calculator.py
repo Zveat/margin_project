@@ -187,10 +187,10 @@ def run_logistics_service():
 
     # Данные для междугородних перевозок
     intercity_data = {
-        "Алматы-Астана": 500000,
+        "Алматы-Aстана": 500000,
         "Алматы-Шымкент": 300000,
-        "Алматы-Актау": 1200000,
-        "Алматы-Атырау": 800000,
+        "Алматы-Aктау": 1200000,
+        "Алматы-Aтырау": 800000,
         "Алматы-города1": 1,
         "Алматы-города2": 1,
         "Алматы-города3": 1
@@ -559,10 +559,15 @@ def run_margin_service():
         selected_deal = st.selectbox("Выберите прошлый расчёт для восстановления", deal_ids, format_func=format_deal)
         if st.button("Восстановить расчёт"):
             try:
+                # Отладка: выведем, что возвращает load_calculation
+                print(f"Попытка восстановить расчёт с deal_id: {selected_deal}")
                 client_data_restored, deal_data_restored, products_restored = load_calculation(spreadsheet_id, int(selected_deal))
                 if client_data_restored:
                     client_name, client_company, client_bin, client_phone, client_address, client_contract = client_data_restored
                     total_logistics, kickback = deal_data_restored
+
+                    # Отладка: выведем восстановленные продукты
+                    print(f"Восстановленные продукты: {products_restored}")
 
                     st.session_state.client_name = client_name
                     st.session_state.client_company = client_company
@@ -572,13 +577,14 @@ def run_margin_service():
                     st.session_state.client_contract = client_contract
                     st.session_state.total_logistics = int(total_logistics) if total_logistics else 0
                     st.session_state.kickback = int(kickback) if kickback else 0
-                    st.session_state.products = products_restored
+                    st.session_state.products = products_restored if products_restored else []
                     st.success("Расчёт восстановлен!")
                     st.rerun()
                 else:
                     st.error("Расчёт с указанным ID не найден.")
             except Exception as e:
                 st.error(f"Ошибка при восстановлении расчёта: {e}")
+                print(f"Ошибка в восстановлении: {e}")
     else:
         st.info("История расчётов пуста.")
 
