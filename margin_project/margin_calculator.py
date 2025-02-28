@@ -43,27 +43,53 @@ def check_credentials(username, password):
 # -------------------------
 spreadsheet_id = "1Z4-Moti7RVqyBQY5v4tcCwFQS3noOD84w9Q2liv9rI4"
 
-# Генерируем и сохраняем уникальный идентификатор сессии, если его ещё нет
+# Пытаемся восстановить session_id из Google Sheets, если его нет в st.session_state
 if "session_id" not in st.session_state:
-    st.session_state["session_id"] = str(uuid.uuid4())
-    print(f"Сгенерирован новый session_id: {st.session_state['session_id']}")
-
-# Пытаемся восстановить состояние из Google Sheets при запуске для текущей сессии
-if "authenticated" not in st.session_state or "user" not in st.session_state:
-    print(f"Попытка восстановить состояние авторизации для сессии {st.session_state['session_id']}...")
+    print("session_id отсутствует в st.session_state, пытаемся восстановить из Google Sheets...")
     try:
-        # Получаем все записи из AuthState для отладки
         conn = connect_to_sheets()
         sheet = conn.open_by_key(spreadsheet_id)
         auth_worksheet = sheet.worksheet("AuthState")
         all_auth = auth_worksheet.get_all_values()
-        print(f"Содержимое листа AuthState: {all_auth}")
+        print(f"Содержимое листа AuthState (с заголовками): {all_auth}")
+        
+        # Ищем последнюю запись с authenticated=True для восстановления session_id
+        for row in all_auth[1:]:  # Пропускаем заголовок
+            if row[1].strip().upper() == "TRUE":
+                st.session_state["session_id"] = row[0]  # Устанавливаем session_id из первой колонки
+                print(f"Восстановлен session_id из Google Sheets: {st.session_state['session_id']}")
+                break
+        if "session_id" not in st.session_state:
+            st.session_state["session_id"] = str(uuid.uuid4())
+            print(f"Сгенерирован новый session_id, так как восстановить не удалось: {st.session_state['session_id']}")
+    except Exception as e:
+        print(f"Ошибка при восстановлении session_id: {e}")
+        st.session_state["session_id"] = str(uuid.uuid4())
+        print(f"Сгенерирован новый session_id из-за ошибки: {st.session_state['session_id']}")
 
-        auth_state = load_auth_state(spreadsheet_id, st.session_state["session_id"])
-        print(f"Загруженное состояние авторизации из Google Sheets: {auth_state}")
-        st.session_state["authenticated"] = auth_state.get("authenticated", False)
-        st.session_state["user"] = auth_state.get("user", "")
-        print(f"После восстановления: authenticated={st.session_state['authenticated']}, user={st.session_state['user']}")
+# Пытаемся восстановить состояние авторизации для текущей сессии
+if "authenticated" not in st.session_state or "user" not in st.session_state:
+    print(f"Попытка восстановить состояние авторизации для сессии {st.session_state['session_id']}...")
+    try:
+        # Проверяем доступ к Google Sheets и лист "AuthState"
+        conn = connect_to_sheets()
+        sheet = conn.open_by_key(spreadsheet_id)
+        auth_worksheet = sheet.worksheet("AuthState")
+        all_auth = auth_worksheet.get_all_values()
+        print(f"Содержимое листа AuthState (с заголовками): {all_auth}")
+        
+        # Проверяем, есть ли заголовок "SessionID"
+        header = all_auth[0] if all_auth else []
+        if "SessionID" not in header:
+            print(f"Ошибка: Заголовок 'SessionID' не найден в листе AuthState. Текущие заголовки: {header}")
+            st.session_state["authenticated"] = False
+            st.session_state["user"] = ""
+        else:
+            auth_state = load_auth_state(spreadsheet_id, st.session_state["session_id"])
+            print(f"Загруженное состояние авторизации из Google Sheets: {auth_state}")
+            st.session_state["authenticated"] = auth_state.get("authenticated", False)
+            st.session_state["user"] = auth_state.get("user", "")
+            print(f"После восстановления: authenticated={st.session_state['authenticated']}, user={st.session_state['user']}")
     except Exception as e:
         print(f"Ошибка при восстановлении состояния авторизации: {e}")
         st.session_state["authenticated"] = False
