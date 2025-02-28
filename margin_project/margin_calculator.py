@@ -549,7 +549,14 @@ def run_margin_service():
 
     if history:
         deal_ids = [row[0] for row in history]  # deal_id (индекс 0 в History)
-        selected_deal = st.selectbox("Выберите прошлый расчёт для восстановления", deal_ids, format_func=lambda x: f"Расчёт #{x} ({row[1]})")  # deal_id и дата
+        # Исправляем format_func, чтобы использовать данные из history для отображения даты
+        def format_deal(deal_id):
+            for row in history:
+                if row[0] == str(deal_id):
+                    return f"Расчёт #{deal_id} ({row[1]})"  # deal_id и дата (столбец 1 — дата)
+            return f"Расчёт #{deal_id}"
+        
+        selected_deal = st.selectbox("Выберите прошлый расчёт для восстановления", deal_ids, format_func=format_deal)
         if st.button("Восстановить расчёт"):
             try:
                 client_data_restored, deal_data_restored, products_restored = load_calculation(spreadsheet_id, int(selected_deal))
