@@ -46,8 +46,9 @@ config = {
     }
 }
 
-# Инициализация аутентификатора с конфигурацией для версии >=0.4.0
+# Инициализация аутентификатора с явным указанием credentials для версии >=0.4.0
 authenticator = Authenticate(
+    credentials=credentials,  # Добавляем credentials как обязательный аргумент
     config=config
 )
 
