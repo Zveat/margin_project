@@ -4,18 +4,22 @@ import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 import os
 import json
+import base64
 from datetime import datetime
 
 # Настройка доступа к Google Sheets
 SCOPE = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
 
 def connect_to_sheets():
-    """Подключается к Google Sheets с использованием сервисного аккаунта из переменной окружения."""
+    """Подключается к Google Sheets с использованием Base64-кодированных credentials из переменной окружения."""
     try:
-        # Получаем JSON из переменной окружения
-        credentials_json = os.getenv("GOOGLE_CREDENTIALS")
-        if not credentials_json:
+        # Получаем закодированную строку Base64 из переменной окружения
+        credentials_b64 = os.getenv("GOOGLE_CREDENTIALS")
+        if not credentials_b64:
             raise ValueError("Переменная окружения GOOGLE_CREDENTIALS не найдена")
+
+        # Декодируем Base64 в JSON
+        credentials_json = base64.b64decode(credentials_b64).decode('utf-8')
 
         # Парсим JSON и создаём учётные данные
         creds_dict = json.loads(credentials_json)
