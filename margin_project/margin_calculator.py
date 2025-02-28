@@ -47,12 +47,15 @@ if "user" not in st.session_state:
 
 # НОВОЕ: Обработка сообщений от JavaScript с использованием st.query_params
 query_params = st.query_params.to_dict()
+print(f"Query params on load: {query_params}")  # Отладка
 if query_params.get("auth") == "loginSuccess":
     st.session_state["authenticated"] = True
     st.session_state["user"] = query_params.get("user", "")
+    print(f"Restored session state: authenticated={st.session_state['authenticated']}, user={st.session_state['user']}")
 elif query_params.get("auth") == "logout":
     st.session_state["authenticated"] = False
     st.session_state["user"] = ""
+    print("Logged out, resetting session state")
 
 # -------------------------
 # Форма входа
@@ -67,10 +70,19 @@ if not st.session_state["authenticated"]:
             st.session_state["authenticated"] = True
             st.session_state["user"] = username_input
             st.query_params.update({"auth": "loginSuccess", "user": username_input})  # Отправляем сообщение через URL
+            print(f"Login successful, setting query params: auth=loginSuccess, user={username_input}")
             st.rerun()
         else:
             st.error("Неверный логин или пароль")
     st.stop()
+
+# НОВОЕ: Кнопка выхода (добавляем, чтобы не дублировать JavaScript)
+if st.button("Выйти"):
+    st.session_state["authenticated"] = False
+    st.session_state["user"] = ""
+    st.query_params.update({"auth": "logout"})  # Отправляем сообщение через URL
+    print("Logout initiated, setting query params: auth=logout")
+    st.rerun()
 
 # -------------------------
 # Основной сервис
@@ -1140,74 +1152,89 @@ with tab_margin:
 with tab_logistics:
     run_logistics_service()
 
-# --- В самом конце файла вставляем JS для управления авторизацией через localStorage с отладкой ---
+# --- В самом конце файла вставляем JS для управления авторизацией через localStorage с улучшенной отладкой ---
 st.markdown("""
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     console.log("Page loaded, checking localStorage...");
-    // Восстановление состояния из localStorage при загрузке страницы
-    const authData = localStorage.getItem('authData');
-    console.log("Auth data from localStorage:", authData);
-    if (authData) {
-        try {
-            const { authenticated, user } = JSON.parse(authData);
-            console.log("Parsed auth data:", { authenticated, user });
-            if (authenticated) {
+    try {
+        // Восстановление состояния из localStorage при загрузке страницы
+        const authData = localStorage.getItem('authData');
+        console.log("Auth data from localStorage:", authData);
+        if (authData) {
+            const parsedData = JSON.parse(authData);
+            console.log("Parsed auth data:", parsedData);
+            if (parsedData.authenticated) {
                 // Устанавливаем состояние через Streamlit
                 window.parent.postMessage({
                     type: 'setSessionState',
-                    authenticated: authenticated,
-                    user: user
+                    authenticated: parsedData.authenticated,
+                    user: parsedData.user
                 }, '*');
-                console.log("Sent setSessionState message with:", { authenticated, user });
+                console.log("Sent setSessionState message with:", parsedData);
+            } else {
+                console.log("Authenticated is false, not sending message.");
             }
-        } catch (e) {
-            console.error("Error parsing authData from localStorage:", e);
+        } else {
+            console.log("No auth data found in localStorage.");
         }
-    } else {
-        console.log("No auth data found in localStorage.");
-    }
 
-    // Обработка события авторизации
-    window.addEventListener('message', function(event) {
-        console.log("Received message:", event.data);
-        if (event.data.type === 'loginSuccess') {
-            const { username } = event.data;
-            console.log("Login success, saving to localStorage:", { authenticated: true, user: username });
-            localStorage.setItem('authData', JSON.stringify({ authenticated: true, user: username }));
-        } else if (event.data.type === 'logout') {
-            console.log("Logout, removing from localStorage.");
-            localStorage.removeItem('authData');
-        }
-    });
+        // Обработка события авторизации
+        window.addEventListener('message', function(event) {
+            console.log("Received message:", event.data);
+            if (event.data.type === 'loginSuccess') {
+                const { username } = event.data;
+                console.log("Login success, saving to localStorage:", { authenticated: true, user: username });
+                localStorage.setItem('authData', JSON.stringify({ authenticated: true, user: username }));
+            } else if (event.data.type === 'logout') {
+                console.log("Logout, removing from localStorage.");
+                localStorage.removeItem('authData');
+            }
+        });
 
-    // Кнопка "Войти" — отправляем сообщение в Streamlit
-    document.querySelectorAll('button').forEach(button => {
-        if (button.textContent === 'Войти') {
-            button.addEventListener('click', function() {
+        // Кнопка "Войти" — отправляем сообщение в Streamlit
+        const loginButton = document.querySelector('button:contains("Войти")');
+        if (loginButton) {
+            loginButton.addEventListener('click', function() {
                 console.log("Login button clicked.");
-                const username = document.querySelector('input[data-testid="stTextInput"]').value;
-                const password = document.querySelector('input[data-testid="stTextInput"][type="password"]').value;
-                console.log("Login attempt with username:", username, "password:", password);
-                if (username && password) {
-                    window.parent.postMessage({
-                        type: 'loginAttempt',
-                        username: username.toLowerCase().trim(),
-                        password: password.trim()
-                    }, '*');
-                    console.log("Sent loginAttempt message with:", { username: username.toLowerCase().trim(), password: password.trim() });
+                const usernameInput = document.querySelector('input[data-testid="stTextInput"]');
+                const passwordInput = document.querySelector('input[data-testid="stTextInput"][type="password"]');
+                if (usernameInput && passwordInput) {
+                    const username = usernameInput.value.trim().toLowerCase();
+                    const password = passwordInput.value.trim();
+                    console.log("Login attempt with username:", username, "password:", password);
+                    if (username && password) {
+                        window.parent.postMessage({
+                            type: 'loginAttempt',
+                            username: username,
+                            password: password
+                        }, '*');
+                        console.log("Sent loginAttempt message with:", { username, password });
+                    } else {
+                        console.warn("Username or password is empty.");
+                    }
                 } else {
-                    console.warn("Username or password is empty.");
+                    console.error("Login inputs not found in DOM.");
                 }
             });
-        } else if (button.textContent === 'Выйти') {
-            button.addEventListener('click', function() {
+        } else {
+            console.warn("Login button not found in DOM.");
+        }
+
+        // Кнопка "Выйти" — отправляем сообщение в Streamlit
+        const logoutButton = document.querySelector('button:contains("Выйти")');
+        if (logoutButton) {
+            logoutButton.addEventListener('click', function() {
                 console.log("Logout button clicked.");
                 window.parent.postMessage({ type: 'logout' }, '*');
                 console.log("Sent logout message.");
             });
+        } else {
+            console.warn("Logout button not found in DOM.");
         }
-    });
+    } catch (error) {
+        console.error("JavaScript error:", error);
+    }
 });
 </script>
 """, unsafe_allow_html=True)
