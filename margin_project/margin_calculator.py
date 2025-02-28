@@ -746,6 +746,8 @@ def run_margin_service():
                         # Открываем форму редактирования для выбранного товара
                         st.session_state.edit_index = index
                         st.session_state.edit_product = product.copy()
+                        # Сохраняем уникальный ключ для кнопки "Отмена" в сессии
+                        st.session_state.cancel_key = f"cancel_edit_{index}_{int(time.time() * 1000)}_{random.randint(1, 1000)}"
                         st.rerun()
 
                     if st.button("❌ Удалить товар", key=f"del_{index}"):
@@ -764,6 +766,8 @@ def run_margin_service():
                 del st.session_state.edit_index
             if "edit_product" in st.session_state:
                 del st.session_state.edit_product
+            if "cancel_key" in st.session_state:
+                del st.session_state.cancel_key
             st.rerun()
 
         st.subheader("🛠 Редактирование товара")
@@ -839,22 +843,28 @@ def run_margin_service():
                 }
                 del st.session_state.edit_index
                 del st.session_state.edit_product
+                if "cancel_key" in st.session_state:
+                    del st.session_state.cancel_key
                 st.success("Товар успешно отредактирован!")
                 st.rerun()
 
-        # Кнопка "Отмена" вынесена за пределы формы, но внутри условия редактирования
-        unique_key = f"cancel_edit_{st.session_state.edit_index}_{int(time.time() * 1000)}_{random.randint(1, 1000)}"
-        print(f"Сгенерирован ключ для кнопки 'Отмена': {unique_key}")
-        col_cancel, _ = st.columns([1, 1])  # Размещаем кнопку в отдельной колонке
-        with col_cancel:
-            if st.button("✖️ Отмена", key=unique_key):
-                print(f"Кнопка 'Отмена' нажата с ключом: {unique_key}")
-                # Проверяем, что edit_index и edit_product существуют перед удалением
-                if "edit_index" in st.session_state:
-                    del st.session_state.edit_index
-                if "edit_product" in st.session_state:
-                    del st.session_state.edit_product
-                st.rerun()
+        # Кнопка "Отмена" использует сохранённый ключ из сессии
+        if "cancel_key" in st.session_state:
+            print(f"Используется сохранённый ключ для кнопки 'Отмена': {st.session_state.cancel_key}")
+            col_cancel, _ = st.columns([1, 1])  # Размещаем кнопку в отдельной колонке
+            with col_cancel:
+                if st.button("✖️ Отмена", key=st.session_state.cancel_key):
+                    print(f"Кнопка 'Отмена' нажата с ключом: {st.session_state.cancel_key}")
+                    # Проверяем, что edit_index и edit_product существуют перед удалением
+                    if "edit_index" in st.session_state:
+                        del st.session_state.edit_index
+                    if "edit_product" in st.session_state:
+                        del st.session_state.edit_product
+                    if "cancel_key" in st.session_state:
+                        del st.session_state.cancel_key
+                    st.rerun()
+        else:
+            st.error("Ошибка: Ключ для кнопки 'Отмена' не найден. Пожалуйста, попробуйте снова.")
 
     # --- Кнопка «Рассчитать»
     if st.button("📊 Рассчитать маржинальность"):
