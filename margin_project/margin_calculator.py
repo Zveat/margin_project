@@ -121,7 +121,7 @@ except locale.Error:
 
 
 ###############################################################################
-#                         БЛОК 1: КОД ЛОГИСТИЧЕСКОГО КАЛЬКУЛЯТОРА
+#                         БЛОК 1: КОД ЛОГИСТИЧЕСКОГО КАЛЬKUЛЯТОРА
 ###############################################################################
 def run_logistics_service():
 
@@ -845,7 +845,7 @@ def run_margin_service():
                         del st.session_state.cancel_key
                     st.rerun()
 
-    # НОВОЕ: Блок "История расчётов" внизу страницы под экспандером "Список товаров"
+    # НОВОЕ: Блок "Архив расчетов" внизу страницы под экспандером "Список товаров" с улучшениями
     with st.expander("📜 Архив расчетов", expanded=False):
         conn = connect_to_sheets()  # Подключаемся к Google Sheets
         try:
@@ -856,61 +856,91 @@ def run_margin_service():
 
         # Загружаем историю расчётов
         history_sheet = sheet.worksheet("History")
-        history = history_sheet.get_all_values()[1:]  # Пропускаем заголовок
+        all_history = history_sheet.get_all_values()[1:]  # Получаем все записи (кроме заголовка)
 
-        if history:
-            deal_ids = [row[0] for row in history]  # deal_id (индекс 0 в History)
-            # Обновляем format_func, чтобы отображать ФИО, Название компании и дату в формате "ДД.ММ.ГГ",
-            # с пустыми полями, если ФИО или Название компании отсутствуют
-            def format_deal(deal_id):
-                for row in history:
-                    if row[0] == str(deal_id):
-                        # Извлекаем ФИО клиента и название компании из данных
-                        client_name = row[2].strip() if len(row) > 2 and row[2] and row[2].lower() not in ["не указано", "завершён"] else ""  # ФИО (столбец 3 в History)
-                        client_company = row[3].strip() if len(row) > 3 and row[3] and row[3].lower() not in ["не указано", "завершён"] else ""  # Название компании (столбец 4 в History)
-                        # Проверяем CalculationDate (столбец 2 в History) и форматируем дату в "ДД.ММ.ГГ"
-                        try:
-                            date_str = row[1]  # Дата (столбец 2 в History)
-                            if date_str.lower() in ["завершён", "не указано"]:
+        # Фильтруем записи, которым не больше месяца
+        one_month_ago = datetime.datetime.now() - datetime.timedelta(days=30)
+        filtered_history = [
+            row for row in all_history
+            if datetime.datetime.strptime(row[1], "%Y-%m-%d %H:%M:%S") > one_month_ago
+        ]
+        print(f"Количество записей после фильтрации по дате (менее месяца): {len(filtered_history)}")  # Отладка
+
+        # Сортируем записи по дате (CalculationDate) в порядке убывания (новые сверху)
+        sorted_history = sorted(filtered_history, key=lambda x: datetime.datetime.strptime(x[1], "%Y-%m-%d %H:%M:%S"), reverse=True)
+        print(f"Количество отсортированных записей: {len(sorted_history)}")  # Отладка
+
+        # Ограничиваем до 200 записей
+        limited_history = sorted_history[:200]
+        print(f"Ограничено до 200 записей: {len(limited_history)}")  # Отладка
+
+        # Поиск по client_name и client_company
+        search_query = st.text_input("Поиск по ФИО или компании", "")
+        if search_query:
+            searched_history = [
+                row for row in limited_history
+                if search_query.lower() in row[2].lower() or search_query.lower() in row[3].lower()  # client_name (столбец C), client_company (столбец D)
+            ]
+            print(f"Найдено записей после поиска '{search_query}': {len(searched_history)}")  # Отладка
+        else:
+            searched_history = limited_history
+
+        if searched_history:
+            deal_ids = [row[0] for row in searched_history if row and row[0].isdigit()]  # deal_id (столбец A), фильтруем только числовые значения
+            if not deal_ids:
+                st.warning("Нет валидных deal_id в архиве расчетов.")
+            else:
+                # Обновляем format_func, чтобы отображать ФИО, Название компании и дату в формате "ДД.ММ.ГГ",
+                # с пустыми полями, если ФИО или Название компании отсутствуют
+                def format_deal(deal_id):
+                    for row in searched_history:
+                        if row[0] == str(deal_id):
+                            # Извлекаем ФИО клиента и название компании из данных
+                            client_name = row[2].strip() if len(row) > 2 and row[2] and row[2].lower() not in ["не указано", "завершён"] else ""  # ФИО (столбец 3 в History)
+                            client_company = row[3].strip() if len(row) > 3 and row[3] and row[3].lower() not in ["не указано", "завершён"] else ""  # Название компании (столбец 4 в History)
+                            # Проверяем CalculationDate (столбец 2 в History) и форматируем дату в "ДД.ММ.ГГ"
+                            try:
+                                date_str = row[1]  # Дата (столбец 2 в History)
+                                if date_str.lower() in ["завершён", "не указано"]:
+                                    formatted_date = ""
+                                else:
+                                    date_obj = datetime.datetime.strptime(date_str, "%Y-%m-%d %H:%M:%S")
+                                    formatted_date = date_obj.strftime("%d.%m.%y")  # Формат "ДД.ММ.ГГ"
+                            except (ValueError, IndexError):
                                 formatted_date = ""
-                            else:
-                                date_obj = datetime.datetime.strptime(date_str, "%Y-%m-%d %H:%M:%S")
-                                formatted_date = date_obj.strftime("%d.%m.%y")  # Формат "ДД.ММ.ГГ"
-                        except (ValueError, IndexError):
-                            formatted_date = ""
-                        # Формируем строку: "ФИО, КОМПАНИЯ, ДАТА" с пустыми полями, если данные отсутствуют
-                        return f"{client_name}, {client_company}, {formatted_date}".rstrip(", ")
-                return f"Расчёт #{deal_id} (Не найдено)"
+                            # Формируем строку: "ФИО, КОМПАНИЯ, ДАТА" с пустыми полями, если данные отсутствуют
+                            return f"{client_name}, {client_company}, {formatted_date}".rstrip(", ")
+                    return f"Расчёт #{deal_id} (Не найдено)"
 
-            selected_deal = st.selectbox("Выберите прошлый расчёт", deal_ids, format_func=format_deal)
-            if st.button("Восстановить архив"):
-                try:
-                    # Отладка: выведем, что возвращает load_calculation
-                    print(f"Попытка восстановить расчёт с deal_id: {selected_deal}")
-                    client_data_restored, deal_data_restored, products_restored = load_calculation(spreadsheet_id, int(selected_deal))
-                    if client_data_restored:
-                        client_name, client_company, client_bin, client_phone, client_address, client_contract = client_data_restored
-                        total_logistics, kickback = deal_data_restored
+                selected_deal = st.selectbox("Выберите прошлый расчёт", deal_ids, format_func=format_deal)
+                if st.button("Восстановить архив"):
+                    try:
+                        # Отладка: выведем, что возвращает load_calculation
+                        print(f"Попытка восстановить расчёт с deal_id: {selected_deal}")
+                        client_data_restored, deal_data_restored, products_restored = load_calculation(spreadsheet_id, int(selected_deal))
+                        if client_data_restored:
+                            client_name, client_company, client_bin, client_phone, client_address, client_contract = client_data_restored
+                            total_logistics, kickback = deal_data_restored
 
-                        # Отладка: выведем восстановленные продукты
-                        print(f"Восстановленные продукты: {products_restored}")
+                            # Отладка: выведем восстановленные продукты
+                            print(f"Восстановленные продукты: {products_restored}")
 
-                        st.session_state.client_name = client_name
-                        st.session_state.client_company = client_company
-                        st.session_state.client_bin = client_bin
-                        st.session_state.client_phone = client_phone
-                        st.session_state.client_address = client_address
-                        st.session_state.client_contract = client_contract
-                        st.session_state.total_logistics = int(total_logistics) if total_logistics else 0
-                        st.session_state.kickback = int(kickback) if kickback else 0
-                        st.session_state.products = products_restored if products_restored else []
-                        st.success("Расчёт восстановлен!")
-                        st.rerun()
-                    else:
-                        st.error("Расчёт с указанным ID не найден.")
-                except Exception as e:
-                    st.error(f"Ошибка при восстановлении расчёта: {e}")
-                    print(f"Ошибка в восстановлении: {e}")
+                            st.session_state.client_name = client_name
+                            st.session_state.client_company = client_company
+                            st.session_state.client_bin = client_bin
+                            st.session_state.client_phone = client_phone
+                            st.session_state.client_address = client_address
+                            st.session_state.client_contract = client_contract
+                            st.session_state.total_logistics = int(total_logistics) if total_logistics else 0
+                            st.session_state.kickback = int(kickback) if kickback else 0
+                            st.session_state.products = products_restored if products_restored else []
+                            st.success("Расчёт восстановлен!")
+                            st.rerun()
+                        else:
+                            st.error("Расчёт с указанным ID не найден.")
+                    except Exception as e:
+                        st.error(f"Ошибка при восстановлении расчёта: {e}")
+                        print(f"Ошибка в восстановлении: {e}")
         else:
             st.info("История расчётов пуста.")
 
