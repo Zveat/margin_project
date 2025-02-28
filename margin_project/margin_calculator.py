@@ -1,3 +1,5 @@
+
+
 # margin_calculator.py
 
 import streamlit as st
@@ -5,6 +7,7 @@ import os
 import base64
 import locale
 import uuid
+from passlib.hash import bcrypt
 from streamlit_authenticator import Authenticate
 import pandas as pd
 import io
@@ -22,67 +25,33 @@ st.set_page_config(page_title="Margin Calculator", page_icon="💰")
 # -------------------------
 # Данные пользователей (хранятся локально или в конфиге)
 # -------------------------
-# Хэши паролей можно сгенерировать через тестовый скрипт, как описано ниже
 credentials = {
     "usernames": {
         "zveat": {
             "name": "John Doe",
-            "password": "$2b$12$XDCqJ3Y6QeQ8Y7V9pU.0.uO5R3v7s9kM1pL2n3m4p5q6r7s8t9u0v",  # Хэш для пароля "2097"
-            "email": "zveat@example.com"  # Валидный email
+            "password": bcrypt.hash("2097")  # Хэшированный пароль
         },
         "jane": {
             "name": "Jane Doe",
-            "password": "$2b$12$XDCqJ3Y6QeQ8Y7V9pU.0.uO5R3v7s9kM1pL2n3m4p5q6r7s8t9u0v",  # Хэш для пароля "456"
-            "email": "jane@example.com"  # Валидный email
+            "password": bcrypt.hash("456")  # Хэшированный пароль
         }
     }
 }
 
-# НОВОЕ: Конфигурация с кастомными метками для формы авторизации на русском (для версии >=0.4.0)
-config = {
-    "credentials": credentials,
-    "cookie": {
-        "name": "margin_calculator",
-        "key": "random_key",
-        "expiry_days": 30
-    }
-}
-
-# Инициализация аутентификатора с явным указанием credentials для версии >=0.4.0
+# Инициализация аутентификатора
 authenticator = Authenticate(
-    credentials=credentials,  # Добавляем credentials как обязательный аргумент
-    config=config
+    credentials,
+    cookie_name="margin_calculator",
+    key="random_key",
+    cookie_expiry_days=30
 )
 
-# Проверка авторизации с улучшенным спиннером и минимизацией мигания формы
-if "authenticated" not in st.session_state:
-    st.session_state["authenticated"] = False
-    st.session_state["user"] = ""
-
-with st.spinner("Проверка авторизации..."):
-    # Задержка 0.5 секунды для имитации проверки куки (можно убрать в реальном приложении)
-    import time
-    time.sleep(0.5)
-    # Кастомизация полей формы авторизации с русскими метками
-    fields = {
-        "username": {"label": "Логин", "type": "text", "placeholder": "Введите логин"},
-        "password": {"label": "Пароль", "type": "password", "placeholder": "Введите пароль"},
-        "submit": {"label": "Войти", "type": "submit"}
-    }
-    result = authenticator.login(fields=fields)  # Убрал preauthorized, так как он не поддерживается в 0.4.1
-
-    # Проверяем, что result не None, и распаковываем только если это возможно
-    if result is not None:
-        name, authentication_status, username = result
-    else:
-        name, authentication_status, username = None, None, None
+# Проверка авторизации
+name, authentication_status, username = authenticator.login("Вход в сервис", location='main')
 
 if authentication_status:
     st.session_state["authenticated"] = True
     st.session_state["user"] = username
-    # Очищаем возможное автозаполнение имени в других полях
-    if "product_name" not in st.session_state:
-        st.session_state["product_name"] = ""  # Инициализация пустого значения для поля "Наименование товара"
 elif authentication_status is False:
     st.error("Неверный логин или пароль")
     st.stop()
@@ -92,15 +61,16 @@ elif authentication_status is None:
 
 # НОВОЕ: Кнопка выхода (через аутентификатор)
 if st.button("Выйти"):
-    authenticator.logout("Выйти", location="main", key="logout")
+    authenticator.logout("Выйти", location='main', key="logout")
     st.session_state["authenticated"] = False
     st.session_state["user"] = ""
-    st.session_state["product_name"] = ""  # Очищаем имя после выхода
     st.rerun()
 
 # Убедимся, что st.session_state сохраняет авторизацию между обновлениями
-if "products" not in st.session_state:
-    st.session_state.products = []
+if "authenticated" not in st.session_state:
+    st.session_state["authenticated"] = False
+if "user" not in st.session_state:
+    st.session_state["user"] = ""
 
 # -------------------------
 # Основной сервис (доступен только авторизованным пользователям)
@@ -147,7 +117,7 @@ html_block = f"""
 <div class="responsive-header">
   <img src="{logo_src}" alt="Logo" />
   <h2>
-    <span style="color:#007bff;">СЕРВИС РАСЧЕТА ЛОГИСТИКИ И МАРЖИНАЛЬНОСТИ</span>
+    <span style="color:#007bff;">СЕРВСИС РАСЧЕТА ЛОГИСТИКИ И МАРЖИНАЛЬНОСТИ</span>
   </h2>
 </div>
 """
@@ -161,7 +131,7 @@ except locale.Error:
 
 
 ###############################################################################
-#                         БЛОК 1: КОД ЛОГИСТИЧЕСКОГО КАЛЬКУЛЯТОРА
+#                         БЛОК 1: КОД ЛОГИСТИЧЕСКОГО КАЛЬKUЛЯТОРА
 ###############################################################################
 def run_logistics_service():
 
@@ -216,7 +186,7 @@ def run_logistics_service():
         {"Вид транспорта": "Газель",             "Вес груза": 300,  "Длинна груза": 3,  "Стоимость доставки": "4000-12000"},
         {"Вид транспорта": "Длинномer/бортовой", "Вес груза": 1000, "Длинна груза": 12, "Стоимость доставки": "30000-35000"},
         {"Вид транспорта": "Газель Бортовая",    "Вес груза": 2000, "Длинна груза": 4,  "Стоимость доставки": "10000-20000"},
-        {"Вид транспорта": "Бorтовой грузовик",  "Вес груза": 6000, "Длинna груза": 7,  "Стоимость доставки": "20000-30000"},
+        {"Вид транспорта": "Бортовой грузовик",  "Вес груза": 6000, "Длинna груза": 7,  "Стоимость доставки": "20000-30000"},
         {"Вид транспорта": "Фура",               "Вес груза": 23000,"Длинna груza": 12, "Стоимость доставки": "50000-60000"}
     ]
 
@@ -625,8 +595,7 @@ def run_margin_service():
         col_left, col_right = st.columns(2)
         with col_left:
             st.markdown("Наименование товара")
-            # НОВОЕ: Убедимся, что поле "Наименование товара" всегда пустое при загрузке
-            name = st.text_input("", key="product_name", value=st.session_state.get("product_name", ""), label_visibility="collapsed")
+            name = st.text_input("", key="name", label_visibility="collapsed")
             st.markdown("Ед. измерения")
             unit = st.selectbox("", ["шт", "м", "кг", "км", "бухта", "рулон", "м²", "тонна"], 
                                 key="unit", label_visibility="collapsed")
@@ -681,9 +650,9 @@ def run_margin_service():
         submit_btn = st.form_submit_button("➕ Добавить товар")
 
     if submit_btn:
-        if st.session_state.product_name.strip():  # Используем новый ключ "product_name"
+        if st.session_state.name.strip():
             st.session_state.products.append({
-                "Товар": st.session_state.product_name,
+                "Товар": st.session_state.name,
                 "Ед_измерения": st.session_state.unit,
                 "Количество": st.session_state.quantity,
                 "Вес (кг)": st.session_state.weight,
@@ -697,7 +666,6 @@ def run_margin_service():
                 "Комментарий поставщика 4": st.session_state.comm_4,
                 "Наценка (%)": st.session_state.markup,
             })
-            st.session_state.product_name = ""  # Очищаем поле после добавления
             st.rerun()
         else:
             st.warning("Введите название товара ⚠️ ")
@@ -774,7 +742,7 @@ def run_margin_service():
         with st.form(form_key):
             col_left, col_right = st.columns(2)
             with col_left:
-                name = st.text_input("Наименование товара", value=st.session_state.edit_product["Товар"], key=f"edit_product_name_{st.session_state.edit_index}")
+                name = st.text_input("Наименование товара", value=st.session_state.edit_product["Товар"], key=f"edit_name_{st.session_state.edit_index}")
                 unit = st.selectbox("Ед. измерения", ["шт", "м", "кг", "км", "бухта", "рулон", "м²", "тонна"], 
                                     index=["шт", "м", "кг", "км", "бухта", "рулон", "м²", "тонна"].index(st.session_state.edit_product["Ед_измерения"]),
                                     key=f"edit_unit_{st.session_state.edit_index}")
