@@ -11,7 +11,7 @@ import math
 import datetime
 from fpdf import FPDF
 from num2words import num2words
-from streamlit_cookies import Cookies
+from streamlit_cookies_controller import CookieController
 
 # НОВОЕ: Импорт для работы с Google Sheets
 from google_sheets_db import save_calculation, load_calculation, connect_to_sheets
