@@ -5,8 +5,7 @@ import os
 import base64
 import locale
 import uuid
-from passlib.hash import bcrypt
-from streamlit_authenticator import Authenticate
+from streamlit_authenticator import Authenticate, Hasher  # Импортируем Hasher для хэширования
 import pandas as pd
 import io
 import math
@@ -23,17 +22,19 @@ st.set_page_config(page_title="Margin Calculator", page_icon="💰")
 # -------------------------
 # Данные пользователей (хранятся локально или в конфиге)
 # -------------------------
+# Используем Hasher для хэширования паролей
+hasher = Hasher()
 credentials = {
     "usernames": {
         "zveat": {
             "name": "John Doe",
-            "password": bcrypt.hash("2097"),  # Хэшированный пароль
-            "email": "zveat@example.com"  # Убедимся, что email всегда заполнен
+            "password": hasher.generate_password_hash("2097"),  # Хэш пароля через Hasher
+            "email": "zveat@example.com"  # Валидный email
         },
         "jane": {
             "name": "Jane Doe",
-            "password": bcrypt.hash("456"),  # Хэшированный пароль
-            "email": "jane@example.com"  # Убедимся, что email всегда заполнен
+            "password": hasher.generate_password_hash("456"),  # Хэш пароля через Hasher
+            "email": "jane@example.com"  # Валидный email
         }
     }
 }
@@ -64,13 +65,13 @@ with st.spinner("Проверка авторизации..."):
     import time
     time.sleep(0.5)
     # Кастомизация полей формы авторизации с русскими метками
-    # Исправляем формат fields для версии 0.4.1: структура должна быть вложенной для совместимости
+    # Уточняем формат fields для версии 0.4.1, добавляя дополнительные параметры
     fields = {
-        "username": {"label": "Логин", "type": "text"},
-        "password": {"label": "Пароль", "type": "password"},
+        "username": {"label": "Логин", "type": "text", "placeholder": "Введите логин"},
+        "password": {"label": "Пароль", "type": "password", "placeholder": "Введите пароль"},
         "submit": {"label": "Войти", "type": "submit"}
     }
-    result = authenticator.login(fields=fields)  # Сохраняем результат в переменную
+    result = authenticator.login(fields=fields, preauthorized=None)  # Сохраняем результат в переменную, добавляем preauthorized
 
     # Отладка: выводим результат для диагностики
     st.write("Debug: Login result:", result)  # Добавляем отладочный вывод (удалите или закомментируйте после тестирования)
@@ -83,7 +84,8 @@ with st.spinner("Проверка авторизации..."):
 
     # Дополнительная отладка для диагностики
     if authentication_status is None:
-        st.write("Debug: Authentication failed, status is None")
+        st.write("Debug: Authentication failed, status is None. Checking credentials...")
+        st.write("Debug: Credentials usernames:", credentials["usernames"].keys())  # Выводим доступные логины для диагностики
     elif authentication_status is False:
         st.write("Debug: Authentication failed, invalid credentials")
 
