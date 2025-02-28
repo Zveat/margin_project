@@ -65,6 +65,9 @@ if not st.session_state["authenticated"]:
             # Сохраняем состояние в куки через CookieController
             cookie_controller.set("authenticated", "true", expires=datetime.datetime.now() + datetime.timedelta(days=30))  # Сохраняем на 30 дней
             cookie_controller.set("user", username_input, expires=datetime.datetime.now() + datetime.timedelta(days=30))  # Сохраняем на 30 дней
+            # Отладочные сообщения
+            print(f"Auth cookie after set: {cookie_controller.get('authenticated')}")
+            print(f"User cookie after set: {cookie_controller.get('user')}")
             st.rerun()
         else:
             st.error("Неверный логин или пароль")
