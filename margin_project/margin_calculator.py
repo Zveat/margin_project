@@ -748,7 +748,7 @@ def run_margin_service():
                 # Кнопки "Редактировать" и "Удалить" с выравниванием: "Редактировать" слева, "Удалить" максимально справа
                 col_btn_edit, col_btn_delete = st.columns([4, 1])  # Сохраняем пропорцию для выравнивания
                 with col_btn_edit:
-                    if st.button(f"✏️ Редактировать товар_{index}", key=f"edit_{index}"):
+                    if st.button(f"✏️ Редактировать_{index}", key=f"edit_{index}"):
                         # Открываем форму редактирования для выбранного товара
                         st.session_state.edit_index = index
                         st.session_state.edit_product = product.copy()
