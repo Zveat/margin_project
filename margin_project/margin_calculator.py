@@ -509,7 +509,7 @@ def generate_invoice_gos(
     return pdf_path
 
 def run_margin_service():
-    # CSS для единообразия в «Калькуляторе маржинальности» с исходными отступами
+    # CSS для единообразия в «Калькуляторе маржинальности» с исходными отступами и скрытием суффикса
     st.markdown(
         """
         <style>
@@ -533,6 +533,34 @@ def run_margin_service():
         /* Убираем лишние отступы для кнопок внутри экспандера */
         .stExpander .stButton > button {
             margin: 0; /* Убедимся, что кнопки не имеют лишних внутренних отступов */
+        }
+        /* Скрываем суффикс _index в тексте кнопок (например, _0, _1 и т.д.) */
+        .stButton > button::after {
+            content: attr(data-label);
+            visibility: hidden;
+        }
+        .stButton > button {
+            position: relative;
+        }
+        .stButton > button::before {
+            content: "Редактировать товар" / "Удалить товар"; /* Базовый текст */
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px; /* Убедимся, что размер текста совпадает */
+            color: #fff; /* Цвет текста кнопки */
+        }
+        /* Специфичные стили для каждой кнопки */
+        .stButton[data-testid="stButton"][data-label^="✏️ Редактировать товар_"]::before {
+            content: "✏️ Редактировать товар";
+        }
+        .stButton[data-testid="stButton"][data-label^="❌ Удалить товар_"]::before {
+            content: "❌ Удалить товар";
         }
         </style>
         """,
@@ -745,10 +773,10 @@ def run_margin_service():
                     st.write(f"**Цена поставщика (мин – макс):** {int(min_supplier_price):,} – {int(max_supplier_price):,} ₸")
                     st.write(f"**Цена для клиента (за ед.):** {int(price_for_client):,} ₸")
                 
-                # Кнопки "Редактировать" и "Удалить" с выравниванием: "Редактировать" слева, "Удалить" максимально справа
+                # Кнопки с суффиксом _index в тексте, но скрытым визуально
                 col_btn_edit, col_btn_delete = st.columns([4, 1])  # Сохраняем пропорцию для выравнивания
                 with col_btn_edit:
-                    if st.button("✏️ Редактировать товар", key=f"edit_{index}"):
+                    if st.button(f"✏️ Редактировать товар_{index}", key=f"edit_{index}"):
                         # Убедимся, что индекс и продукт корректно сохраняются в сессии
                         st.session_state.edit_index = index
                         st.session_state.edit_product = product.copy()
@@ -759,7 +787,7 @@ def run_margin_service():
                         st.rerun()
 
                 with col_btn_delete:
-                    if st.button("❌ Удалить товар", key=f"del_{index}"):
+                    if st.button(f"❌ Удалить товар_{index}", key=f"del_{index}"):
                         st.session_state.products.pop(index)
                         st.rerun()
 
