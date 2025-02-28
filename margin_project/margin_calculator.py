@@ -563,21 +563,26 @@ def run_margin_service():
 
     if history:
         deal_ids = [row[0] for row in history]  # deal_id (индекс 0 в History)
-        # Обновляем format_func, чтобы отображать ФИО, Название компании и дату без времени
+        # Обновляем format_func, чтобы отображать ФИО, Название компании и дату в формате "ДД.ММ.ГГ",
+        # с пустыми полями, если ФИО или Название компании отсутствуют
         def format_deal(deal_id):
             for row in history:
                 if row[0] == str(deal_id):
                     # Извлекаем ФИО клиента и название компании из данных
-                    client_name = row[2] if len(row) > 2 and row[2] else "Не указано"  # ФИО (столбец 3 в History)
-                    client_company = row[3] if len(row) > 3 and row[3] else "Не указано"  # Название компании (столбец 4 в History)
-                    # Дата из строки (столбец 2 в History), форматируем без времени
+                    client_name = row[2].strip() if len(row) > 2 and row[2] and row[2].lower() not in ["не указано", "завершён"] else ""  # ФИО (столбец 3 в History)
+                    client_company = row[3].strip() if len(row) > 3 and row[3] and row[3].lower() not in ["не указано", "завершён"] else ""  # Название компании (столбец 4 в History)
+                    # Проверяем CalculationDate (столбец 2 в History) и форматируем дату в "ДД.ММ.ГГ"
                     try:
                         date_str = row[1]  # Дата (столбец 2 в History)
-                        date_obj = datetime.datetime.strptime(date_str, "%Y-%m-%d %H:%M:%S")
-                        formatted_date = date_obj.strftime("%Y-%m-%d")  # Формат "ГГГГ-ММ-ДД"
+                        if date_str.lower() in ["завершён", "не указано"]:
+                            formatted_date = ""
+                        else:
+                            date_obj = datetime.datetime.strptime(date_str, "%Y-%m-%d %H:%M:%S")
+                            formatted_date = date_obj.strftime("%d.%m.%y")  # Формат "ДД.ММ.ГГ"
                     except (ValueError, IndexError):
-                        formatted_date = "Не указано"
-                    return f"{client_name}, {client_company}, {formatted_date}"
+                        formatted_date = ""
+                    # Формируем строку: "ФИО, КОМПАНИЯ, ДАТА" с пустыми полями, если данные отсутствуют
+                    return f"{client_name}, {client_company}, {formatted_date}".rstrip(", ")
             return f"Расчёт #{deal_id} (Не найдено)"
 
         selected_deal = st.selectbox("Выберите прошлый расчёт для восстановления", deal_ids, format_func=format_deal)
@@ -968,6 +973,16 @@ def run_margin_service():
             st.text(f"💸 Налог на обнал (32%) (откат): {int(tax_kickback):,} ₸")
             st.text(f"📊 Налог НДС от маржи (12%): {int(tax_nds):,} ₸")
 
+            # Формируем имя файла на основе ФИО, Названия компании и Даты
+            current_date = datetime.datetime.now().strftime("%Y-%m-%d")
+            if client_name and client_name.strip() and client_name.lower() != "не указано":
+                file_name_base = client_name.strip()
+                if client_company and client_company.strip() and client_company.lower() != "не указано":
+                    file_name_base += f", {client_company.strip()}"
+                file_name_base += f", {current_date}"
+            else:
+                file_name_base = current_date  # Только дата, если ФИО или Название компании отсутствуют
+
             # Сохранение результатов в Excel
             output = io.BytesIO()
             with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
@@ -1022,7 +1037,7 @@ def run_margin_service():
             st.download_button(
                 "📥 Скачать расчёт в Excel",
                 data=output.getvalue(),
-                file_name="margin_calculator.xlsx",
+                file_name=f"{file_name_base}.xlsx",
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             )
 
@@ -1055,7 +1070,7 @@ def run_margin_service():
                 st.download_button(
                     "📥 Скачать счет (гос)",
                     data=f,
-                    file_name="invoice_gos_full.pdf",
+                    file_name=f"{file_name_base}.pdf",
                     mime="application/pdf",
                 )
 
