@@ -43,14 +43,22 @@ def check_credentials(username, password):
 # -------------------------
 spreadsheet_id = "1Z4-Moti7RVqyBQY5v4tcCwFQS3noOD84w9Q2liv9rI4"
 
-# Генерируем уникальный идентификатор сессии, если его ещё нет
+# Генерируем и сохраняем уникальный идентификатор сессии, если его ещё нет
 if "session_id" not in st.session_state:
     st.session_state["session_id"] = str(uuid.uuid4())
+    print(f"Сгенерирован новый session_id: {st.session_state['session_id']}")
 
 # Пытаемся восстановить состояние из Google Sheets при запуске для текущей сессии
 if "authenticated" not in st.session_state or "user" not in st.session_state:
     print(f"Попытка восстановить состояние авторизации для сессии {st.session_state['session_id']}...")
     try:
+        # Получаем все записи из AuthState для отладки
+        conn = connect_to_sheets()
+        sheet = conn.open_by_key(spreadsheet_id)
+        auth_worksheet = sheet.worksheet("AuthState")
+        all_auth = auth_worksheet.get_all_values()
+        print(f"Содержимое листа AuthState: {all_auth}")
+
         auth_state = load_auth_state(spreadsheet_id, st.session_state["session_id"])
         print(f"Загруженное состояние авторизации из Google Sheets: {auth_state}")
         st.session_state["authenticated"] = auth_state.get("authenticated", False)
@@ -893,7 +901,7 @@ def run_margin_service():
             st.error("Google Таблица не найдена. Убедитесь, что spreadsheet_id корректен и сервисный аккаунт имеет доступ.")
             return
 
-        # Загружаем историю расчётов
+        # Загружаем историю расчётов из листа "History"
         history_sheet = sheet.worksheet("History")
         all_history = history_sheet.get_all_values()[1:]  # Получаем все записи (кроме заголовка)
 
