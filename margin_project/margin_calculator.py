@@ -42,11 +42,22 @@ def check_credentials(username, password):
 # -------------------------
 spreadsheet_id = "1Z4-Moti7RVqyBQY5v4tcCwFQS3noOD84w9Q2liv9rI4"
 
-if "authenticated" not in st.session_state:
-    # Пытаемся восстановить состояние из Google Sheets
-    auth_state = load_auth_state(spreadsheet_id, st.session_state.get("user", ""))
-    st.session_state["authenticated"] = auth_state.get("authenticated", False)
-    st.session_state["user"] = auth_state.get("user", "")
+# Пытаемся восстановить состояние из Google Sheets при запуске
+if "authenticated" not in st.session_state or "user" not in st.session_state:
+    print("Попытка восстановить состояние авторизации из Google Sheets...")
+    try:
+        auth_state = load_auth_state(spreadsheet_id, st.session_state.get("user", ""))
+        print(f"Загруженное состояние авторизации из Google Sheets: {auth_state}")
+        st.session_state["authenticated"] = auth_state.get("authenticated", False)
+        st.session_state["user"] = auth_state.get("user", "")
+        print(f"После восстановления: authenticated={st.session_state['authenticated']}, user={st.session_state['user']}")
+    except Exception as e:
+        print(f"Ошибка при восстановлении состояния авторизации: {e}")
+        st.session_state["authenticated"] = False
+        st.session_state["user"] = ""
+
+# Проверка состояния после восстановления (для отладки)
+print(f"Текущее состояние после проверки: authenticated={st.session_state['authenticated']}, user={st.session_state['user']}")
 
 # -------------------------
 # Форма входа
@@ -251,7 +262,7 @@ def run_logistics_service():
             else:
                 tariff = intercity_data[direction]
                 capacity = 20  # Допустим, фура может перевозить до 20 тонн
-                coef = 2       # Коэффициент догруza
+                coef = 2       # Коэффициент догруза
                 cost = (tariff / capacity) * weight_tonn * coef
                 st.success(f"Стоимость перевозки: **{round(cost)} тг**")
 
