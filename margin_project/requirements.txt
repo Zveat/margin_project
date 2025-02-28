@@ -54,4 +54,4 @@ streamlit-authenticator==0.1.0
 passlib[bcrypt]
 gspread
 oauth2client
-streamlit-cookies==0.2.0
+streamlit-cookies-controller==0.0.4
