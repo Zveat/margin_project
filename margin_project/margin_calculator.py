@@ -59,13 +59,6 @@ elif authentication_status is None:
     st.warning("Пожалуйста, введите логин и пароль")
     st.stop()
 
-# НОВОЕ: Кнопка выхода (через аутентификатор)
-if st.button("Выйти"):
-    authenticator.logout("Выйти", location='main', key="logout")
-    st.session_state["authenticated"] = False
-    st.session_state["user"] = ""
-    st.rerun()
-
 # Убедимся, что st.session_state сохраняет авторизацию между обновлениями
 if "authenticated" not in st.session_state:
     st.session_state["authenticated"] = False
