@@ -13,6 +13,7 @@ import math
 import datetime
 from fpdf import FPDF
 from num2words import num2words
+import pytz  # Добавлен импорт для работы с часовыми поясами
 
 # НОВОЕ: Импорт для работы с Google Sheets для архива расчётов
 from google_sheets_db import save_calculation, load_calculation, connect_to_sheets
@@ -267,6 +268,7 @@ def format_date_russian(date_obj):
         "July": "Июля",     "August": "Августа","September": "Сентября",
         "October": "Октября","November": "Ноября","December": "Декабря"
     }
+    # Используем переданный date_obj с часовым поясом UTC+5
     formatted = date_obj.strftime("%d %B %Y г.")
     for eng, rus in months.items():
         formatted = formatted.replace(eng, rus)
@@ -278,7 +280,8 @@ def get_next_invoice_number(prefix="INV", format_str="{:05d}"):
     Хранится в файле 'last_invoice.txt' (можно заменить на базу данных или другое хранилище).
     """
     storage_file = "last_invoice.txt"
-    current_year = datetime.datetime.now().year
+    # Используем локальное время UTC+5
+    current_year = datetime.now(pytz.timezone('Asia/Almaty')).year
 
     try:
         with open(storage_file, "r") as f:
@@ -322,8 +325,8 @@ def generate_invoice_gos(
     tax_nds,
     net_margin,
 ):
-    # Текущая дата в формате "XX Месяц YYYY г."
-    invoice_date = format_date_russian(datetime.datetime.now())
+    # Текущая дата в формате "XX Месяц YYYY г." с часовым поясом UTC+5
+    invoice_date = format_date_russian(datetime.now(pytz.timezone('Asia/Almaty')))
 
     pdf = FPDF()
     pdf.add_page()
@@ -862,7 +865,7 @@ def run_margin_service():
         all_history = history_sheet.get_all_values()[1:]  # Получаем все записи (кроме заголовка)
 
         # Фильтруем записи, которым не больше месяца
-        one_month_ago = datetime.datetime.now() - datetime.timedelta(days=60)
+        one_month_ago = datetime.now(pytz.timezone('Asia/Almaty')) - datetime.timedelta(days=60)  # Используем UTC+5
         filtered_history = [
             row for row in all_history
             if datetime.datetime.strptime(row[1], "%Y-%m-%d %H:%M:%S") > one_month_ago
@@ -1001,8 +1004,8 @@ def run_margin_service():
             st.text(f"💸 Налог на обнал (32%) (откат): {int(tax_kickback):,} ₸")
             st.text(f"📊 Налог НДС от маржи (12%): {int(tax_nds):,} ₸")
 
-            # Формируем имя файла на основе ФИО, Названия компании и Даты
-            current_date = datetime.datetime.now().strftime("%Y-%m-%d")
+            # Формируем имя файла на основе ФИО, Названия компании и Даты с правильным часовым поясом
+            current_date = datetime.now(pytz.timezone('Asia/Almaty')).strftime("%Y-%m-%d")
             if client_name and client_name.strip() and client_name.lower() != "не указано":
                 file_name_base = client_name.strip()
                 if client_company and client_company.strip() and client_company.lower() != "не указано":
