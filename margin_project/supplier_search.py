@@ -1,6 +1,7 @@
 # supplier_search.py
 
 from google_sheets_db import connect_to_sheets
+import streamlit as st
 
 def run_supplier_search():
     """
