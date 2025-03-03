@@ -281,7 +281,7 @@ def get_next_invoice_number(prefix="INV", format_str="{:05d}"):
     """
     storage_file = "last_invoice.txt"
     # Используем локальное время UTC+5
-    current_year = datetime.now(pytz.timezone('Asia/Almaty')).year
+    current_year = datetime.datetime.now(pytz.timezone('Asia/Almaty')).year
 
     try:
         with open(storage_file, "r") as f:
@@ -326,7 +326,7 @@ def generate_invoice_gos(
     net_margin,
 ):
     # Текущая дата в формате "XX Месяц YYYY г." с часовым поясом UTC+5
-    invoice_date = format_date_russian(datetime.now(pytz.timezone('Asia/Almaty')))
+    invoice_date = format_date_russian(datetime.datetime.now(pytz.timezone('Asia/Almaty')))
 
     pdf = FPDF()
     pdf.add_page()
@@ -819,37 +819,37 @@ def run_margin_service():
                 else:
                     st.error("Название товара не может быть пустым. Пожалуйста, введите название.")
 
-        # Кнопка "Отмена" использует сохранённый ключ из сессии
-        if "cancel_key" in st.session_state:
-            print(f"Используется сохранённый ключ для кнопки 'Отмена': {st.session_state.cancel_key}")
-            col_cancel, _ = st.columns([1, 1])  # Размещаем кнопку в отдельной колонке
-            with col_cancel:
-                if st.button("✖️ Отмена", key=st.session_state.cancel_key):
-                    print(f"Кнопка 'Отмена' нажата с ключом: {st.session_state.cancel_key}")
-                    # Проверяем, что edit_index и edit_product существуют перед удалением
-                    if "edit_index" in st.session_state:
-                        del st.session_state.edit_index
-                    if "edit_product" in st.session_state:
-                        del st.session_state.edit_product
-                    if "cancel_key" in st.session_state:
-                        del st.session_state.cancel_key
-                    st.rerun()
-        else:
-            # Если ключ отсутствует, генерируем новый и сохраняем его
-            st.session_state.cancel_key = f"cancel_edit_{st.session_state.edit_index}"
-            print(f"Сгенерирован новый ключ для кнопки 'Отмена', так как предыдущий не найден: {st.session_state.cancel_key}")
-            col_cancel, _ = st.columns([1, 1])  # Размещаем кнопку в отдельной колонке
-            with col_cancel:
-                if st.button("✖️ Отмена", key=st.session_state.cancel_key):
-                    print(f"Кнопка 'Отмена' нажата с ключом: {st.session_state.cancel_key}")
-                    # Проверяем, что edit_index и edit_product существуют перед удалением
-                    if "edit_index" in st.session_state:
-                        del st.session_state.edit_index
-                    if "edit_product" in st.session_state:
-                        del st.session_state.edit_product
-                    if "cancel_key" in st.session_state:
-                        del st.session_state.cancel_key
-                    st.rerun()
+            # Кнопка "Отмена" использует сохранённый ключ из сессии
+            if "cancel_key" in st.session_state:
+                print(f"Используется сохранённый ключ для кнопки 'Отмена': {st.session_state.cancel_key}")
+                col_cancel, _ = st.columns([1, 1])  # Размещаем кнопку в отдельной колонке
+                with col_cancel:
+                    if st.button("✖️ Отмена", key=st.session_state.cancel_key):
+                        print(f"Кнопка 'Отмена' нажата с ключом: {st.session_state.cancel_key}")
+                        # Проверяем, что edit_index и edit_product существуют перед удалением
+                        if "edit_index" in st.session_state:
+                            del st.session_state.edit_index
+                        if "edit_product" in st.session_state:
+                            del st.session_state.edit_product
+                        if "cancel_key" in st.session_state:
+                            del st.session_state.cancel_key
+                        st.rerun()
+            else:
+                # Если ключ отсутствует, генерируем новый и сохраняем его
+                st.session_state.cancel_key = f"cancel_edit_{st.session_state.edit_index}"
+                print(f"Сгенерирован новый ключ для кнопки 'Отмена', так как предыдущий не найден: {st.session_state.cancel_key}")
+                col_cancel, _ = st.columns([1, 1])  # Размещаем кнопку в отдельной колонке
+                with col_cancel:
+                    if st.button("✖️ Отмена", key=st.session_state.cancel_key):
+                        print(f"Кнопка 'Отмена' нажата с ключом: {st.session_state.cancel_key}")
+                        # Проверяем, что edit_index и edit_product существуют перед удалением
+                        if "edit_index" in st.session_state:
+                            del st.session_state.edit_index
+                        if "edit_product" in st.session_state:
+                            del st.session_state.edit_product
+                        if "cancel_key" in st.session_state:
+                            del st.session_state.cancel_key
+                        st.rerun()
 
     # НОВOЕ: Блок "Архив расчетов" внизу страницы под экспандером "Список товаров" с улучшениями
     with st.expander("📜 Архив расчетов", expanded=False):
@@ -865,7 +865,7 @@ def run_margin_service():
         all_history = history_sheet.get_all_values()[1:]  # Получаем все записи (кроме заголовка)
 
         # Фильтруем записи, которым не больше месяца
-        one_month_ago = datetime.now(pytz.timezone('Asia/Almaty')) - datetime.timedelta(days=60)  # Используем UTC+5
+        one_month_ago = datetime.datetime.now(pytz.timezone('Asia/Almaty')) - datetime.timedelta(days=60)  # Используем UTC+5
         filtered_history = [
             row for row in all_history
             if datetime.datetime.strptime(row[1], "%Y-%m-%d %H:%M:%S") > one_month_ago
@@ -1005,7 +1005,7 @@ def run_margin_service():
             st.text(f"📊 Налог НДС от маржи (12%): {int(tax_nds):,} ₸")
 
             # Формируем имя файла на основе ФИО, Названия компании и Даты с правильным часовым поясом
-            current_date = datetime.now(pytz.timezone('Asia/Almaty')).strftime("%Y-%m-%d")
+            current_date = datetime.datetime.now(pytz.timezone('Asia/Almaty')).strftime("%Y-%m-%d")
             if client_name and client_name.strip() and client_name.lower() != "не указано":
                 file_name_base = client_name.strip()
                 if client_company and client_company.strip() and client_company.lower() != "не указано":
