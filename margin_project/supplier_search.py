@@ -7,9 +7,9 @@ def run_supplier_search():
     """
     Функция для поиска поставщиков, которая возвращает интерфейс Streamlit для отображения.
     """
-    st.subheader("🔍 Введите название товара")
+    st.subheader("🔍 Поиск поставщиков")
 
-    # CSS для стилизации (аналогичный вашему текущему стилю, с улучшениями для компактности)
+    # CSS для стилизации (с улучшениями для компактности)
     st.markdown(
         """
         <style>
@@ -24,7 +24,7 @@ def run_supplier_search():
         body {
             background-color: #f1c40f;
         }
-        div[data-testid="stTextInput"] input {
+        div[data-testid="stTextInput"] input, div[data-testid="stSelectbox"] select {
              border: 1px solid #ccc !important;
              border-radius: 5px !important;
              padding: 8px !important;
@@ -71,46 +71,52 @@ def run_supplier_search():
         print(f"Ошибка подключения: {e}")
         st.stop()
 
-    # Ввод поискового запроса
-    search_query = st.text_input(" например: труба ")
+    # Извлечение уникальных городов и типов товаров для фильтров
+    cities = sorted(list(set(city for row in all_suppliers if row and len(row) > 1 for city in row[1].split(", ") if city.strip())))
+    products = sorted(list(set(product for row in all_suppliers if row and len(row) > 5 for product in row[5].split(", ") if product.strip())))
 
-    if search_query:
-        # Фильтрация поставщиков по поисковому запросу (ищем в столбце F — "Перечень товаров, которые продаёт поставщик")
-        filtered_suppliers = [
-            row for row in all_suppliers
-            if row and len(row) > 5 and any(search_query.lower().strip() in str(cell).lower().strip() for cell in [row[5]] if cell)  # Столбец F (индекс 5), проверяем, что строка не пустая
-        ]
+    # Фильтры
+    city_filter = st.multiselect("Выберите город", cities)
+    product_type_filter = st.multiselect("Тип товара", products)
+    search_query = st.text_input("Введите название товара (например, 'труба')", "")
 
-        print(f"Найдено {len(filtered_suppliers)} поставщиков по запросу: {search_query}")  # Отладка
-        print(f"Пример первой строки после фильтрации: {filtered_suppliers[0] if filtered_suppliers else 'Нет данных'}")  # Отладка
+    # Фильтрация поставщиков
+    filtered_suppliers = [
+        row for row in all_suppliers
+        if row and len(row) > 5
+        and (not search_query or any(search_query.lower().strip() in str(cell).lower().strip() for cell in [row[5]] if cell))
+        and (not city_filter or any(city.lower().strip() in row[1].lower().strip() for city in city_filter))
+        and (not product_type_filter or any(pt.lower().strip() in row[5].lower().strip() for pt in product_type_filter))
+    ]
 
-        if filtered_suppliers:
-            st.write(f"Найдено {len(filtered_suppliers)} подходящих поставщиков:")
-            for supplier in filtered_suppliers:
-                # Проверка и форматирование данных для каждого поставщика
-                company = supplier[0].strip() if supplier[0] and supplier[0].strip() else "Не указано"
-                city = supplier[1].strip() if supplier[1] and supplier[1].strip() else "Не указан"
-                website = supplier[2].strip() if supplier[2] and supplier[2].strip() else None
-                # Сохраняем оригинальный формат телефона из Google Sheets
-                phone = supplier[3].strip() if supplier[3] and supplier[3].strip() else "Не указан"
-                comment = supplier[4].strip() if supplier[4] and supplier[4].strip() else "Не указан"
+    print(f"Найдено {len(filtered_suppliers)} поставщиков по запросу: {search_query}, фильтры: город={city_filter}, товар={product_type_filter}")  # Отладка
 
-                print(f"Обработка поставщика: Компания={company}, Город={city}, Сайт={website}, Телефон={phone}, Комментарий={comment}")  # Отладка
+    if filtered_suppliers:
+        st.write(f"Найдено {len(filtered_suppliers)} подходящих поставщиков:")
+        for supplier in filtered_suppliers:
+            # Проверка и форматирование данных для каждого поставщика
+            company = supplier[0].strip() if supplier[0] and supplier[0].strip() else "Не указано"
+            city = supplier[1].strip() if supplier[1] and supplier[1].strip() else "Не указан"
+            website = supplier[2].strip() if supplier[2] and supplier[2].strip() else None
+            # Сохраняем оригинальный формат телефона из Google Sheets
+            phone = supplier[3].strip() if supplier[3] and supplier[3].strip() else "Не указан"
+            comment = supplier[4].strip() if supplier[4] and supplier[4].strip() else "Не указан"
 
-                # HTML-карточка для аккуратного отображения поставщика
-                st.markdown(
-                    f"""
-                    <div class="supplier-card">
-                        <p><strong>Компания:</strong> {company}</p>
-                        <p><strong>Город:</strong> {city}</p>
-                        <p><strong>Сайт:</strong> {'Не указан' if not website else f'<a href="{website}" target="_blank">Посетить сайт</a>'}</p>
-                        <p><strong>Телефон:</strong> {phone}</p>
-                        <p><strong>Комментарий:</strong> {comment}</p>
-                    </div>
-                    """,
-                    unsafe_allow_html=True
-                )
-        else:
-            st.warning("По вашему запросу поставщики не найдены.")
+            print(f"Обработка поставщика: Компания={company}, Город={city}, Сайт={website}, Телефон={phone}, Комментарий={comment}")  # Отладка
+
+            # HTML-карточка для аккуратного отображения поставщика
+            st.markdown(
+                f"""
+                <div class="supplier-card">
+                    <p><strong>Компания:</strong> {company}</p>
+                    <p><strong>Город:</strong> {city}</p>
+                    <p><strong>Сайт:</strong> {'Не указан' if not website else f'<a href="{website}" target="_blank">Посетить сайт</a>'}</p>
+                    <p><strong>Телефон:</strong> {phone}</p>
+                    <p><strong>Комментарий:</strong> {comment}</p>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
     else:
-        st.info("Введите название товара для поиска.")
+        st.warning("По вашему запросу и фильтрам поставщики не найдены.")
+    st.info("Введите название товара для поиска или используйте фильтры для уточнения.")
