@@ -84,7 +84,7 @@ html_block = f"""
     align-items: center;
     justify-content: center;
     flex-wrap: wrap;
-    margin-bottom: 3px;
+    margin-bottom: 0px;
   }}
   .responsive-header img {{
     max-width: 200px;
