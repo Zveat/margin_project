@@ -72,7 +72,7 @@ def run_supplier_search():
         st.stop()
 
     # Ввод поискового запроса
-    search_query = st.text_input(" например, 'труба', ")
+    search_query = st.text_input(" например: труба ")
 
     if search_query:
         # Фильтрация поставщиков по поисковому запросу (ищем в столбце F — "Перечень товаров, которые продаёт поставщик")
