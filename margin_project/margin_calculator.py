@@ -111,7 +111,7 @@ html_block = f"""
 <div class="responsive-header">
   <img src="{logo_src}" alt="Logo" />
   <h2>
-    <span style="color:#007bff;">СЕРВИС ДЛЯ АВТОМАЗИЦИИ РАБОТЫ</span>
+    <span style="color:#1a535c;">СЕРВИС ДЛЯ АВТОМАЗИЦИИ РАБОТЫ</span>
   </h2>
 </div>
 """
