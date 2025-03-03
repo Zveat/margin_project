@@ -72,13 +72,13 @@ def run_supplier_search():
         st.stop()
 
     # Извлечение уникальных городов и типов товаров для фильтров
-    cities = sorted(list(set(city for row in all_suppliers if row and len(row) > 1 for city in row[1].split(", ") if city.strip())))
-    products = sorted(list(set(product for row in all_suppliers if row and len(row) > 5 for product in row[5].split(", ") if product.strip())))
+    cities = sorted(list(set(city.strip() for row in all_suppliers if row and len(row) > 1 for city in row[1].split(",") if city.strip())))
+    products = sorted(list(set(product.strip() for row in all_suppliers if row and len(row) > 5 for product in row[5].split(",") if product.strip())))
 
     # Фильтры
-    city_filter = st.multiselect("Выберите город", cities)
-    product_type_filter = st.multiselect("Тип товара", products)
-    search_query = st.text_input("Введите название товара (например, 'труба')", "")
+    city_filter = st.multiselect("Выберите город", cities, key="city_filter")
+    product_type_filter = st.multiselect("Тип товара", products, key="product_filter")
+    search_query = st.text_input("Введите название товара (например, 'труба')", key="search_query")
 
     # Фильтрация поставщиков
     filtered_suppliers = [
