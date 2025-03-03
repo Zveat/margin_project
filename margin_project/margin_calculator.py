@@ -868,12 +868,13 @@ def run_margin_service():
         one_month_ago = datetime.datetime.now(pytz.timezone('Asia/Almaty')) - datetime.timedelta(days=60)  # Используем UTC+5
         filtered_history = [
             row for row in all_history
-            if datetime.datetime.strptime(row[1], "%Y-%m-%d %H:%M:%S") > one_month_ago
+            if row[1] and row[1].strip() and row[1].lower() not in ["завершён", "не указано"]  # Проверяем, что дата существует и не является специальным значением
+            and datetime.datetime.strptime(row[1], "%Y-%m-%d %H:%M:%S").replace(tzinfo=pytz.timezone('Asia/Almaty')) > one_month_ago
         ]
         print(f"Количество записей после фильтрации по дате (менее месяца): {len(filtered_history)}")  # Отладка
 
         # Сортируем записи по дате (CalculationDate) в порядке убывания (новые сверху)
-        sorted_history = sorted(filtered_history, key=lambda x: datetime.datetime.strptime(x[1], "%Y-%m-%d %H:%M:%S"), reverse=True)
+        sorted_history = sorted(filtered_history, key=lambda x: datetime.datetime.strptime(x[1], "%Y-%m-%d %H:%M:%S").replace(tzinfo=pytz.timezone('Asia/Almaty')), reverse=True)
         print(f"Количество отсортированных записей: {len(sorted_history)}")  # Отладка
 
         # Ограничиваем до 300 записей
