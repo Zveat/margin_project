@@ -112,7 +112,7 @@ html_block = f"""
   <img src="{logo_src}" alt="Logo" />
   <h2>
     <span style="color:#1a535c;">СЕРВИС ДЛЯ АВТОМАЗИЦИИ РАБОТЫ</span>
-  </h2>
+  </h1>
 </div>
 """
 st.markdown(html_block, unsafe_allow_html=True)
