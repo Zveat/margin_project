@@ -111,7 +111,7 @@ html_block = f"""
 <div class="responsive-header">
   <img src="{logo_src}" alt="Logo" />
   <h2>
-    <span style="color:#007bff;">СЕРВИС РАСЧЕТА ЛОГИСТИКИ, МАРЖИНАЛЬНОСТИ И ПОИСКА ПОСТАВЩИКОВ</span>
+    <span style="color:#007bff;">СЕРВИС ДЛЯ АВТОМАЗИЦИИ РАБОТЫ</span>
   </h2>
 </div>
 """
