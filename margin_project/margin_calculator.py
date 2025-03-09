@@ -483,7 +483,7 @@ def generate_invoice_gos(
     pdf.cell(0, 5, f"Всего наименований {total_items}, на сумму {int(total_sum):,} тенге", ln=True)
     pdf.ln(2)
     sum_words = num2words(int(total_sum), lang="ru").capitalize() + " тенге 00 тиын"
-    pdf.cell(0, 5, f"**Итого к оплате: {sum_words}", ln=True)**
+    pdf.cell(0, 5, f"**Итого к оплате:** {sum_words}", ln=True)
     pdf.ln(2)
 
     current_y = pdf.get_y()
