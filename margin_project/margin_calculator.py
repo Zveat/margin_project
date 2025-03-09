@@ -64,6 +64,9 @@ if "authenticated" not in st.session_state:
 if "user" not in st.session_state:
     st.session_state["user"] = ""
 
+# Отладка: проверяем, что находится в st.session_state["user"]
+print(f"После авторизации st.session_state['user']: {st.session_state['user']}")
+
 # -------------------------
 # Основной сервис (доступен только авторизованным пользователям)
 # -------------------------
@@ -120,7 +123,6 @@ try:
     locale.setlocale(locale.LC_TIME, 'ru_RU.UTF-8')
 except locale.Error:
     locale.setlocale(locale.LC_TIME, '')
-
 
 ###############################################################################
 #                         БЛОК 1: КОД ЛОГИСТИЧЕСКОГО КАЛЬКУЛЯТОРА
@@ -604,7 +606,16 @@ def run_margin_service():
 
     # --- Форма для добавления товаров
     st.subheader("🛒 Добавление товаров")
-    print(f"Состояние st.session_state перед формой: {st.session_state}")  # Отладка
+
+    # Отладка: проверяем значение st.session_state['name'] перед рендерингом формы
+    print(f"Значение st.session_state['name'] перед формой: {st.session_state.get('name', 'не задано')}")
+
+    # Сбрасываем значение st.session_state["name"], чтобы поле "Наименование товара" всегда было пустым при загрузке формы
+    if "name" in st.session_state:
+        st.session_state["name"] = ""
+
+    print(f"Состояние st.session_state после сброса 'name': {st.session_state}")
+
     with st.form("add_product_form"):
         col_left, col_right = st.columns(2)
         with col_left:
@@ -704,6 +715,8 @@ def run_margin_service():
                 "Комментарий поставщика 4": st.session_state.comm_4,
                 "Наценка (%)": st.session_state.markup,
             })
+            # После добавления товара очищаем поле "name", чтобы при следующем открытии формы оно было пустым
+            st.session_state["name"] = ""
             st.rerun()
         else:
             st.warning("Введите название товара ⚠️ ")
@@ -1182,14 +1195,24 @@ with tab_suppliers:
     run_supplier_search()  # Вызываем функцию из supplier_search.py
 
 # --- В самом конце файла вставляем JS, отключающий автозаполнение ---
+# Усиливаем отключение автозаполнения
 st.markdown("""
 <script>
 document.addEventListener('DOMContentLoaded', function() {
   document.querySelectorAll('input').forEach(function(el) {
-    el.setAttribute('autocomplete', 'off');
+    el.setAttribute('autocomplete', 'new-password');  // Изменяем на 'new-password' для большей строгости
     el.setAttribute('autocorrect', 'off');
     el.setAttribute('autocapitalize', 'off');
+    el.setAttribute('name', 'off-' + Math.random().toString(36).substring(2));  // Случайное имя для предотвращения автозаполнения
   });
+
+  // Принудительно очищаем поле с key="name" при загрузке страницы
+  setTimeout(function() {
+    const input = document.querySelector('input[aria-label="Наименование товара"]');
+    if (input) {
+      input.value = '';
+    }
+  }, 100);
 });
 </script>
 """, unsafe_allow_html=True)
