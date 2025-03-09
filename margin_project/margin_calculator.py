@@ -517,7 +517,7 @@ def generate_invoice_gos(
     except Exception as e:
         print("Ошибка загрузки печати:", e)
     try:
-        pdf.image(signature_path, x=40, y=y_sign - 10, w=20) w- редактировать размер подписи
+        pdf.image(signature_path, x=40, y=y_sign - 10, w=20) # w- редактировать размер подписи
     except Exception as e:
         print("Ошибка загрузки подписи:", e)
 
