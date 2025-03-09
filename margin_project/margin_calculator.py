@@ -605,7 +605,7 @@ def run_margin_service():
 
     # --- Форма для добавления товаров
     st.subheader("🛒 Добавление товаров")
-    with st.form("add_product_form"):
+with st.form("add_product_form"):
     col_left, col_right = st.columns(2)
     with col_left:
         st.markdown("Наименование товара")
@@ -622,6 +622,7 @@ def run_margin_service():
         quantity = st.number_input("Количество", min_value=1, value=1, key="quantity", label_visibility="collapsed")
         st.markdown("Вес (кг)")
         weight = st.number_input("Вес (кг)", min_value=0, value=0, format="%d", key="weight", label_visibility="collapsed")
+    # Здесь должен быть остальной код формы (например, col_right и submit_btn)
 
         with col_right:
             # Цена поставщика 1
