@@ -33,7 +33,7 @@ def run_supplier_search():
     Функция для поиска поставщиков, которая возвращает интерфейс Streamlit для отображения.
     """
     # Заголовок
-    st.markdown('<h3 style="text-align: center; color: #1a535c;">🔍 Поиск поставщиков</h3>', unsafe_allow_html=True)
+    st.markdown('<h3 style="text-align: center; color: #1a535c;">🔍 Введите название товара</h3>', unsafe_allow_html=True)
 
     # Добавляем стили CSS для улучшенного дизайна
     st.markdown(
@@ -176,7 +176,7 @@ def run_supplier_search():
     st.markdown('<div class="search-input-container">', unsafe_allow_html=True)
     search_query = st.text_input(
         "",
-        placeholder="Введите название товара (например: труба)",
+        placeholder="Например: труба",
         key="search_input",
         label_visibility="collapsed"
     )
