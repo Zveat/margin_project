@@ -503,7 +503,7 @@ def generate_invoice_gos(
     )
     pdf.ln(5)
     pdf.set_font("DejaVu", "", 9)
-    pdf.cell(30, 5, "Исполнитель Пулик З.В.", ln=False)
+    pdf.cell(30, 5, "Исполнитель: Пулик З.В.", ln=False)
     pdf.cell(60, 5, "_______", ln=True)
     y_sign = pdf.get_y()
     pdf.ln(5)
@@ -517,7 +517,7 @@ def generate_invoice_gos(
     except Exception as e:
         print("Ошибка загрузки печати:", e)
     try:
-        pdf.image(signature_path, x=50, y=y_sign - 10, w=20) # w- редактировать размер подписи
+        pdf.image(signature_path, x=55, y=y_sign - 10, w=20) # w- редактировать размер подписи
     except Exception as e:
         print("Ошибка загрузки подписи:", e)
 
