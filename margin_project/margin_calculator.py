@@ -513,11 +513,11 @@ def generate_invoice_gos(
     signature_path = os.path.join(os.path.dirname(__file__), "assets", "signature.png")
 
     try:
-        pdf.image(stamp_path, x=100, y=y_sign - 10, w=50)
+        pdf.image(stamp_path, x=100, y=y_sign - 10, w=50) # w- редактировать размер печати
     except Exception as e:
         print("Ошибка загрузки печати:", e)
     try:
-        pdf.image(signature_path, x=40, y=y_sign - 10, w=20)
+        pdf.image(signature_path, x=40, y=y_sign - 10, w=20) w- редактировать размер подписи
     except Exception as e:
         print("Ошибка загрузки подписи:", e)
 
