@@ -88,10 +88,6 @@ def run_supplier_search():
     # Загрузка данных из Google Sheets
     all_suppliers = load_suppliers()
 
-    # Отображаем время последнего обновления (примерное, основанное на ttl)
-    last_updated = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    st.markdown(f"**Последнее обновление данных:** {last_updated} (обновляется каждые 60 сек)")
-
     # Ввод поискового запроса
     search_query = st.text_input(label="Поиск товара", placeholder="например: труба", key="search_input")
 
