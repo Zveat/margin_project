@@ -217,11 +217,11 @@ def run_supplier_search():
                     f"""
                     <div class="supplier-card">
                         <div class="company-name">{company}</div>
-                        <div class="supplier-info">🏙 **Город:** {city}</div>
-                        <div class="supplier-info">🌐 **Сайт:** {'Не указан' if not website else f'<a href="#" onclick="window.open(\'{website}\', \'_blank\'); return false;"><button class="website-btn">Посетить сайт</button></a>'}</div>
+                        <div class="supplier-info"<strong>🏙 Города:</strong>{city}</div>
+                        <div class="supplier-info">🌐 Сайт: {'Не указан' if not website else f'<a href="#" onclick="window.open(\'{website}\', \'_blank\'); return false;"><button class="website-btn">Посетить сайт</button></a>'}</div>
                         <div class="price-info">💰 Прайс на сайте: {price_info}</div>
-                        <div class="supplier-info">📞 **Телефон:** {phone}</div>
-                        <div class="comment-info">💬 **Комментарий:** {comment}</div>
+                        <div class="supplier-info">📞 Телефон: {phone}</div>
+                        <div class="comment-info">💬 Комментарий: {comment}</div>
                     </div>
                     """,
                     unsafe_allow_html=True
