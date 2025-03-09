@@ -9,50 +9,61 @@ def run_supplier_search():
     """
     st.subheader("🔍 Введите название товара")
 
-    # CSS для стилизации (аналогичный вашему текущему стилю, с улучшениями для компактности)
+    # CSS для стилизации (обновленный современный дизайн)
     st.markdown(
         """
         <style>
         .block-container {
-            max-width: 750px !important;
-            margin-left: 20px !important;
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            max-width: 900px !important;
+            margin: 0 auto !important;
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
         }
         body {
-            background-color: #f1c40f;
+            background-color: #f4d03f; /* Мягкий желтый фон */
         }
         div[data-testid="stTextInput"] input {
-             border: 1px solid #ccc !important;
-             border-radius: 5px !important;
-             padding: 8px !important;
-             font-size: 14px !important;
+            border: 2px solid #e0e0e0 !important;
+            border-radius: 8px !important;
+            padding: 10px !important;
+            font-size: 16px !important;
+            transition: border-color 0.3s ease;
         }
-        div.stButton > button {
-             background-color: #656dff;
-             color: #FFFFFF;
-             border: none;
-             border-radius: 4px;
-             padding: 2px 8px;
-             font-size: 6px;
-             cursor: pointer;
-             transition: background-color 0.3s ease;
-        }
-        div.stButton > button:hover {
-             background-color: #94db00;
+        div[data-testid="stTextInput"] input:focus {
+            border-color: #1a73e8 !important;
+            box-shadow: 0 0 5px rgba(26, 115, 232, 0.2);
         }
         .supplier-card {
-            background-color: #f9f9f9;
-            padding: 10px;
-            border-radius: 5px;
-            margin-bottom: 10px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .supplier-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.15);
         }
         .supplier-card p {
-            margin: 0 0 5px 0;
-            font-size: 14px;
+            margin: 0 0 8px 0;
+            font-size: 15px;
+            color: #333333;
+        }
+        .supplier-card p strong {
+            color: #1a73e8; /* Синий цвет для заголовков */
+            font-weight: 600;
+        }
+        .supplier-card a {
+            color: #1a73e8;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .supplier-card a:hover {
+            text-decoration: underline;
+            color: #155ab5;
         }
         </style>
         """,
