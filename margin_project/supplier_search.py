@@ -111,6 +111,21 @@ def run_supplier_search():
             font-style: italic;
             margin: 3px 0;
         }
+        /* Стили для кнопки сайта */
+        .website-btn {
+            background-color: #656dff;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 4px;
+            padding: 5px 10px;
+            font-size: 12px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background-color 0.3s ease;
+        }
+        .website-btn:hover {
+            background-color: #94db00;
+        }
         /* Адаптивность */
         @media (max-width: 600px) {
             .supplier-search-container {
@@ -130,8 +145,12 @@ def run_supplier_search():
             .supplier-info, .price-info, .comment-info {
                 font-size: 12px;
             }
+            .website-btn {
+                padding: 4px 8px;
+                font-size: 10px;
+            }
         }
-        /* Стили для кнопок */
+        /* Стили для кнопки обновления */
         div.stButton > button {
             background-color: #656dff;
             color: #FFFFFF;
@@ -193,13 +212,13 @@ def run_supplier_search():
 
                 print(f"Обработка поставщика: {company}, {city}, {website}, {phone}, {comment}, Прайс: {price_info}")
 
-                # HTML-карточка для аккуратного отображения поставщика
+                # HTML-карточка для аккуратного отображения поставщика с кнопкой вместо ссылки
                 st.markdown(
                     f"""
                     <div class="supplier-card">
                         <div class="company-name">{company}</div>
                         <div class="supplier-info">🏙 Города: {city}</div>
-                        <div class="supplier-info">🌐 Сайт: {'Не указан' if not website else f'<a href="{website}" target="_blank">{website}</a>'}</div>
+                        <div class="supplier-info">🌐 Сайт: {'Не указан' if not website else f'<a href="#" onclick="window.open(\'{website}\', \'_blank\'); return false;"><button class="website-btn">Посетить сайт</button></a>'}</div>
                         <div class="price-info">💰 Прайс на сайте: {price_info}</div>
                         <div class="supplier-info">📞 Телефон: {phone}</div>
                         <div class="comment-info">💬 Комментарий: {comment}</div>
