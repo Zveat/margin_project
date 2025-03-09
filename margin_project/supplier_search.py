@@ -175,7 +175,7 @@ def run_supplier_search():
     # Поле ввода с иконкой лупы
     st.markdown('<div class="search-input-container">', unsafe_allow_html=True)
     search_query = st.text_input(
-        "",
+        label="Поиск товара",
         placeholder="Например: труба",
         key="search_input",
         label_visibility="collapsed"
