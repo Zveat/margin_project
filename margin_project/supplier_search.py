@@ -114,7 +114,7 @@ def run_supplier_search():
         /* Стили для кнопки сайта (изменённые) */
         .website-btn {
             background-color: #E0FFFF; /* Бледно-синий, менее яркий */
-            color: #1a535c; /* Тёмно-синий текст */
+            color: #94db00; /* 1a535cТёмно-синий текст */
             border: 1px solid #b0c4de; /* Нейтральная граница */
             border-radius: 4px;
             padding: 3px 8px; /* Уменьшенный размер */
