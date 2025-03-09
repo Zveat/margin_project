@@ -3,7 +3,7 @@ import streamlit as st
 import time
 import datetime
 
-@st.cache_data(ttl=60)  # Автоматическое обновление кэша каждые 60 секунд
+@st.cache_data(ttl=6000)  # Автоматическое обновление кэша каждые 6000 секунд, 1.6 час
 def load_suppliers():
     start_time = time.time()
     conn = connect_to_sheets()
