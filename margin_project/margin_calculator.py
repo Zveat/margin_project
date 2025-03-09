@@ -124,7 +124,6 @@ try:
 except locale.Error:
     locale.setlocale(locale.LC_TIME, '')
 
-
 ###############################################################################
 #                         БЛОК 1: КОД ЛОГИСТИЧЕСКОГО КАЛЬКУЛЯТОРА
 ###############################################################################
@@ -243,7 +242,6 @@ def run_logistics_service():
                 coef = 2       # Коэффициент догруза
                 cost = (tariff / capacity) * weight_tonn * coef
                 st.success(f"Стоимость перевозки: **{round(cost)} тг**")
-
 
 ###############################################################################
 #                 БЛОК 2: КОД КАЛЬКУЛЯТОРА МАРЖИНАЛЬНОСТИ (Основной сервис)
@@ -591,57 +589,57 @@ def run_margin_service():
         col_left, col_right = st.columns(2)
         with col_left:
             st.markdown("Наименование товара")
-            name = st.text_input("", key="name", label_visibility="collapsed")
+            name = st.text_input("Наименование товара", key="name", label_visibility="collapsed")
             st.markdown("Ед. измерения")
-            unit = st.selectbox("", ["шт", "м", "кг", "км", "бухта", "рулон", "м²", "тонна"], 
+            unit = st.selectbox("Ед. измерения", ["шт", "м", "кг", "км", "бухта", "рулон", "м²", "тонна"], 
                                 key="unit", label_visibility="collapsed")
             st.markdown("Количество")
-            quantity = st.number_input("", min_value=1, value=1, key="quantity", label_visibility="collapsed")
+            quantity = st.number_input("Количество", min_value=1, value=1, key="quantity", label_visibility="collapsed")
             st.markdown("Вес (кг)")
-            weight = st.number_input("", min_value=0, value=0, format="%d", key="weight", label_visibility="collapsed")
+            weight = st.number_input("Вес (кг)", min_value=0, value=0, format="%d", key="weight", label_visibility="collapsed")
 
         with col_right:
             # Цена поставщика 1
             row1_col1, row1_col2 = st.columns(2)
             with row1_col1:
                 st.markdown('<p style="font-size:16px; margin-bottom:0px;">Цена поставщика 1 (₸)</p>', unsafe_allow_html=True)
-                price1 = st.number_input("", min_value=0, value=0, format="%d", key="price_1", label_visibility="collapsed")
+                price1 = st.number_input("Цена поставщика 1 (₸)", min_value=0, value=0, format="%d", key="price_1", label_visibility="collapsed")
             with row1_col2:
                 st.markdown("⠀")
-                comment1 = st.text_input("", placeholder="Комментарий", key="comm_1", label_visibility="collapsed")
+                comment1 = st.text_input("Комментарий поставщика 1", placeholder="Комментарий", key="comm_1", label_visibility="collapsed")
 
             # Цена поставщика 2
             row2_col1, row2_col2 = st.columns(2)
             with row2_col1:
                 st.markdown('<p style="font-size:16px; margin-bottom:0px;">Цена поставщика 2 (₸)</p>', unsafe_allow_html=True)
-                price2 = st.number_input("", min_value=0, value=0, format="%d", key="price_2", label_visibility="collapsed")
+                price2 = st.number_input("Цена поставщика 2 (₸)", min_value=0, value=0, format="%d", key="price_2", label_visibility="collapsed")
             with row2_col2:
                 st.markdown("⠀")
-                comment2 = st.text_input("", placeholder="Комментарий", key="comm_2", label_visibility="collapsed")
+                comment2 = st.text_input("Комментарий поставщика 2", placeholder="Комментарий", key="comm_2", label_visibility="collapsed")
 
             # Цена поставщика 3
             row3_col1, row3_col2 = st.columns(2)
             with row3_col1:
                 st.markdown('<p style="font-size:16px; margin-bottom:0px;">Цена поставщика 3 (₸)</p>', unsafe_allow_html=True)
-                price3 = st.number_input("", min_value=0, value=0, format="%d", key="price_3", label_visibility="collapsed")
+                price3 = st.number_input("Цена поставщика 3 (₸)", min_value=0, value=0, format="%d", key="price_3", label_visibility="collapsed")
             with row3_col2:
                 st.markdown("⠀")
-                comment3 = st.text_input("", placeholder="Комментарий", key="comm_3", label_visibility="collapsed")
+                comment3 = st.text_input("Комментарий поставщика 3", placeholder="Комментарий", key="comm_3", label_visibility="collapsed")
 
             # Цена поставщика 4
             row4_col1, row4_col2 = st.columns(2)
             with row4_col1:
                 st.markdown('<p style="font-size:16px; margin-bottom:0px;">Цена поставщика 4 (₸)</p>', unsafe_allow_html=True)
-                price4 = st.number_input("", min_value=0, value=0, format="%d", key="price_4", label_visibility="collapsed")
+                price4 = st.number_input("Цена поставщика 4 (₸)", min_value=0, value=0, format="%d", key="price_4", label_visibility="collapsed")
             with row4_col2:
                 st.markdown("⠀")
-                comment4 = st.text_input("", placeholder="Комментарий", key="comm_4", label_visibility="collapsed")
+                comment4 = st.text_input("Комментарий поставщика 4", placeholder="Комментарий", key="comm_4", label_visibility="collapsed")
 
             # Наценка
             row5_col1, _, _ = st.columns([2,1,2])
             with row5_col1:
                 st.markdown("Наценка (%)")
-                markup = st.number_input("", min_value=0, value=20, format="%d", key="markup", label_visibility="collapsed")
+                markup = st.number_input("Наценка (%)", min_value=0, value=20, format="%d", key="markup", label_visibility="collapsed")
 
         submit_btn = st.form_submit_button("➕ Добавить товар")
 
@@ -750,43 +748,43 @@ def run_margin_service():
                 row1_col1, row1_col2 = st.columns(2)
                 with row1_col1:
                     st.markdown('<p style="font-size:16px; margin-bottom:0px;">Цена поставщика 1 (₸)</p>', unsafe_allow_html=True)
-                    price1 = st.number_input("", min_value=0, value=int(st.session_state.edit_product["Цена поставщика 1"]), format="%d", key=f"edit_price_1_{st.session_state.edit_index}", label_visibility="collapsed")
+                    price1 = st.number_input("Цена поставщика 1 (₸)", min_value=0, value=int(st.session_state.edit_product["Цена поставщика 1"]), format="%d", key=f"edit_price_1_{st.session_state.edit_index}", label_visibility="collapsed")
                 with row1_col2:
                     st.markdown("⠀")
-                    comment1 = st.text_input("", placeholder="Комментарий", value=st.session_state.edit_product["Комментарий поставщика 1"], key=f"edit_comm_1_{st.session_state.edit_index}", label_visibility="collapsed")
+                    comment1 = st.text_input("Комментарий поставщика 1", placeholder="Комментарий", value=st.session_state.edit_product["Комментарий поставщика 1"], key=f"edit_comm_1_{st.session_state.edit_index}", label_visibility="collapsed")
 
                 # Цена поставщика 2
                 row2_col1, row2_col2 = st.columns(2)
                 with row2_col1:
                     st.markdown('<p style="font-size:16px; margin-bottom:0px;">Цена поставщика 2 (₸)</p>', unsafe_allow_html=True)
-                    price2 = st.number_input("", min_value=0, value=int(st.session_state.edit_product["Цена поставщика 2"]), format="%d", key=f"edit_price_2_{st.session_state.edit_index}", label_visibility="collapsed")
+                    price2 = st.number_input("Цена поставщика 2 (₸)", min_value=0, value=int(st.session_state.edit_product["Цена поставщика 2"]), format="%d", key=f"edit_price_2_{st.session_state.edit_index}", label_visibility="collapsed")
                 with row2_col2:
                     st.markdown("⠀")
-                    comment2 = st.text_input("", placeholder="Комментарий", value=st.session_state.edit_product["Комментарий поставщика 2"], key=f"edit_comm_2_{st.session_state.edit_index}", label_visibility="collapsed")
+                    comment2 = st.text_input("Комментарий поставщика 2", placeholder="Комментарий", value=st.session_state.edit_product["Комментарий поставщика 2"], key=f"edit_comm_2_{st.session_state.edit_index}", label_visibility="collapsed")
 
                 # Цена поставщика 3
                 row3_col1, row3_col2 = st.columns(2)
                 with row3_col1:
                     st.markdown('<p style="font-size:16px; margin-bottom:0px;">Цена поставщика 3 (₸)</p>', unsafe_allow_html=True)
-                    price3 = st.number_input("", min_value=0, value=int(st.session_state.edit_product["Цена поставщика 3"]), format="%d", key=f"edit_price_3_{st.session_state.edit_index}", label_visibility="collapsed")
+                    price3 = st.number_input("Цена поставщика 3 (₸)", min_value=0, value=int(st.session_state.edit_product["Цена поставщика 3"]), format="%d", key=f"edit_price_3_{st.session_state.edit_index}", label_visibility="collapsed")
                 with row3_col2:
                     st.markdown("⠀")
-                    comment3 = st.text_input("", placeholder="Комментарий", value=st.session_state.edit_product["Комментарий поставщика 3"], key=f"edit_comm_3_{st.session_state.edit_index}", label_visibility="collapsed")
+                    comment3 = st.text_input("Комментарий поставщика 3", placeholder="Комментарий", value=st.session_state.edit_product["Комментарий поставщика 3"], key=f"edit_comm_3_{st.session_state.edit_index}", label_visibility="collapsed")
 
                 # Цена поставщика 4
                 row4_col1, row4_col2 = st.columns(2)
                 with row4_col1:
                     st.markdown('<p style="font-size:16px; margin-bottom:0px;">Цена поставщика 4 (₸)</p>', unsafe_allow_html=True)
-                    price4 = st.number_input("", min_value=0, value=int(st.session_state.edit_product["Цена поставщика 4"]), format="%d", key=f"edit_price_4_{st.session_state.edit_index}", label_visibility="collapsed")
+                    price4 = st.number_input("Цена поставщика 4 (₸)", min_value=0, value=int(st.session_state.edit_product["Цена поставщика 4"]), format="%d", key=f"edit_price_4_{st.session_state.edit_index}", label_visibility="collapsed")
                 with row4_col2:
                     st.markdown("⠀")
-                    comment4 = st.text_input("", placeholder="Комментарий", value=st.session_state.edit_product["Комментарий поставщика 4"], key=f"edit_comm_4_{st.session_state.edit_index}", label_visibility="collapsed")
+                    comment4 = st.text_input("Комментарий поставщика 4", placeholder="Комментарий", value=st.session_state.edit_product["Комментарий поставщика 4"], key=f"edit_comm_4_{st.session_state.edit_index}", label_visibility="collapsed")
 
                 # Наценка
                 row5_col1, _, _ = st.columns([2,1,2])
                 with row5_col1:
                     st.markdown("Наценка (%)")
-                    markup = st.number_input("", min_value=0, value=int(st.session_state.edit_product["Наценка (%)"]), format="%d", key=f"edit_markup_{st.session_state.edit_index}", label_visibility="collapsed")
+                    markup = st.number_input("Наценка (%)", min_value=0, value=int(st.session_state.edit_product["Наценка (%)"]), format="%d", key=f"edit_markup_{st.session_state.edit_index}", label_visibility="collapsed")
 
             # Отладка нажатия кнопки "Сохранить изменения" с проверкой значений
             if st.form_submit_button("💾 Сохранить изменения"):
