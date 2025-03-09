@@ -1,3 +1,5 @@
+
+
 # margin_calculator.py
 
 import streamlit as st
@@ -13,13 +15,9 @@ import math
 import datetime
 from fpdf import FPDF
 from num2words import num2words
-import pytz  # Добавлен импорт для работы с часовыми поясами
 
 # НОВОЕ: Импорт для работы с Google Sheets для архива расчётов
 from google_sheets_db import save_calculation, load_calculation, connect_to_sheets
-
-# НОВОЕ: Импорт функции поиска поставщиков из supplier_search.py
-from supplier_search import run_supplier_search
 
 # Устанавливаем параметры страницы
 st.set_page_config(page_title="Margin Calculator", page_icon="💰")
@@ -61,6 +59,13 @@ elif authentication_status is None:
     st.warning("Пожалуйста, введите логин и пароль")
     st.stop()
 
+# НОВОЕ: Кнопка выхода (через аутентификатор)
+if st.button("Выйти"):
+    authenticator.logout("Выйти", location='main', key="logout")
+    st.session_state["authenticated"] = False
+    st.session_state["user"] = ""
+    st.rerun()
+
 # Убедимся, что st.session_state сохраняет авторизацию между обновлениями
 if "authenticated" not in st.session_state:
     st.session_state["authenticated"] = False
@@ -86,7 +91,7 @@ html_block = f"""
     align-items: center;
     justify-content: center;
     flex-wrap: wrap;
-    margin-bottom: 0px;
+    margin-bottom: 20px;
   }}
   .responsive-header img {{
     max-width: 200px;
@@ -112,7 +117,7 @@ html_block = f"""
 <div class="responsive-header">
   <img src="{logo_src}" alt="Logo" />
   <h2>
-    <span style="color:#1a535c;">СЕРВИС ДЛЯ АВТОМАТИЗАЦИИ РАБОТЫ</span>
+    <span style="color:#007bff;">СЕРВСИС РАСЧЕТА ЛОГИСТИКИ И МАРЖИНАЛЬНОСТИ</span>
   </h2>
 </div>
 """
@@ -124,10 +129,12 @@ try:
 except locale.Error:
     locale.setlocale(locale.LC_TIME, '')
 
+
 ###############################################################################
-#                         БЛОК 1: КОД ЛОГИСТИЧЕСКОГО КАЛЬКУЛЯТОРА
+#                         БЛОК 1: КОД ЛОГИСТИЧЕСКОГО КАЛЬKUЛЯТОРА
 ###############################################################################
 def run_logistics_service():
+
     # Дополнительные стили (CSS) логистического калькулятора
     st.markdown(
         """
@@ -243,6 +250,7 @@ def run_logistics_service():
                 cost = (tariff / capacity) * weight_tonn * coef
                 st.success(f"Стоимость перевозки: **{round(cost)} тг**")
 
+
 ###############################################################################
 #                 БЛОК 2: КОД КАЛЬКУЛЯТОРА МАРЖИНАЛЬНОСТИ (Основной сервис)
 ###############################################################################
@@ -266,7 +274,6 @@ def format_date_russian(date_obj):
         "July": "Июля",     "August": "Августа","September": "Сентября",
         "October": "Октября","November": "Ноября","December": "Декабря"
     }
-    # Используем переданный date_obj с часовым поясом UTC+5
     formatted = date_obj.strftime("%d %B %Y г.")
     for eng, rus in months.items():
         formatted = formatted.replace(eng, rus)
@@ -278,8 +285,7 @@ def get_next_invoice_number(prefix="INV", format_str="{:05d}"):
     Хранится в файле 'last_invoice.txt' (можно заменить на базу данных или другое хранилище).
     """
     storage_file = "last_invoice.txt"
-    # Используем локальное время UTC+5
-    current_year = datetime.datetime.now(pytz.timezone('Asia/Almaty')).year
+    current_year = datetime.datetime.now().year
 
     try:
         with open(storage_file, "r") as f:
@@ -323,8 +329,8 @@ def generate_invoice_gos(
     tax_nds,
     net_margin,
 ):
-    # Текущая дата в формате "XX Месяц YYYY г." с часовым поясом UTC+5
-    invoice_date = format_date_russian(datetime.datetime.now(pytz.timezone('Asia/Almaty')))
+    # Текущая дата в формате "XX Месяц YYYY г."
+    invoice_date = format_date_russian(datetime.datetime.now())
 
     pdf = FPDF()
     pdf.add_page()
@@ -361,11 +367,11 @@ def generate_invoice_gos(
     start_y = pdf.get_y()
     w1, w2, w3 = 70, 65, 50
     line_height = 5
-    txt1 = "Бенефициар:\nТОО «Lesta»\nБИН: 180840004745"
+    txt1 = "Бенефициар:\nТОО «OOK-STORE»\nБИН: 170740032780"
     pdf.multi_cell(w1, line_height, txt1, border=1, align="L")
     col1_end = pdf.get_y()
     pdf.set_xy(start_x + w1, start_y)
-    txt2 = "ИИК\nKZ06601A861052816001\n\n"
+    txt2 = "ИИК\nKZ11722S000024087169\n\n"
     pdf.multi_cell(w2, line_height, txt2, border=1, align="C")
     col2_end = pdf.get_y()
     pdf.set_xy(start_x + w1 + w2, start_y)
@@ -378,11 +384,11 @@ def generate_invoice_gos(
     # Вторая строка
     start_x2 = pdf.get_x()
     start_y2 = pdf.get_y()
-    txt4 = "Банк бенефициара:\nАО «Народный Банк Казахстана»"
+    txt4 = "Банк бенефициара:\nАО «Kaspi Bank»"
     pdf.multi_cell(w1, line_height, txt4, border=1, align="L")
     col1_end2 = pdf.get_y()
     pdf.set_xy(start_x2 + w1, start_y2)
-    txt5 = "БИК\nHSBKKZKX"
+    txt5 = "БИК\nCASPKZKA"
     pdf.multi_cell(w2, line_height, txt5, border=1, align="C")
     col2_end2 = pdf.get_y()
     pdf.set_xy(start_x2 + w1 + w2, start_y2)
@@ -494,11 +500,11 @@ def generate_invoice_gos(
     signature_path = os.path.join(os.path.dirname(__file__), "assets", "signature.png")
 
     try:
-        pdf.image(stamp_path, x=100, y=y_sign - 10, w=55) # w=отвечает за размер лого
+        pdf.image(stamp_path, x=100, y=y_sign - 10, w=50)
     except Exception as e:
         print("Ошибка загрузки печати:", e)
     try:
-        pdf.image(signature_path, x=40, y=y_sign - 10, w=20) # w=отвечает за размер подписи
+        pdf.image(signature_path, x=40, y=y_sign - 10, w=20)
     except Exception as e:
         print("Ошибка загрузки подписи:", e)
 
@@ -589,57 +595,57 @@ def run_margin_service():
         col_left, col_right = st.columns(2)
         with col_left:
             st.markdown("Наименование товара")
-            name = st.text_input("Наименование товара", key="name", label_visibility="collapsed")
+            name = st.text_input("", key="name", label_visibility="collapsed")
             st.markdown("Ед. измерения")
-            unit = st.selectbox("Ед. измерения", ["шт", "м", "кг", "км", "бухта", "рулон", "м²", "тонна"], 
+            unit = st.selectbox("", ["шт", "м", "кг", "км", "бухта", "рулон", "м²", "тонна"], 
                                 key="unit", label_visibility="collapsed")
             st.markdown("Количество")
-            quantity = st.number_input("Количество", min_value=1, value=1, key="quantity", label_visibility="collapsed")
+            quantity = st.number_input("", min_value=1, value=1, key="quantity", label_visibility="collapsed")
             st.markdown("Вес (кг)")
-            weight = st.number_input("Вес (кг)", min_value=0, value=0, format="%d", key="weight", label_visibility="collapsed")
+            weight = st.number_input("", min_value=0, value=0, format="%d", key="weight", label_visibility="collapsed")
 
         with col_right:
             # Цена поставщика 1
             row1_col1, row1_col2 = st.columns(2)
             with row1_col1:
                 st.markdown('<p style="font-size:16px; margin-bottom:0px;">Цена поставщика 1 (₸)</p>', unsafe_allow_html=True)
-                price1 = st.number_input("Цена поставщика 1 (₸)", min_value=0, value=0, format="%d", key="price_1", label_visibility="collapsed")
+                price1 = st.number_input("", min_value=0, value=0, format="%d", key="price_1", label_visibility="collapsed")
             with row1_col2:
                 st.markdown("⠀")
-                comment1 = st.text_input("Комментарий поставщика 1", placeholder="Комментарий", key="comm_1", label_visibility="collapsed")
+                comment1 = st.text_input("", placeholder="Комментарий", key="comm_1", label_visibility="collapsed")
 
             # Цена поставщика 2
             row2_col1, row2_col2 = st.columns(2)
             with row2_col1:
                 st.markdown('<p style="font-size:16px; margin-bottom:0px;">Цена поставщика 2 (₸)</p>', unsafe_allow_html=True)
-                price2 = st.number_input("Цена поставщика 2 (₸)", min_value=0, value=0, format="%d", key="price_2", label_visibility="collapsed")
+                price2 = st.number_input("", min_value=0, value=0, format="%d", key="price_2", label_visibility="collapsed")
             with row2_col2:
                 st.markdown("⠀")
-                comment2 = st.text_input("Комментарий поставщика 2", placeholder="Комментарий", key="comm_2", label_visibility="collapsed")
+                comment2 = st.text_input("", placeholder="Комментарий", key="comm_2", label_visibility="collapsed")
 
             # Цена поставщика 3
             row3_col1, row3_col2 = st.columns(2)
             with row3_col1:
                 st.markdown('<p style="font-size:16px; margin-bottom:0px;">Цена поставщика 3 (₸)</p>', unsafe_allow_html=True)
-                price3 = st.number_input("Цена поставщика 3 (₸)", min_value=0, value=0, format="%d", key="price_3", label_visibility="collapsed")
+                price3 = st.number_input("", min_value=0, value=0, format="%d", key="price_3", label_visibility="collapsed")
             with row3_col2:
                 st.markdown("⠀")
-                comment3 = st.text_input("Комментарий поставщика 3", placeholder="Комментарий", key="comm_3", label_visibility="collapsed")
+                comment3 = st.text_input("", placeholder="Комментарий", key="comm_3", label_visibility="collapsed")
 
             # Цена поставщика 4
             row4_col1, row4_col2 = st.columns(2)
             with row4_col1:
                 st.markdown('<p style="font-size:16px; margin-bottom:0px;">Цена поставщика 4 (₸)</p>', unsafe_allow_html=True)
-                price4 = st.number_input("Цена поставщика 4 (₸)", min_value=0, value=0, format="%d", key="price_4", label_visibility="collapsed")
+                price4 = st.number_input("", min_value=0, value=0, format="%d", key="price_4", label_visibility="collapsed")
             with row4_col2:
                 st.markdown("⠀")
-                comment4 = st.text_input("Комментарий поставщика 4", placeholder="Комментарий", key="comm_4", label_visibility="collapsed")
+                comment4 = st.text_input("", placeholder="Комментарий", key="comm_4", label_visibility="collapsed")
 
             # Наценка
             row5_col1, _, _ = st.columns([2,1,2])
             with row5_col1:
                 st.markdown("Наценка (%)")
-                markup = st.number_input("Наценка (%)", min_value=0, value=20, format="%d", key="markup", label_visibility="collapsed")
+                markup = st.number_input("", min_value=0, value=20, format="%d", key="markup", label_visibility="collapsed")
 
         submit_btn = st.form_submit_button("➕ Добавить товар")
 
@@ -748,43 +754,43 @@ def run_margin_service():
                 row1_col1, row1_col2 = st.columns(2)
                 with row1_col1:
                     st.markdown('<p style="font-size:16px; margin-bottom:0px;">Цена поставщика 1 (₸)</p>', unsafe_allow_html=True)
-                    price1 = st.number_input("Цена поставщика 1 (₸)", min_value=0, value=int(st.session_state.edit_product["Цена поставщика 1"]), format="%d", key=f"edit_price_1_{st.session_state.edit_index}", label_visibility="collapsed")
+                    price1 = st.number_input("", min_value=0, value=int(st.session_state.edit_product["Цена поставщика 1"]), format="%d", key=f"edit_price_1_{st.session_state.edit_index}", label_visibility="collapsed")
                 with row1_col2:
                     st.markdown("⠀")
-                    comment1 = st.text_input("Комментарий поставщика 1", placeholder="Комментарий", value=st.session_state.edit_product["Комментарий поставщика 1"], key=f"edit_comm_1_{st.session_state.edit_index}", label_visibility="collapsed")
+                    comment1 = st.text_input("", placeholder="Комментарий", value=st.session_state.edit_product["Комментарий поставщика 1"], key=f"edit_comm_1_{st.session_state.edit_index}", label_visibility="collapsed")
 
                 # Цена поставщика 2
                 row2_col1, row2_col2 = st.columns(2)
                 with row2_col1:
                     st.markdown('<p style="font-size:16px; margin-bottom:0px;">Цена поставщика 2 (₸)</p>', unsafe_allow_html=True)
-                    price2 = st.number_input("Цена поставщика 2 (₸)", min_value=0, value=int(st.session_state.edit_product["Цена поставщика 2"]), format="%d", key=f"edit_price_2_{st.session_state.edit_index}", label_visibility="collapsed")
+                    price2 = st.number_input("", min_value=0, value=int(st.session_state.edit_product["Цена поставщика 2"]), format="%d", key=f"edit_price_2_{st.session_state.edit_index}", label_visibility="collapsed")
                 with row2_col2:
                     st.markdown("⠀")
-                    comment2 = st.text_input("Комментарий поставщика 2", placeholder="Комментарий", value=st.session_state.edit_product["Комментарий поставщика 2"], key=f"edit_comm_2_{st.session_state.edit_index}", label_visibility="collapsed")
+                    comment2 = st.text_input("", placeholder="Комментарий", value=st.session_state.edit_product["Комментарий поставщика 2"], key=f"edit_comm_2_{st.session_state.edit_index}", label_visibility="collapsed")
 
                 # Цена поставщика 3
                 row3_col1, row3_col2 = st.columns(2)
                 with row3_col1:
                     st.markdown('<p style="font-size:16px; margin-bottom:0px;">Цена поставщика 3 (₸)</p>', unsafe_allow_html=True)
-                    price3 = st.number_input("Цена поставщика 3 (₸)", min_value=0, value=int(st.session_state.edit_product["Цена поставщика 3"]), format="%d", key=f"edit_price_3_{st.session_state.edit_index}", label_visibility="collapsed")
+                    price3 = st.number_input("", min_value=0, value=int(st.session_state.edit_product["Цена поставщика 3"]), format="%d", key=f"edit_price_3_{st.session_state.edit_index}", label_visibility="collapsed")
                 with row3_col2:
                     st.markdown("⠀")
-                    comment3 = st.text_input("Комментарий поставщика 3", placeholder="Комментарий", value=st.session_state.edit_product["Комментарий поставщика 3"], key=f"edit_comm_3_{st.session_state.edit_index}", label_visibility="collapsed")
+                    comment3 = st.text_input("", placeholder="Комментарий", value=st.session_state.edit_product["Комментарий поставщика 3"], key=f"edit_comm_3_{st.session_state.edit_index}", label_visibility="collapsed")
 
                 # Цена поставщика 4
                 row4_col1, row4_col2 = st.columns(2)
                 with row4_col1:
                     st.markdown('<p style="font-size:16px; margin-bottom:0px;">Цена поставщика 4 (₸)</p>', unsafe_allow_html=True)
-                    price4 = st.number_input("Цена поставщика 4 (₸)", min_value=0, value=int(st.session_state.edit_product["Цена поставщика 4"]), format="%d", key=f"edit_price_4_{st.session_state.edit_index}", label_visibility="collapsed")
+                    price4 = st.number_input("", min_value=0, value=int(st.session_state.edit_product["Цена поставщика 4"]), format="%d", key=f"edit_price_4_{st.session_state.edit_index}", label_visibility="collapsed")
                 with row4_col2:
                     st.markdown("⠀")
-                    comment4 = st.text_input("Комментарий поставщика 4", placeholder="Комментарий", value=st.session_state.edit_product["Комментарий поставщика 4"], key=f"edit_comm_4_{st.session_state.edit_index}", label_visibility="collapsed")
+                    comment4 = st.text_input("", placeholder="Комментарий", value=st.session_state.edit_product["Комментарий поставщика 4"], key=f"edit_comm_4_{st.session_state.edit_index}", label_visibility="collapsed")
 
                 # Наценка
                 row5_col1, _, _ = st.columns([2,1,2])
                 with row5_col1:
                     st.markdown("Наценка (%)")
-                    markup = st.number_input("Наценка (%)", min_value=0, value=int(st.session_state.edit_product["Наценка (%)"]), format="%d", key=f"edit_markup_{st.session_state.edit_index}", label_visibility="collapsed")
+                    markup = st.number_input("", min_value=0, value=int(st.session_state.edit_product["Наценка (%)"]), format="%d", key=f"edit_markup_{st.session_state.edit_index}", label_visibility="collapsed")
 
             # Отладка нажатия кнопки "Сохранить изменения" с проверкой значений
             if st.form_submit_button("💾 Сохранить изменения"):
@@ -817,39 +823,39 @@ def run_margin_service():
                 else:
                     st.error("Название товара не может быть пустым. Пожалуйста, введите название.")
 
-            # Кнопка "Отмена" использует сохранённый ключ из сессии
-            if "cancel_key" in st.session_state:
-                print(f"Используется сохранённый ключ для кнопки 'Отмена': {st.session_state.cancel_key}")
-                col_cancel, _ = st.columns([1, 1])  # Размещаем кнопку в отдельной колонке
-                with col_cancel:
-                    if st.button("✖️ Отмена", key=st.session_state.cancel_key):
-                        print(f"Кнопка 'Отмена' нажата с ключом: {st.session_state.cancel_key}")
-                        # Проверяем, что edit_index и edit_product существуют перед удалением
-                        if "edit_index" in st.session_state:
-                            del st.session_state.edit_index
-                        if "edit_product" in st.session_state:
-                            del st.session_state.edit_product
-                        if "cancel_key" in st.session_state:
-                            del st.session_state.cancel_key
-                        st.rerun()
-            else:
-                # Если ключ отсутствует, генерируем новый и сохраняем его
-                st.session_state.cancel_key = f"cancel_edit_{st.session_state.edit_index}"
-                print(f"Сгенерирован новый ключ для кнопки 'Отмена', так как предыдущий не найден: {st.session_state.cancel_key}")
-                col_cancel, _ = st.columns([1, 1])  # Размещаем кнопку в отдельной колонке
-                with col_cancel:
-                    if st.button("✖️ Отмена", key=st.session_state.cancel_key):
-                        print(f"Кнопка 'Отмена' нажата с ключом: {st.session_state.cancel_key}")
-                        # Проверяем, что edit_index и edit_product существуют перед удалением
-                        if "edit_index" in st.session_state:
-                            del st.session_state.edit_index
-                        if "edit_product" in st.session_state:
-                            del st.session_state.edit_product
-                        if "cancel_key" in st.session_state:
-                            del st.session_state.cancel_key
-                        st.rerun()
+        # Кнопка "Отмена" использует сохранённый ключ из сессии
+        if "cancel_key" in st.session_state:
+            print(f"Используется сохранённый ключ для кнопки 'Отмена': {st.session_state.cancel_key}")
+            col_cancel, _ = st.columns([1, 1])  # Размещаем кнопку в отдельной колонке
+            with col_cancel:
+                if st.button("✖️ Отмена", key=st.session_state.cancel_key):
+                    print(f"Кнопка 'Отмена' нажата с ключом: {st.session_state.cancel_key}")
+                    # Проверяем, что edit_index и edit_product существуют перед удалением
+                    if "edit_index" in st.session_state:
+                        del st.session_state.edit_index
+                    if "edit_product" in st.session_state:
+                        del st.session_state.edit_product
+                    if "cancel_key" in st.session_state:
+                        del st.session_state.cancel_key
+                    st.rerun()
+        else:
+            # Если ключ отсутствует, генерируем новый и сохраняем его
+            st.session_state.cancel_key = f"cancel_edit_{st.session_state.edit_index}"
+            print(f"Сгенерирован новый ключ для кнопки 'Отмена', так как предыдущий не найден: {st.session_state.cancel_key}")
+            col_cancel, _ = st.columns([1, 1])  # Размещаем кнопку в отдельной колонке
+            with col_cancel:
+                if st.button("✖️ Отмена", key=st.session_state.cancel_key):
+                    print(f"Кнопка 'Отмена' нажата с ключом: {st.session_state.cancel_key}")
+                    # Проверяем, что edit_index и edit_product существуют перед удалением
+                    if "edit_index" in st.session_state:
+                        del st.session_state.edit_index
+                    if "edit_product" in st.session_state:
+                        del st.session_state.edit_product
+                    if "cancel_key" in st.session_state:
+                        del st.session_state.cancel_key
+                    st.rerun()
 
-    # НОВОЕ: Блок "Архив расчетов" внизу страницы под экспандером "Список товаров" с улучшениями
+    # НОВOЕ: Блок "Архив расчетов" внизу страницы под экспандером "Список товаров" с улучшениями
     with st.expander("📜 Архив расчетов", expanded=False):
         conn = connect_to_sheets()  # Подключаемся к Google Sheets
         try:
@@ -863,16 +869,15 @@ def run_margin_service():
         all_history = history_sheet.get_all_values()[1:]  # Получаем все записи (кроме заголовка)
 
         # Фильтруем записи, которым не больше месяца
-        one_month_ago = datetime.datetime.now(pytz.timezone('Asia/Almaty')) - datetime.timedelta(days=60)  # Используем UTC+5
+        one_month_ago = datetime.datetime.now() - datetime.timedelta(days=60)
         filtered_history = [
             row for row in all_history
-            if row[1] and row[1].strip() and row[1].lower() not in ["завершён", "не указано"]  # Проверяем, что дата существует и не является специальным значением
-            and datetime.datetime.strptime(row[1], "%Y-%m-%d %H:%M:%S").replace(tzinfo=pytz.timezone('Asia/Almaty')) > one_month_ago
+            if datetime.datetime.strptime(row[1], "%Y-%m-%d %H:%M:%S") > one_month_ago
         ]
         print(f"Количество записей после фильтрации по дате (менее месяца): {len(filtered_history)}")  # Отладка
 
         # Сортируем записи по дате (CalculationDate) в порядке убывания (новые сверху)
-        sorted_history = sorted(filtered_history, key=lambda x: datetime.datetime.strptime(x[1], "%Y-%m-%d %H:%M:%S").replace(tzinfo=pytz.timezone('Asia/Almaty')), reverse=True)
+        sorted_history = sorted(filtered_history, key=lambda x: datetime.datetime.strptime(x[1], "%Y-%m-%d %H:%M:%S"), reverse=True)
         print(f"Количество отсортированных записей: {len(sorted_history)}")  # Отладка
 
         # Ограничиваем до 300 записей
@@ -1003,8 +1008,8 @@ def run_margin_service():
             st.text(f"💸 Налог на обнал (32%) (откат): {int(tax_kickback):,} ₸")
             st.text(f"📊 Налог НДС от маржи (12%): {int(tax_nds):,} ₸")
 
-            # Формируем имя файла на основе ФИО, Названия компании и Даты с правильным часовым поясом
-            current_date = datetime.datetime.now(pytz.timezone('Asia/Almaty')).strftime("%Y-%m-%d")
+            # Формируем имя файла на основе ФИО, Названия компании и Даты
+            current_date = datetime.datetime.now().strftime("%Y-%m-%d")
             if client_name and client_name.strip() and client_name.lower() != "не указано":
                 file_name_base = client_name.strip()
                 if client_company and client_company.strip() and client_company.lower() != "не указано":
@@ -1076,12 +1081,12 @@ def run_margin_service():
             pdf_path = generate_invoice_gos(
                 invoice_number=unique_invoice_number,
                 invoice_date="placeholder",
-                supplier_name="ТОО Lesta",
-                supplier_bin="180840004745",
+                supplier_name="ТОО OOK-STORE",
+                supplier_bin="170740032780",
                 supplier_address="г. Алматы, ул. Березовского 19",
-                supplier_bank_name="АО Народный Банк Казахстана",
-                supplier_iik="KZ06601A861052816001",
-                supplier_bik="HSBKKZKX",
+                supplier_bank_name="Kaspi Bank",
+                supplier_iik="KZ11722S000024087169",
+                supplier_bik="CASPKZKA",
                 client_name=client_name,
                 client_company=client_company,
                 client_bin=client_bin,
@@ -1123,19 +1128,17 @@ def run_margin_service():
             except Exception as e:
                 st.error(f"Ошибка при сохранении в Google Sheets: {e}")
 
+# ... (оставляем остальной код — логистику, вкладки, JS — без изменений)
 ###############################################################################
 #                     ОСНОВНОЙ БЛОК: ВКЛАДКИ (TABS)
 ###############################################################################
-tab_margin, tab_logistics, tab_suppliers = st.tabs(["**Расчет маржинальности**", "**Расчет логистики**", "**Поиск поставщиков**"])
+tab_margin, tab_logistics = st.tabs(["**Калькулятор маржинальности**", "**Калькулятор логистики**"])
 
 with tab_margin:
     run_margin_service()
 
 with tab_logistics:
     run_logistics_service()
-
-with tab_suppliers:
-    run_supplier_search()  # Вызываем функцию из supplier_search.py
 
 # --- В самом конце файла вставляем JS, отключающий автозаполнение ---
 st.markdown("""
@@ -1149,3 +1152,4 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 """, unsafe_allow_html=True)
+
