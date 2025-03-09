@@ -606,17 +606,22 @@ def run_margin_service():
     # --- Форма для добавления товаров
     st.subheader("🛒 Добавление товаров")
     with st.form("add_product_form"):
-        col_left, col_right = st.columns(2)
-        with col_left:
-            st.markdown("Наименование товара")
-            st.text_input("Наименование товара", key="name", label_visibility="collapsed")
-            st.markdown("Ед. измерения")
-            unit = st.selectbox("Ед. измерения", ["шт", "м", "кг", "км", "бухта", "рулон", "м²", "тонна"], 
-                                key="unit", label_visibility="collapsed")
-            st.markdown("Количество")
-            quantity = st.number_input("Количество", min_value=1, value=1, key="quantity", label_visibility="collapsed")
-            st.markdown("Вес (кг)")
-            weight = st.number_input("Вес (кг)", min_value=0, value=0, format="%d", key="weight", label_visibility="collapsed")
+    col_left, col_right = st.columns(2)
+    with col_left:
+        st.markdown("Наименование товара")
+        st.text_input(
+            "Наименование товара",
+            value="",  # Явно задаём пустое значение
+            key="name",
+            label_visibility="collapsed"
+        )
+        st.markdown("Ед. измерения")
+        unit = st.selectbox("Ед. измерения", ["шт", "м", "кг", "км", "бухта", "рулон", "м²", "тонна"], 
+                            key="unit", label_visibility="collapsed")
+        st.markdown("Количество")
+        quantity = st.number_input("Количество", min_value=1, value=1, key="quantity", label_visibility="collapsed")
+        st.markdown("Вес (кг)")
+        weight = st.number_input("Вес (кг)", min_value=0, value=0, format="%d", key="weight", label_visibility="collapsed")
 
         with col_right:
             # Цена поставщика 1
