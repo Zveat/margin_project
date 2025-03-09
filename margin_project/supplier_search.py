@@ -176,7 +176,7 @@ def run_supplier_search():
     st.markdown('<div class="search-input-container">', unsafe_allow_html=True)
     search_query = st.text_input(
         "",
-        placeholder="например: труб)",
+        placeholder="например: труба",
         key="search_input",
         label_visibility="collapsed"
     )
@@ -217,11 +217,11 @@ def run_supplier_search():
                     f"""
                     <div class="supplier-card">
                         <div class="company-name">{company}</div>
-                        <div class="supplier-info">🏙 Города: {city}</div>
-                        <div class="supplier-info">🌐 Сайт: {'Не указан' if not website else f'<a href="#" onclick="window.open(\'{website}\', \'_blank\'); return false;"><button class="website-btn">Посетить сайт</button></a>'}</div>
+                        <div class="supplier-info">🏙 **Город:** {city}</div>
+                        <div class="supplier-info">🌐 **Сайт:** {'Не указан' if not website else f'<a href="#" onclick="window.open(\'{website}\', \'_blank\'); return false;"><button class="website-btn">Посетить сайт</button></a>'}</div>
                         <div class="price-info">💰 Прайс на сайте: {price_info}</div>
-                        <div class="supplier-info">📞 Телефон: {phone}</div>
-                        <div class="comment-info">💬 Комментарий: {comment}</div>
+                        <div class="supplier-info">📞 **Телефон:** {phone}</div>
+                        <div class="comment-info">💬 **Комментарий:** {comment}</div>
                     </div>
                     """,
                     unsafe_allow_html=True
@@ -231,7 +231,7 @@ def run_supplier_search():
         else:
             st.markdown('<p style="text-align: center; color: #d32f2f;">Поставщики не найдены.</p>', unsafe_allow_html=True)
     else:
-        st.markdown('<p style="text-align: center; color: #666;">Начните поиск, введя название товара.</p>', unsafe_allow_html=True)
+        st.markdown('<p style="text-align: center; color: #666;">Начни поиск, введя название товара.</p>', unsafe_allow_html=True)
 
     # Добавляем кнопку ручного обновления
     if st.button("🔄 Обновить данные"):
