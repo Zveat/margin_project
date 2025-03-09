@@ -2,14 +2,18 @@
 
 from google_sheets_db import connect_to_sheets
 import streamlit as st
+import time
 
 # Кэширование данных из Google Sheets
 @st.cache_data
 def load_suppliers():
+    start_time = time.time()
     conn = connect_to_sheets()
     sheet = conn.open_by_key("1Z4-Moti7RVqyBQY5v4tcCwFQS3noOD84w9Q2liv9rI4")
     suppliers_sheet = sheet.worksheet("Suppliers")
     all_suppliers = suppliers_sheet.get_all_values()[1:]
+    load_time = time.time() - start_time
+    print(f"Загрузка данных заняла {load_time:.2f} секунд")
     return all_suppliers
 
 def run_supplier_search():
@@ -57,30 +61,35 @@ def run_supplier_search():
 
     # Загрузка данных
     try:
+        start_time = time.time()
         all_suppliers = load_suppliers()
-        st.write(f"Получено {len(all_suppliers)} записей из листа 'Suppliers'")
+        load_duration = time.time() - start_time
+        st.write(f"Получено {len(all_suppliers)} записей из листа 'Suppliers' за {load_duration:.2f} секунд")
     except Exception as e:
         st.error(f"Ошибка подключения к Google Sheets: {e}")
         st.stop()
 
-    # Ввод поискового запроса с явным label
+    # Ввод поискового запроса
     search_query = st.text_input(
-        label="Введите название товара",
-        value="",
+        label="Поиск товара",  # Явный label для устранения предупреждений
         placeholder="например: труба",
-        label_visibility="collapsed"  # Скрываем label, но он задан
+        key="search_input"  # Уникальный ключ для избежания конфликтов
     )
 
     if search_query:
         # Фильтрация поставщиков
+        start_time = time.time()
         filtered_suppliers = [
             row for row in all_suppliers
             if row and len(row) >= 6 and search_query.lower().strip() in (row[5].strip().lower() if row[5] else "")
         ]
+        filter_duration = time.time() - start_time
+        print(f"Фильтрация заняла {filter_duration:.2f} секунд")
 
         if filtered_suppliers:
             st.write(f"Найдено {len(filtered_suppliers)} подходящих поставщиков:")
-            # Собираем все карточки в один HTML-блок
+            start_time = time.time()
+            # Рендеринг карточек
             cards_html = ""
             for supplier in filtered_suppliers:
                 company = supplier[0].strip() if supplier[0] and supplier[0].strip() else "Не указано"
@@ -100,8 +109,9 @@ def run_supplier_search():
                         <p><strong>Комментарий:</strong> {comment}</p>
                     </div>
                 """
-            # Рендерим все карточки одним вызовом
             st.markdown(cards_html, unsafe_allow_html=True)
+            render_duration = time.time() - start_time
+            print(f"Рендеринг занял {render_duration:.2f} секунд")
         else:
             st.warning("По вашему запросу поставщики не найдены.")
     else:
