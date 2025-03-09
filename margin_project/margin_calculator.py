@@ -751,7 +751,7 @@ def run_margin_service():
                     price1 = st.number_input("Цена поставщика 1", min_value=0, value=int(st.session_state.edit_product["Цена поставщика 1"]), format="%d", key=f"edit_price_1_{st.session_state.edit_index}", label_visibility="collapsed")
                 with row1_col2:
                     st.markdown("⠀")
-                    comment1 = st.text_input("", placeholder="Комментарий", value=st.session_state.edit_product["Комментарий поставщика 1"], key=f"edit_comm_1_{st.session_state.edit_index}", label_visibility="collapsed")
+                    comment1 = st.text_input("Комментарий поставщика 1", placeholder="Комментарий", value=st.session_state.edit_product["Комментарий поставщика 1"], key=f"edit_comm_1_{st.session_state.edit_index}", label_visibility="collapsed")
 
                 # Цена поставщика 2
                 row2_col1, row2_col2 = st.columns(2)
@@ -760,7 +760,7 @@ def run_margin_service():
                     price2 = st.number_input("Цена поставщика 2", min_value=0, value=int(st.session_state.edit_product["Цена поставщика 2"]), format="%d", key=f"edit_price_2_{st.session_state.edit_index}", label_visibility="collapsed")
                 with row2_col2:
                     st.markdown("⠀")
-                    comment2 = st.text_input("", placeholder="Комментарий", value=st.session_state.edit_product["Комментарий поставщика 2"], key=f"edit_comm_2_{st.session_state.edit_index}", label_visibility="collapsed")
+                    comment2 = st.text_input("Комментарий поставщика 2", placeholder="Комментарий", value=st.session_state.edit_product["Комментарий поставщика 2"], key=f"edit_comm_2_{st.session_state.edit_index}", label_visibility="collapsed")
 
                 # Цена поставщика 3
                 row3_col1, row3_col2 = st.columns(2)
@@ -769,7 +769,7 @@ def run_margin_service():
                     price3 = st.number_input("Цена поставщика 3", min_value=0, value=int(st.session_state.edit_product["Цена поставщика 3"]), format="%d", key=f"edit_price_3_{st.session_state.edit_index}", label_visibility="collapsed")
                 with row3_col2:
                     st.markdown("⠀")
-                    comment3 = st.text_input("", placeholder="Комментарий", value=st.session_state.edit_product["Комментарий поставщика 3"], key=f"edit_comm_3_{st.session_state.edit_index}", label_visibility="collapsed")
+                    comment3 = st.text_input("Комментарий поставщика 3", placeholder="Комментарий", value=st.session_state.edit_product["Комментарий поставщика 3"], key=f"edit_comm_3_{st.session_state.edit_index}", label_visibility="collapsed")
 
                 # Цена поставщика 4
                 row4_col1, row4_col2 = st.columns(2)
@@ -778,7 +778,7 @@ def run_margin_service():
                     price4 = st.number_input("Цена поставщика 4", min_value=0, value=int(st.session_state.edit_product["Цена поставщика 4"]), format="%d", key=f"edit_price_4_{st.session_state.edit_index}", label_visibility="collapsed")
                 with row4_col2:
                     st.markdown("⠀")
-                    comment4 = st.text_input("", placeholder="Комментарий", value=st.session_state.edit_product["Комментарий поставщика 4"], key=f"edit_comm_4_{st.session_state.edit_index}", label_visibility="collapsed")
+                    comment4 = st.text_input("Комментарий поставщика 4", placeholder="Комментарий", value=st.session_state.edit_product["Комментарий поставщика 4"], key=f"edit_comm_4_{st.session_state.edit_index}", label_visibility="collapsed")
 
                 # Наценка
                 row5_col1, _, _ = st.columns([2,1,2])
