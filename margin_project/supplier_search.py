@@ -94,8 +94,10 @@ def run_supplier_search():
                 # Сохраняем оригинальный формат телефона из Google Sheets
                 phone = supplier[3].strip() if supplier[3] and supplier[3].strip() else "Не указан"
                 comment = supplier[4].strip() if supplier[4] and supplier[4].strip() else "Не указан"
+                # Добавляем обработку столбца G (Есть прайс на сайте)
+                has_price_list = supplier[6].strip() if len(supplier) > 6 and supplier[6] and supplier[6].strip() else "Не указано"
 
-                print(f"Обработка поставщика: Компания={company}, Город={city}, Сайт={website}, Телефон={phone}, Комментарий={comment}")  # Отладка
+                print(f"Обработка поставщика: Компания={company}, Город={city}, Сайт={website}, Телефон={phone}, Комментарий={comment}, Есть прайс на сайте={has_price_list}")  # Отладка
 
                 # HTML-карточка для аккуратного отображения поставщика
                 st.markdown(
@@ -104,6 +106,7 @@ def run_supplier_search():
                         <p><strong>Компания:</strong> {company}</p>
                         <p><strong>Город:</strong> {city}</p>
                         <p><strong>Сайт:</strong> {'Не указан' if not website else f'<a href="{website}" target="_blank">Посетить сайт</a>'}</p>
+                        <p><strong>Есть прайс на сайте:</strong> {has_price_list}</p>
                         <p><strong>Телефон:</strong> {phone}</p>
                         <p><strong>Комментарий:</strong> {comment}</p>
                     </div>
