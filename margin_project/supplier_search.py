@@ -1,10 +1,9 @@
-# supplier_search.py
-
 from google_sheets_db import connect_to_sheets
 import streamlit as st
 import time
+import datetime
 
-@st.cache_data
+# Убрали @st.cache_data, чтобы данные загружались заново при каждом рендере
 def load_suppliers():
     start_time = time.time()
     conn = connect_to_sheets()
@@ -89,6 +88,10 @@ def run_supplier_search():
     # Загрузка данных из Google Sheets
     all_suppliers = load_suppliers()
 
+    # Отображаем время последнего обновления
+    last_updated = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    st.markdown(f"**Последнее обновление данных:** {last_updated}")
+
     # Ввод поискового запроса
     search_query = st.text_input(label="Поиск товара", placeholder="например: труба", key="search_input")
 
@@ -138,6 +141,16 @@ def run_supplier_search():
             st.warning("По вашему запросу поставщики не найдены.")
     else:
         st.info("Введите название товара для поиска.")
+
+    # Добавляем JavaScript-таймер для автоматического обновления каждые 60 секунд
+    st.markdown("""
+    <script>
+    setTimeout(function() {
+        // Вызываем перезагрузку страницы через 60 секунд
+        document.querySelector('button[title="Rerun"]').click();
+    }, 60000); // 60000 миллисекунд = 60 секунд
+    </script>
+    """, unsafe_allow_html=True)
 
 if __name__ == "__main__":
     run_supplier_search()
