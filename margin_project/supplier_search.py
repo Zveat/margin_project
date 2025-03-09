@@ -113,7 +113,7 @@ def run_supplier_search():
         }
         /* Стили для кнопки сайта (изменённые) */
         .website-btn {
-            background-color: #800080; /* Бледно-синий, менее яркий */
+            background-color: #E0FFFF; /* Бледно-синий, менее яркий */
             color: #1a535c; /* Тёмно-синий текст */
             border: 1px solid #b0c4de; /* Нейтральная граница */
             border-radius: 4px;
