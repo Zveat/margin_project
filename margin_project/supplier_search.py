@@ -30,8 +30,12 @@ def load_suppliers():
         return []
 
 def run_supplier_search():
+    """
+    Функция для поиска поставщиков, которая возвращает интерфейс Streamlit для отображения.
+    """
     st.subheader("🔍 Введите название товара")
 
+    # CSS для стилизации (аналогичный вашему текущему стилю, с улучшениями для компактности)
     st.markdown(
         """
         <style>
@@ -47,10 +51,23 @@ def run_supplier_search():
             background-color: #f1c40f;
         }
         div[data-testid="stTextInput"] input {
-            border: 1px solid #ccc !important;
-            border-radius: 5px !important;
-            padding: 8px !important;
-            font-size: 14px !important;
+             border: 1px solid #ccc !important;
+             border-radius: 5px !important;
+             padding: 8px !important;
+             font-size: 14px !important;
+        }
+        div.stButton > button {
+             background-color: #656dff;
+             color: #FFFFFF;
+             border: none;
+             border-radius: 4px;
+             padding: 2px 8px;
+             font-size: 6px;
+             cursor: pointer;
+             transition: background-color 0.3s ease;
+        }
+        div.stButton > button:hover {
+             background-color: #94db00;
         }
         .supplier-card {
             background-color: #f9f9f9;
@@ -69,20 +86,19 @@ def run_supplier_search():
         unsafe_allow_html=True
     )
 
+    # Загрузка данных из Google Sheets
     all_suppliers = load_suppliers()
 
-    search_query = st.text_input(label="Поиск товара", placeholder="например: труба", key="search_input")
+    # Ввод поискового запроса
+    search_query = st.text_input("например: труба", label="Поиск товара", key="search_input")
 
     if search_query:
+        # Фильтрация поставщиков по поисковому запросу (ищем в столбце F — "Перечень товаров")
         start_time = time.time()
-        filtered_suppliers = []
-        for row in all_suppliers:
-            if not row or len(row) < 7:  # Проверяем наличие минимум 7 столбцов (G включен)
-                print(f"Пропущена строка с недостаточным количеством столбцов: {row}")
-                continue
-            products = row[5].strip() if row[5] else ""
-            if search_query.lower().strip() in products.lower().strip():
-                filtered_suppliers.append(row)
+        filtered_suppliers = [
+            row for row in all_suppliers
+            if row and len(row) > 5 and any(search_query.lower().strip() in str(cell).lower().strip() for cell in [row[5]] if cell)  # Столбец F (индекс 5)
+        ]
         filter_time = time.time() - start_time
         print(f"Фильтрация заняла {filter_time:.2f} секунд")
         print(f"Найдено {len(filtered_suppliers)} поставщиков по запросу: {search_query}")
@@ -93,22 +109,25 @@ def run_supplier_search():
             start_time = time.time()
             cards_html = ""
             for supplier in filtered_suppliers:
-                company = supplier[0].strip() if supplier[0] else "Не указано"
-                city = supplier[1].strip() if supplier[1] else "Не указан"
-                website = supplier[2].strip() if supplier[2] else None
-                phone = supplier[3].strip() if supplier[3] else "Не указан"
-                comment = supplier[4].strip() if supplier[4] else "Не указан"
-                price_info = supplier[6].strip() if len(supplier) > 6 and supplier[6] else "Не указано"  # Без преобразования
+                # Проверка и форматирование данных для каждого поставщика
+                company = supplier[0].strip() if supplier[0] and supplier[0].strip() else "Не указано"
+                city = supplier[1].strip() if supplier[1] and supplier[1].strip() else "Не указан"
+                website = supplier[2].strip() if supplier[2] and supplier[2].strip() else None
+                phone = supplier[3].strip() if supplier[3] and supplier[3].strip() else "Не указан"
+                comment = supplier[4].strip() if supplier[4] and supplier[4].strip() else "Не указан"
+                price_info = supplier[6].strip() if len(supplier) > 6 and supplier[6] else "Не указано"  # Столбец G (индекс 6)
 
                 print(f"Обработка поставщика: {company}, {city}, {website}, {phone}, {comment}, Прайс: {price_info}")
+
+                # HTML-карточка для аккуратного отображения поставщика
                 cards_html += f"""
                     <div class="supplier-card">
                         <p><strong>Компания:</strong> {company}</p>
                         <p><strong>Город:</strong> {city}</p>
                         <p><strong>Сайт:</strong> {'Не указан' if not website else f'<a href="{website}" target="_blank">Посетить сайт</a>'}</p>
+                        <p><strong>Прайс на сайте:</strong> {price_info}</p>
                         <p><strong>Телефон:</strong> {phone}</p>
                         <p><strong>Комментарий:</strong> {comment}</p>
-                        <p><strong>Прайс на сайте:</strong> {price_info}</p>
                     </div>
                 """
             st.markdown(cards_html, unsafe_allow_html=True)
