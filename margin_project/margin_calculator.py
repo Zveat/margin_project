@@ -19,7 +19,7 @@ from google_sheets_db import save_calculation, load_calculation, connect_to_shee
 from supplier_search import run_supplier_search
 
 # Устанавливаем параметры страницы
-st.set_page_config(page_title="Вайт Групп", page_icon="assets/Logo.png"))
+st.set_page_config(page_title="Вайт Групп", page_icon="assets/Logo.png")
 
 # -------------------------
 # Данные пользователей (хранятся локально или в конфиге)
