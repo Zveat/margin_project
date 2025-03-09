@@ -603,7 +603,7 @@ def run_margin_service():
             row1_col1, row1_col2 = st.columns(2)
             with row1_col1:
                 st.markdown('<p style="font-size:16px; margin-bottom:0px;">Цена поставщика 1 (₸)</p>', unsafe_allow_html=True)
-                price1 = st.number_input("", min_value=0, value=0, format="%d", key="price_1", label_visibility="collapsed")
+                price1 = st.number_input("Цена поставщика 1 (₸)", min_value=0, value=0, format="%d", key="price_1", label_visibility="collapsed")
             with row1_col2:
                 st.markdown("⠀")
                 comment1 = st.text_input("", placeholder="Комментарий", key="comm_1", label_visibility="collapsed")
@@ -612,7 +612,7 @@ def run_margin_service():
             row2_col1, row2_col2 = st.columns(2)
             with row2_col1:
                 st.markdown('<p style="font-size:16px; margin-bottom:0px;">Цена поставщика 2 (₸)</p>', unsafe_allow_html=True)
-                price2 = st.number_input("", min_value=0, value=0, format="%d", key="price_2", label_visibility="collapsed")
+                price2 = st.number_input("Цена поставщика 2 (₸)", min_value=0, value=0, format="%d", key="price_2", label_visibility="collapsed")
             with row2_col2:
                 st.markdown("⠀")
                 comment2 = st.text_input("", placeholder="Комментарий", key="comm_2", label_visibility="collapsed")
@@ -621,7 +621,7 @@ def run_margin_service():
             row3_col1, row3_col2 = st.columns(2)
             with row3_col1:
                 st.markdown('<p style="font-size:16px; margin-bottom:0px;">Цена поставщика 3 (₸)</p>', unsafe_allow_html=True)
-                price3 = st.number_input("", min_value=0, value=0, format="%d", key="price_3", label_visibility="collapsed")
+                price3 = st.number_input("Цена поставщика 3 (₸)", min_value=0, value=0, format="%d", key="price_3", label_visibility="collapsed")
             with row3_col2:
                 st.markdown("⠀")
                 comment3 = st.text_input("", placeholder="Комментарий", key="comm_3", label_visibility="collapsed")
@@ -630,7 +630,7 @@ def run_margin_service():
             row4_col1, row4_col2 = st.columns(2)
             with row4_col1:
                 st.markdown('<p style="font-size:16px; margin-bottom:0px;">Цена поставщика 4 (₸)</p>', unsafe_allow_html=True)
-                price4 = st.number_input("", min_value=0, value=0, format="%d", key="price_4", label_visibility="collapsed")
+                price4 = st.number_input("Цена поставщика 4 (₸)", min_value=0, value=0, format="%d", key="price_4", label_visibility="collapsed")
             with row4_col2:
                 st.markdown("⠀")
                 comment4 = st.text_input("", placeholder="Комментарий", key="comm_4", label_visibility="collapsed")
