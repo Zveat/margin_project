@@ -72,14 +72,22 @@ def run_supplier_search():
         st.stop()
 
     # Ввод поискового запроса
-    search_query = st.text_input(" например: труба ")
+    search_query = st.text_input("например: труба")
 
     if search_query:
         # Фильтрация поставщиков по поисковому запросу (ищем в столбце F — "Перечень товаров, которые продаёт поставщик")
-        filtered_suppliers = [
-            row for row in all_suppliers
-            if row and len(row) > 5 and any(search_query.lower().strip() in str(cell).lower().strip() for cell in [row[5]] if cell)  # Столбец F (индекс 5), проверяем, что строка не пустая
-        ]
+        filtered_suppliers = []
+        for row in all_suppliers:
+            # Пропускаем пустые строки
+            if not row or len(row) < 6:  # Убедимся, что есть хотя бы 6 столбцов (до F)
+                print(f"Пропущена строка с недостаточным количеством столбцов: {row}")  # Отладка
+                continue
+            # Проверяем, что столбец F (индекс 5) существует и содержит данные
+            products = row[5].strip() if row[5] else ""
+            if search_query.lower().strip() in products.lower().strip():
+                filtered_suppliers.append(row)
+            else:
+                print(f"Строка не прошла фильтрацию: {row}")  # Отладка
 
         print(f"Найдено {len(filtered_suppliers)} поставщиков по запросу: {search_query}")  # Отладка
         print(f"Пример первой строки после фильтрации: {filtered_suppliers[0] if filtered_suppliers else 'Нет данных'}")  # Отладка
@@ -91,10 +99,9 @@ def run_supplier_search():
                 company = supplier[0].strip() if supplier[0] and supplier[0].strip() else "Не указано"
                 city = supplier[1].strip() if supplier[1] and supplier[1].strip() else "Не указан"
                 website = supplier[2].strip() if supplier[2] and supplier[2].strip() else None
-                # Сохраняем оригинальный формат телефона из Google Sheets
                 phone = supplier[3].strip() if supplier[3] and supplier[3].strip() else "Не указан"
                 comment = supplier[4].strip() if supplier[4] and supplier[4].strip() else "Не указан"
-                # Добавляем обработку столбца G (Есть прайс на сайте)
+                # Обработка столбца G (Есть прайс на сайте)
                 has_price_list = supplier[6].strip() if len(supplier) > 6 and supplier[6] and supplier[6].strip() else "Не указано"
 
                 print(f"Обработка поставщика: Компания={company}, Город={city}, Сайт={website}, Телефон={phone}, Комментарий={comment}, Есть прайс на сайте={has_price_list}")  # Отладка
