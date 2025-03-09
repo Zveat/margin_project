@@ -35,7 +35,7 @@ def run_supplier_search():
     """
     st.subheader("🔍 Введите название товара")
 
-    # CSS для стилизации (аналогичный вашему текущему стилю, с улучшениями для компактности)
+    # CSS для стилизации
     st.markdown(
         """
         <style>
@@ -107,7 +107,6 @@ def run_supplier_search():
         if filtered_suppliers:
             st.write(f"Найдено {len(filtered_suppliers)} подходящих поставщиков:")
             start_time = time.time()
-            cards_html = ""
             for supplier in filtered_suppliers:
                 # Проверка и форматирование данных для каждого поставщика
                 company = supplier[0].strip() if supplier[0] and supplier[0].strip() else "Не указано"
@@ -120,7 +119,8 @@ def run_supplier_search():
                 print(f"Обработка поставщика: {company}, {city}, {website}, {phone}, {comment}, Прайс: {price_info}")
 
                 # HTML-карточка для аккуратного отображения поставщика
-                cards_html += f"""
+                st.markdown(
+                    f"""
                     <div class="supplier-card">
                         <p><strong>Компания:</strong> {company}</p>
                         <p><strong>Город:</strong> {city}</p>
@@ -129,8 +129,9 @@ def run_supplier_search():
                         <p><strong>Телефон:</strong> {phone}</p>
                         <p><strong>Комментарий:</strong> {comment}</p>
                     </div>
-                """
-            st.markdown(cards_html, unsafe_allow_html=True)
+                    """,
+                    unsafe_allow_html=True
+                )
             render_time = time.time() - start_time
             print(f"Рендеринг занял {render_time:.2f} секунд")
         else:
