@@ -115,7 +115,7 @@ def run_supplier_search():
         .website-btn {
             background-color: #E0FFFF; /* цвет кнопки */
             color: #1a535c; /* цвет текста кнопки */
-            border: 1px solid #1a535c; /* Нейтральная границаb0c4de */
+            border: 1px solid #b0c4de; /* цвет границы кнопки */
             border-radius: 4px;
             padding: 3px 8px; /* Уменьшенный размер */
             font-size: 12px;
@@ -124,7 +124,7 @@ def run_supplier_search():
             transition: background-color 0.3s ease;
         }
         .website-btn:hover {
-            background-color: #c0d0ff; /* Ещё более мягкий оттенок при наведении */
+            background-color: #b0c4de; /* цвет кнопки при наведении */
         }
         /* Адаптивность */
         @media (max-width: 600px) {
