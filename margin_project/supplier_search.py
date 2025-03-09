@@ -33,7 +33,7 @@ def run_supplier_search():
     Функция для поиска поставщиков, которая возвращает интерфейс Streamlit для отображения.
     """
     # Заголовок
-    st.markdown('<h3 style="text-align: center; color: #1a535c;">🔍 Введите название товара</h3>', unsafe_allow_html=True)
+    st.markdown('<h3 style="text-align: center; color: #1a535c;">🔍 Поиск поставщиков</h3>', unsafe_allow_html=True)
 
     # Добавляем стили CSS для улучшенного дизайна
     st.markdown(
@@ -176,7 +176,7 @@ def run_supplier_search():
     st.markdown('<div class="search-input-container">', unsafe_allow_html=True)
     search_query = st.text_input(
         "",
-        placeholder="например: труба",
+        placeholder="Введите название товара (например: труба)",
         key="search_input",
         label_visibility="collapsed"
     )
@@ -212,16 +212,16 @@ def run_supplier_search():
 
                 print(f"Обработка поставщика: {company}, {city}, {website}, {phone}, {comment}, Прайс: {price_info}")
 
-                # HTML-карточка для аккуратного отображения поставщика с кнопкой вместо ссылки
+                # HTML-карточка для аккуратного отображения поставщика с жирными заголовками
                 st.markdown(
                     f"""
                     <div class="supplier-card">
                         <div class="company-name">{company}</div>
-                        <div class="supplier-info"<strong>🏙 Города:</strong> {city}</div>
-                        <div class="supplier-info">🌐 Сайт: {'Не указан' if not website else f'<a href="#" onclick="window.open(\'{website}\', \'_blank\'); return false;"><button class="website-btn">Посетить сайт</button></a>'}</div>
-                        <div class="price-info">💰 Прайс на сайте: {price_info}</div>
-                        <div class="supplier-info">📞 Телефон: {phone}</div>
-                        <div class="comment-info">💬 Комментарий: {comment}</div>
+                        <div class="supplier-info"><strong>🏙 Города:</strong> {city}</div>
+                        <div class="supplier-info"><strong>🌐 Сайт:</strong> {'Не указан' if not website else f'<a href="#" onclick="window.open(\'{website}\', \'_blank\'); return false;"><button class="website-btn">Посетить сайт</button></a>'}</div>
+                        <div class="price-info"><strong>💰 Прайс на сайте:</strong> {price_info}</div>
+                        <div class="supplier-info"><strong>📞 Телефон:</strong> {phone}</div>
+                        <div class="comment-info"><strong>💬 Комментарий:</strong> {comment}</div>
                     </div>
                     """,
                     unsafe_allow_html=True
@@ -231,7 +231,7 @@ def run_supplier_search():
         else:
             st.markdown('<p style="text-align: center; color: #d32f2f;">Поставщики не найдены.</p>', unsafe_allow_html=True)
     else:
-        st.markdown('<p style="text-align: center; color: #666;">Начни поиск, введя название товара.</p>', unsafe_allow_html=True)
+        st.markdown('<p style="text-align: center; color: #666;">Начните поиск, введя название товара.</p>', unsafe_allow_html=True)
 
     # Добавляем кнопку ручного обновления
     if st.button("🔄 Обновить данные"):
