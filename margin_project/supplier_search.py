@@ -124,7 +124,7 @@ def run_supplier_search():
             transition: background-color 0.3s ease;
         }
         .website-btn:hover {
-            background-color: #b0c4de; /* цвет кнопки при наведении */
+            background-color: #94db00; /* цвет кнопки при наведении */
         }
         /* Адаптивность */
         @media (max-width: 600px) {
