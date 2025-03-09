@@ -111,20 +111,20 @@ def run_supplier_search():
             font-style: italic;
             margin: 3px 0;
         }
-        /* Стили для кнопки сайта */
+        /* Стили для кнопки сайта (изменённые) */
         .website-btn {
-            background-color: #656dff;
-            color: #FFFFFF;
-            border: none;
+            background-color: #e0e7ff; /* Бледно-синий, менее яркий */
+            color: #1a535c; /* Тёмно-синий текст */
+            border: 1px solid #b0c4de; /* Нейтральная граница */
             border-radius: 4px;
-            padding: 5px 10px;
+            padding: 3px 8px; /* Уменьшенный размер */
             font-size: 12px;
             cursor: pointer;
             text-decoration: none;
             transition: background-color 0.3s ease;
         }
         .website-btn:hover {
-            background-color: #94db00;
+            background-color: #c0d0ff; /* Ещё более мягкий оттенок при наведении */
         }
         /* Адаптивность */
         @media (max-width: 600px) {
@@ -146,7 +146,7 @@ def run_supplier_search():
                 font-size: 12px;
             }
             .website-btn {
-                padding: 4px 8px;
+                padding: 2px 6px; /* Ещё меньше на мобильных */
                 font-size: 10px;
             }
         }
