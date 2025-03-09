@@ -1,5 +1,4 @@
 
-
 # margin_calculator.py
 
 import streamlit as st
@@ -18,6 +17,9 @@ from num2words import num2words
 
 # НОВОЕ: Импорт для работы с Google Sheets для архива расчётов
 from google_sheets_db import save_calculation, load_calculation, connect_to_sheets
+
+# НОВОЕ: Импорт функции поиска поставщиков из supplier_search.py
+from supplier_search import run_supplier_search
 
 # Устанавливаем параметры страницы
 st.set_page_config(page_title="Margin Calculator", page_icon="💰")
@@ -59,13 +61,6 @@ elif authentication_status is None:
     st.warning("Пожалуйста, введите логин и пароль")
     st.stop()
 
-# НОВОЕ: Кнопка выхода (через аутентификатор)
-if st.button("Выйти"):
-    authenticator.logout("Выйти", location='main', key="logout")
-    st.session_state["authenticated"] = False
-    st.session_state["user"] = ""
-    st.rerun()
-
 # Убедимся, что st.session_state сохраняет авторизацию между обновлениями
 if "authenticated" not in st.session_state:
     st.session_state["authenticated"] = False
@@ -91,7 +86,7 @@ html_block = f"""
     align-items: center;
     justify-content: center;
     flex-wrap: wrap;
-    margin-bottom: 20px;
+    margin-bottom: 0px;
   }}
   .responsive-header img {{
     max-width: 200px;
@@ -117,7 +112,7 @@ html_block = f"""
 <div class="responsive-header">
   <img src="{logo_src}" alt="Logo" />
   <h2>
-    <span style="color:#007bff;">СЕРВСИС РАСЧЕТА ЛОГИСТИКИ И МАРЖИНАЛЬНОСТИ</span>
+    <span style="color:#1a535c;">СЕРВИС ДЛЯ АВТОМАТИЗАЦИИ РАБОТЫ</span>
   </h2>
 </div>
 """
@@ -131,10 +126,9 @@ except locale.Error:
 
 
 ###############################################################################
-#                         БЛОК 1: КОД ЛОГИСТИЧЕСКОГО КАЛЬKUЛЯТОРА
+#                         БЛОК 1: КОД ЛОГИСТИЧЕСКОГО КАЛЬКУЛЯТОРА
 ###############################################################################
 def run_logistics_service():
-
     # Дополнительные стили (CSS) логистического калькулятора
     st.markdown(
         """
@@ -1128,17 +1122,19 @@ def run_margin_service():
             except Exception as e:
                 st.error(f"Ошибка при сохранении в Google Sheets: {e}")
 
-# ... (оставляем остальной код — логистику, вкладки, JS — без изменений)
 ###############################################################################
 #                     ОСНОВНОЙ БЛОК: ВКЛАДКИ (TABS)
 ###############################################################################
-tab_margin, tab_logistics = st.tabs(["**Калькулятор маржинальности**", "**Калькулятор логистики**"])
+tab_margin, tab_logistics, tab_suppliers = st.tabs(["**Расчет маржинальности**", "**Расчет логистики**", "**Поиск поставщиков**"])
 
 with tab_margin:
     run_margin_service()
 
 with tab_logistics:
     run_logistics_service()
+
+with tab_suppliers:
+    run_supplier_search()  # Вызываем функцию из supplier_search.py
 
 # --- В самом конце файла вставляем JS, отключающий автозаполнение ---
 st.markdown("""
@@ -1152,4 +1148,3 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 """, unsafe_allow_html=True)
-
