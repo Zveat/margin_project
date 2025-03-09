@@ -21,16 +21,6 @@ from supplier_search import run_supplier_search
 # Устанавливаем параметры страницы
 st.set_page_config(page_title="Вайт Групп", page_icon="assets/Logo.png")
 
-# Кастомный JavaScript для изменения заголовка страницы
-st.markdown(
-    """
-    <script>
-        document.title = "Вайт Групп"; // Только желаемый текст
-    </script>
-    """,
-    unsafe_allow_html=True
-)
-
 # -------------------------
 # Данные пользователей (хранятся локально или в конфиге)
 # -------------------------
