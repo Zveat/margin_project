@@ -62,6 +62,7 @@ def run_supplier_search():
         .supplier-card p {
             margin: 0 0 5px 0;
             font-size: 14px;
+            white-space: pre-wrap; /* Сохраняет переносы строк */
         }
         </style>
         """,
@@ -97,13 +98,9 @@ def run_supplier_search():
                 website = supplier[2].strip() if supplier[2] else None
                 phone = supplier[3].strip() if supplier[3] else "Не указан"
                 comment = supplier[4].strip() if supplier[4] else "Не указан"
-                has_price_list = supplier[6].strip() if len(supplier) > 6 and supplier[6] else "Не указано"
-                if "✅" in has_price_list:
-                    has_price_list = "Да"
-                elif "❌" in has_price_list:
-                    has_price_list = "Нет"
+                price_info = supplier[6].strip() if len(supplier) > 6 and supplier[6] else "Не указано"  # Без преобразования
 
-                print(f"Обработка поставщика: {company}, {city}, {website}, {phone}, {comment}, Прайс: {has_price_list}")
+                print(f"Обработка поставщика: {company}, {city}, {website}, {phone}, {comment}, Прайс: {price_info}")
                 cards_html += f"""
                     <div class="supplier-card">
                         <p><strong>Компания:</strong> {company}</p>
@@ -111,7 +108,7 @@ def run_supplier_search():
                         <p><strong>Сайт:</strong> {'Не указан' if not website else f'<a href="{website}" target="_blank">Посетить сайт</a>'}</p>
                         <p><strong>Телефон:</strong> {phone}</p>
                         <p><strong>Комментарий:</strong> {comment}</p>
-                        <p><strong>Прайс на сайте:</strong> {has_price_list}</p>
+                        <p><strong>Прайс на сайте:</strong> {price_info}</p>
                     </div>
                 """
             st.markdown(cards_html, unsafe_allow_html=True)
