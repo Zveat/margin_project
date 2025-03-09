@@ -589,7 +589,7 @@ def run_margin_service():
         col_left, col_right = st.columns(2)
         with col_left:
             st.markdown("Наименование товара")
-            name = st.text_input("", key="name", label_visibility="collapsed")
+            st.text_input("Наименование товара", key="name", label_visibility="collapsed")
             st.markdown("Ед. измерения")
             unit = st.selectbox("", ["шт", "м", "кг", "км", "бухта", "рулон", "м²", "тонна"], 
                                 key="unit", label_visibility="collapsed")
