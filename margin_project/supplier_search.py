@@ -1,147 +1,175 @@
-from google_sheets_db import connect_to_sheets
 import streamlit as st
-import time
-import datetime
-
-@st.cache_data(ttl=6000)  # Автоматическое обновление кэша каждые 6000 секунд, 1.6 час
-def load_suppliers():
-    start_time = time.time()
-    conn = connect_to_sheets()
-    print(f"Подключение к Google Sheets заняло {time.time() - start_time:.2f} секунд")
-    try:
-        start_time = time.time()
-        sheet = conn.open_by_key("1Z4-Moti7RVqyBQY5v4tcCwFQS3noOD84w9Q2liv9rI4")
-        print(f"Открытие таблицы заняло {time.time() - start_time:.2f} секунд")
-        
-        start_time = time.time()
-        suppliers_sheet = sheet.worksheet("Suppliers")
-        print(f"Доступ к листу 'Suppliers' занял {time.time() - start_time:.2f} секунд")
-        
-        start_time = time.time()
-        all_suppliers = suppliers_sheet.get_all_values()[1:]  # Пропускаем заголовок
-        load_time = time.time() - start_time
-        print(f"Загрузка данных заняла {load_time:.2f} секунд")
-        print(f"Всего записей из листа 'Suppliers': {len(all_suppliers)}")
-        return all_suppliers
-    except Exception as e:
-        st.error(f"Ошибка подключения к Google Sheets: {e}")
-        print(f"Ошибка подключения: {e}")
-        return []
 
 def run_supplier_search():
-    """
-    Функция для поиска поставщиков, которая возвращает интерфейс Streamlit для отображения.
-    """
-    st.subheader("🔍 Введите название товара")
-
-    # CSS для стилизации
+    # Добавляем стили CSS для улучшенного дизайна
     st.markdown(
         """
         <style>
-        .block-container {
-            max-width: 750px !important;
-            margin-left: 20px !important;
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        }
-        body {
-            background-color: #f1c40f;
-        }
-        div[data-testid="stTextInput"] input {
-             border: 1px solid #ccc !important;
-             border-radius: 5px !important;
-             padding: 8px !important;
-             font-size: 14px !important;
-        }
-        div.stButton > button {
-             background-color: #656dff;
-             color: #FFFFFF;
-             border: none;
-             border-radius: 4px;
-             padding: 2px 8px;
-             font-size: 6px;
-             cursor: pointer;
-             transition: background-color 0.3s ease;
-        }
-        div.stButton > button:hover {
-             background-color: #94db00;
-        }
-        .supplier-card {
+        /* Общий стиль контейнера */
+        .supplier-search-container {
             background-color: #f9f9f9;
-            padding: 10px;
-            border-radius: 5px;
-            margin-bottom: 10px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            max-width: 800px;
+            margin: 0 auto;
         }
-        .supplier-card p {
-            margin: 0 0 5px 0;
+        /* Стили для поля ввода */
+        .search-input-container {
+            position: relative;
+            margin-bottom: 20px;
+        }
+        .search-input-container input {
+            width: 100% !important;
+            padding: 12px 40px 12px 20px !important;
+            font-size: 16px !important;
+            border: 2px solid #1a535c !important;
+            border-radius: 25px !important;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+            transition: border-color 0.3s ease;
+        }
+        .search-input-container input:focus {
+            border-color: #656dff !important;
+            outline: none !important;
+        }
+        /* Иконка лупы в поле ввода */
+        .search-icon {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 20px;
+            color: #1a535c;
+        }
+        /* Стили для карточек поставщиков */
+        .supplier-card {
+            background-color: #ffffff;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border-left: 5px solid #1a535c;
+            transition: transform 0.2s ease;
+        }
+        .supplier-card:hover {
+            transform: translateY(-2px);
+        }
+        .company-name {
+            font-size: 18px;
+            font-weight: bold;
+            color: #1a535c;
+            margin-bottom: 5px;
+        }
+        .supplier-info {
             font-size: 14px;
-            white-space: pre-wrap; /* Сохраняет переносы строк */
+            color: #333;
+            margin: 3px 0;
+        }
+        .price-info {
+            font-size: 14px;
+            color: #2e7d32; /* Зелёный для цен */
+            font-weight: bold;
+            margin: 3px 0;
+        }
+        .comment-info {
+            font-size: 14px;
+            color: #666;
+            font-style: italic;
+            margin: 3px 0;
+        }
+        /* Адаптивность */
+        @media (max-width: 600px) {
+            .supplier-search-container {
+                padding: 15px;
+            }
+            .search-input-container input {
+                padding: 10px 35px 10px 15px !important;
+                font-size: 14px !important;
+            }
+            .search-icon {
+                font-size: 18px;
+                right: 10px;
+            }
+            .company-name {
+                font-size: 16px;
+            }
+            .supplier-info, .price-info, .comment-info {
+                font-size: 12px;
+            }
         }
         </style>
         """,
         unsafe_allow_html=True
     )
 
-    # Загрузка данных из Google Sheets
-    all_suppliers = load_suppliers()
+    # Заголовок
+    st.markdown('<h3 style="text-align: center; color: #1a535c;">🔍 Поиск поставщиков</h3>', unsafe_allow_html=True)
 
-    # Ввод поискового запроса
-    search_query = st.text_input(label="Поиск товара", placeholder="например: труба", key="search_input")
+    # Контейнер для поиска
+    st.markdown('<div class="supplier-search-container">', unsafe_allow_html=True)
 
+    # Поле ввода с иконкой лупы
+    st.markdown('<div class="search-input-container">', unsafe_allow_html=True)
+    search_query = st.text_input(
+        "",
+        placeholder="Введите название товара (например, труба)",
+        key="supplier_search_input",
+        label_visibility="collapsed"
+    )
+    st.markdown('<span class="search-icon">🔍</span>', unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    # Данные о поставщиках (пример, замените на ваши реальные данные)
+    suppliers_data = [
+        {
+            "company": "ТОО КазТемирКонтакт",
+            "cities": "Алматы, Астана, Актобе, Актау, Атырау, Уральск",
+            "website": "ДОСТУПТЬ САЙТ",
+            "price": "Есть на сайте",
+            "phones": ["8 707 722 7315", "8 (701) 722 73 15", "8 (777) 599 45 80"],
+            "comment": "Не указано"
+        },
+        {
+            "company": "ТОО Стальтрейд",
+            "cities": "Алматы, Астана, Актау, Шымкент, Павлодар",
+            "website": "ДОСТУПТЬ САЙТ",
+            "price": "Есть на сайте",
+            "phones": [],
+            "comment": "Не указано"
+        }
+    ]
+
+    # Фильтрация поставщиков на основе поискового запроса
     if search_query:
-        # Фильтрация поставщиков по поисковому запросу (ищем в столбце F — "Перечень товаров")
-        start_time = time.time()
         filtered_suppliers = [
-            row for row in all_suppliers
-            if row and len(row) > 5 and any(search_query.lower().strip() in str(cell).lower().strip() for cell in [row[5]] if cell)  # Столбец F (индекс 5)
+            supplier for supplier in suppliers_data
+            if search_query.lower() in supplier["company"].lower() or search_query.lower() in "труба"
         ]
-        filter_time = time.time() - start_time
-        print(f"Фильтрация заняла {filter_time:.2f} секунд")
-        print(f"Найдено {len(filtered_suppliers)} поставщиков по запросу: {search_query}")
-        print(f"Пример первой строки после фильтрации: {filtered_suppliers[0] if filtered_suppliers else 'Нет данных'}")
-
-        if filtered_suppliers:
-            st.write(f"Найдено {len(filtered_suppliers)} подходящих поставщиков:")
-            start_time = time.time()
-            for supplier in filtered_suppliers:
-                # Проверка и форматирование данных для каждого поставщика
-                company = supplier[0].strip() if supplier[0] and supplier[0].strip() else "Не указано"
-                city = supplier[1].strip() if supplier[1] and supplier[1].strip() else "Не указан"
-                website = supplier[2].strip() if supplier[2] and supplier[2].strip() else None
-                phone = supplier[3].strip() if supplier[3] and supplier[3].strip() else "Не указан"
-                comment = supplier[4].strip() if supplier[4] and supplier[4].strip() else "Не указан"
-                price_info = supplier[6].strip() if len(supplier) > 6 and supplier[6] else "Не указано"  # Столбец G (индекс 6)
-
-                print(f"Обработка поставщика: {company}, {city}, {website}, {phone}, {comment}, Прайс: {price_info}")
-
-                # HTML-карточка для аккуратного отображения поставщика
-                st.markdown(
-                    f"""
-                    <div class="supplier-card">
-                        <p><strong>Компания:</strong> {company}</p>
-                        <p><strong>Город:</strong> {city}</p>
-                        <p><strong>Сайт:</strong> {'Не указан' if not website else f'<a href="{website}" target="_blank">Посетить сайт</a>'}</p>
-                        <p><strong>Прайс на сайте:</strong> {price_info}</p>
-                        <p><strong>Телефон:</strong> {phone}</p>
-                        <p><strong>Комментарий:</strong> {comment}</p>
-                    </div>
-                    """,
-                    unsafe_allow_html=True
-                )
-            render_time = time.time() - start_time
-            print(f"Рендеринг занял {render_time:.2f} секунд")
-        else:
-            st.warning("По вашему запросу поставщики не найдены.")
     else:
-        st.info("Введите название товара для поиска.")
+        filtered_suppliers = suppliers_data
 
-    # Добавляем кнопку ручного обновления (опционально)
-    if st.button("🔄 Обновить данные"):
-        st.cache_data.clear()  # Очищаем кэш вручную
-        st.rerun()
+    # Отображение результатов поиска
+    if not search_query:
+        st.markdown('<p style="text-align: center; color: #666;">Начните поиск, чтобы увидеть поставщиков.</p>', unsafe_allow_html=True)
+    elif not filtered_suppliers:
+        st.markdown('<p style="text-align: center; color: #d32f2f;">Поставщики не найдены.</p>', unsafe_allow_html=True)
+    else:
+        st.markdown(f'<p style="color: #1a535c; font-weight: bold;">Найдено {len(filtered_suppliers)} поставщиков:</p>', unsafe_allow_html=True)
+        for supplier in filtered_suppliers:
+            # Формируем карточку поставщика
+            phones_str = ", ".join(supplier["phones"]) if supplier["phones"] else "Не указаны"
+            st.markdown(
+                f"""
+                <div class="supplier-card">
+                    <div class="company-name">{supplier["company"]}</div>
+                    <div class="supplier-info">🏙 Города: {supplier["cities"]}</div>
+                    <div class="supplier-info">🌐 Сайт: <a href="{supplier["website"]}" target="_blank">{supplier["website"]}</a></div>
+                    <div class="price-info">💰 Цены на сайте: {supplier["price"]}</div>
+                    <div class="supplier-info">📞 Телефоны: {phones_str}</div>
+                    <div class="comment-info">💬 Комментарий: {supplier["comment"]}</div>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
 
-if __name__ == "__main__":
-    run_supplier_search()
+    st.markdown('</div>', unsafe_allow_html=True)
