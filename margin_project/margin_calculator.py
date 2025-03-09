@@ -1,6 +1,3 @@
-
-# margin_calculator.py
-
 import streamlit as st
 import os
 import base64
@@ -14,8 +11,6 @@ import math
 import datetime
 from fpdf import FPDF
 from num2words import num2words
-
-# НОВОЕ: Импорт для работы с Google Sheets для архива расчётов
 from google_sheets_db import save_calculation, load_calculation, connect_to_sheets
 
 # НОВОЕ: Импорт функции поиска поставщиков из supplier_search.py
@@ -133,11 +128,9 @@ def run_logistics_service():
     st.markdown(
         """
         <style>
-        /* Задаём для .block-container желаемую ширину и отступ слева 
-           (можете подправить стили под себя) */
         .block-container {
-            max-width: 750px !important; /* Желаемая ширина */
-            margin-left: 20px !important; /* Отступ слева */
+            max-width: 750px !important;
+            margin-left: 20px !important;
             background-color: #fff;
             padding: 20px;
             border-radius: 10px;
@@ -146,7 +139,6 @@ def run_logistics_service():
         body {
             background-color: #f1c40f;
         }
-        /* Стили для полей ввода */
         div[data-testid="stNumberInput"] input,
         div[data-testid="stTextInput"] input,
         div[data-testid="stSelectbox"] select {
@@ -155,7 +147,6 @@ def run_logistics_service():
              padding: 8px !important;
              font-size: 14px !important;
         }
-        /* Стили для кнопок */
         div.stButton > button {
              background-color: #656dff;
              color: #FFFFFF;
@@ -273,32 +264,53 @@ def format_date_russian(date_obj):
         formatted = formatted.replace(eng, rus)
     return formatted
 
-def get_next_invoice_number(prefix="INV", format_str="{:05d}"):
+def get_next_invoice_number(spreadsheet_id, conn=None):
     """
-    Генерирует следующий уникальный номер счёта (invoice).
-    Хранится в файле 'last_invoice.txt' (можно заменить на базу данных или другое хранилище).
+    Генерирует следующий уникальный номер счёта, используя Google Sheets для хранения счётчика.
+    Формат: INV[Год][Номер] (например, INV2025001).
     """
-    storage_file = "last_invoice.txt"
-    current_year = datetime.datetime.now().year
+    if conn is None:
+        conn = connect_to_sheets()
 
     try:
-        with open(storage_file, "r") as f:
-            data = f.read().splitlines()
-            saved_year = int(data[0])
-            saved_number = int(data[1])
-    except Exception:
-        saved_year = current_year
-        saved_number = 0
+        # Открываем лист InvoiceCounter (создаём, если не существует)
+        sheet = conn.open_by_key(spreadsheet_id)
+        try:
+            counter_sheet = sheet.worksheet("InvoiceCounter")
+        except gspread.exceptions.WorksheetNotFound:
+            # Создаём новый лист, если его нет
+            counter_sheet = sheet.add_worksheet(title="InvoiceCounter", rows=2, cols=2)
+            counter_sheet.update([["Year", "LastNumber"], [str(datetime.datetime.now().year), "0"]])
 
-    if current_year != saved_year:
-        saved_number = 0
+        # Получаем текущие данные
+        data = counter_sheet.get_all_values()
+        if not data or len(data) < 2:
+            current_year = str(datetime.datetime.now().year)
+            last_number = 0
+            counter_sheet.update([["Year", "LastNumber"], [current_year, str(last_number)]])
+        else:
+            current_year = data[0][0]
+            last_number = int(data[1][1])
 
-    saved_number += 1
+        # Проверяем, сменился ли год
+        new_year = str(datetime.datetime.now().year)
+        if new_year != current_year:
+            last_number = 0
+            counter_sheet.update_cell(1, 1, new_year)
+            counter_sheet.update_cell(2, 1, str(last_number))
 
-    with open(storage_file, "w") as f:
-        f.write(f"{current_year}\n{saved_number}\n")
+        # Увеличиваем номер
+        last_number += 1
+        counter_sheet.update_cell(2, 2, str(last_number))
 
-    return f"{prefix}{current_year}{format_str.format(saved_number)}"
+        # Форматируем номер
+        return f"INV{new_year}{last_number:05d}"
+
+    except Exception as e:
+        st.error(f"Ошибка при генерации номера счёта: {e}")
+        print(f"Ошибка в get_next_invoice_number: {e}")
+        # Резервный вариант: возвращаем уникальный номер с timestamp
+        return f"INV{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}-{uuid.uuid4().hex[:6]}"
 
 def generate_invoice_gos(
     invoice_number,
@@ -330,7 +342,6 @@ def generate_invoice_gos(
     pdf.add_page()
 
     # Пример подключения шрифта (если нужно DejaVu)
-    # Убедитесь, что у вас есть папка assets и в ней DejaVuSans.ttf, DejaVuSans-Bold.ttf
     try:
         font_path = os.path.join(os.path.dirname(__file__), "assets", "DejaVuSans.ttf")
         bold_font_path = os.path.join(os.path.dirname(__file__), "assets", "DejaVuSans-Bold.ttf")
@@ -338,7 +349,6 @@ def generate_invoice_gos(
         pdf.add_font("DejaVu", "B", bold_font_path, uni=True)
         pdf.set_font("DejaVu", "", 9)
     except:
-        # Если не нашли шрифт, пусть хотя бы базовый работает
         pdf.set_font("Arial", "", 9)
 
     attention_text = (
@@ -508,24 +518,21 @@ def generate_invoice_gos(
     return pdf_path
 
 def run_margin_service():
-    # CSS для единообразия в «Калькуляторе маржинальности» (без изменений, так как управляем текстом в Python)
+    # CSS для единообразия в «Калькуляторе маржинальности»
     st.markdown(
         """
         <style>
-        /* Унифицируем шрифт и отступы для markdown-меток внутри контейнера */
         .block-container p {
             margin: 0.3rem 0 0.2rem 0 !important;
             font-size: 16px !important;
             line-height: 1.2 !important;
         }
-        /* Унифицируем высоту и шрифт полей ввода */
         div[data-testid="stNumberInput"] input,
         div[data-testid="stTextInput"] input {
              min-height: 35px !important;
              padding: 4px 6px !important;
              font-size: 14px !important;
         }
-        /* Стили для кнопок */
         div.stButton > button {
              background-color: #656dff;
              color: #FFFFFF;
@@ -548,7 +555,6 @@ def run_margin_service():
     spreadsheet_id = "1Z4-Moti7RVqyBQY5v4tcCwFQS3noOD84w9Q2liv9rI4"
 
     # --- Блок "Данные клиента"
-    # Если данные восстановлены, используем их; иначе — пустые значения
     client_name = st.session_state.get('client_name', '')
     client_company = st.session_state.get('client_company', '')
     client_bin = st.session_state.get('client_bin', '')
@@ -622,7 +628,7 @@ def run_margin_service():
             with row3_col1:
                 st.markdown('<p style="font-size:16px; margin-bottom:0px;">Цена поставщика 3 (₸)</p>', unsafe_allow_html=True)
                 price3 = st.number_input("Цена поставщика 3 (₸)", min_value=0, value=0, format="%d", key="price_3", label_visibility="collapsed")
-            with row3_col2:
+            with row2_col2:
                 st.markdown("⠀")
                 comment3 = st.text_input("Комментарий", placeholder="Комментарий", key="comm_3", label_visibility="collapsed")
 
@@ -696,43 +702,32 @@ def run_margin_service():
                     st.write(f"**Цена поставщика (мин – макс):** {int(min_supplier_price):,} – {int(max_supplier_price):,} ₸")
                     st.write(f"**Цена для клиента (за ед.):** {int(price_for_client):,} ₸")
                 
-                # Кнопки "Редактировать" и "Удалить" с видимым текстом без _X, но с оригинальным текстом в key
+                # Кнопки "Редактировать" и "Удалить"
                 col_btn, _ = st.columns([1, 1])
                 with col_btn:
                     if st.button("✏️ Редактировать", key=f"edit_product_{index}"):
-                        # Открываем форму редактирования для выбранного товара
                         st.session_state.edit_index = index
                         st.session_state.edit_product = product.copy()
-                        # Убедимся, что cancel_key существует и инициализирован
                         if "cancel_key" not in st.session_state:
                             st.session_state.cancel_key = f"cancel_edit_{index}"
-                        print(f"Сгенерирован и сохранён ключ для кнопки 'Отмена': {st.session_state.cancel_key}")
                         st.rerun()
 
                     if st.button("❌ Удалить", key=f"delete_product_{index}"):
                         st.session_state.products.pop(index)
                         st.rerun()
 
-    # --- Форма редактирования товара (если выбрано редактирование)
+    # --- Форма редактирования товара
     if "edit_index" in st.session_state and "edit_product" in st.session_state:
-        # Отладка: выведем текущий edit_index
-        print(f"Редактируется товар с индексом: {st.session_state.edit_index}")
-        
-        # Проверяем, что edit_index в пределах допустимого диапазона
         if st.session_state.edit_index < 0 or st.session_state.edit_index >= len(st.session_state.get("products", [])):
             st.error("Ошибка: Индекс товара для редактирования некорректен. Пожалуйста, попробуйте снова.")
-            if "edit_index" in st.session_state:
-                del st.session_state.edit_index
-            if "edit_product" in st.session_state:
-                del st.session_state.edit_product
+            del st.session_state.edit_index
+            del st.session_state.edit_product
             if "cancel_key" in st.session_state:
                 del st.session_state.cancel_key
             st.rerun()
 
         st.subheader("🛠 Редактирование товара")
-        # Используем фиксированный ключ для формы, основанный на edit_index
         form_key = f"edit_product_form_{st.session_state.edit_index}"
-        print(f"Используется ключ для формы редактирования: {form_key}")
         with st.form(form_key):
             col_left, col_right = st.columns(2)
             with col_left:
@@ -744,7 +739,6 @@ def run_margin_service():
                 weight = st.number_input("Вес (кг)", min_value=0, value=int(st.session_state.edit_product["Вес (кг)"]), format="%d", key=f"edit_weight_{st.session_state.edit_index}")
 
             with col_right:
-                # Цена поставщика 1
                 row1_col1, row1_col2 = st.columns(2)
                 with row1_col1:
                     st.markdown('<p style="font-size:16px; margin-bottom:0px;">Цена поставщика 1 (₸)</p>', unsafe_allow_html=True)
@@ -753,7 +747,6 @@ def run_margin_service():
                     st.markdown("⠀")
                     comment1 = st.text_input("Комментарий поставщика 1", placeholder="Комментарий", value=st.session_state.edit_product["Комментарий поставщика 1"], key=f"edit_comm_1_{st.session_state.edit_index}", label_visibility="collapsed")
 
-                # Цена поставщика 2
                 row2_col1, row2_col2 = st.columns(2)
                 with row2_col1:
                     st.markdown('<p style="font-size:16px; margin-bottom:0px;">Цена поставщика 2 (₸)</p>', unsafe_allow_html=True)
@@ -762,7 +755,6 @@ def run_margin_service():
                     st.markdown("⠀")
                     comment2 = st.text_input("Комментарий поставщика 2", placeholder="Комментарий", value=st.session_state.edit_product["Комментарий поставщика 2"], key=f"edit_comm_2_{st.session_state.edit_index}", label_visibility="collapsed")
 
-                # Цена поставщика 3
                 row3_col1, row3_col2 = st.columns(2)
                 with row3_col1:
                     st.markdown('<p style="font-size:16px; margin-bottom:0px;">Цена поставщика 3 (₸)</p>', unsafe_allow_html=True)
@@ -771,7 +763,6 @@ def run_margin_service():
                     st.markdown("⠀")
                     comment3 = st.text_input("Комментарий поставщика 3", placeholder="Комментарий", value=st.session_state.edit_product["Комментарий поставщика 3"], key=f"edit_comm_3_{st.session_state.edit_index}", label_visibility="collapsed")
 
-                # Цена поставщика 4
                 row4_col1, row4_col2 = st.columns(2)
                 with row4_col1:
                     st.markdown('<p style="font-size:16px; margin-bottom:0px;">Цена поставщика 4 (₸)</p>', unsafe_allow_html=True)
@@ -780,19 +771,13 @@ def run_margin_service():
                     st.markdown("⠀")
                     comment4 = st.text_input("Комментарий поставщика 4", placeholder="Комментарий", value=st.session_state.edit_product["Комментарий поставщика 4"], key=f"edit_comm_4_{st.session_state.edit_index}", label_visibility="collapsed")
 
-                # Наценка
                 row5_col1, _, _ = st.columns([2,1,2])
                 with row5_col1:
                     st.markdown("Наценка (%)")
                     markup = st.number_input("Наценка (%)", min_value=0, value=int(st.session_state.edit_product["Наценка (%)"]), format="%d", key=f"edit_markup_{st.session_state.edit_index}", label_visibility="collapsed")
 
-            # Отладка нажатия кнопки "Сохранить изменения" с проверкой значений
             if st.form_submit_button("💾 Сохранить изменения"):
-                print(f"Кнопка 'Сохранить изменения' нажата для товара с индексом: {st.session_state.edit_index}")
-                print(f"Текущие значения формы: name={name}, unit={unit}, quantity={quantity}, weight={weight}, price1={price1}, price2={price2}, price3={price3}, price4={price4}, markup={markup}")
-                # Проверяем, что значения не пустые
                 if name.strip():
-                    # Обновляем товар в st.session_state.products
                     st.session_state.products[st.session_state.edit_index] = {
                         "Товар": name,
                         "Ед_измерения": unit,
@@ -817,30 +802,9 @@ def run_margin_service():
                 else:
                     st.error("Название товара не может быть пустым. Пожалуйста, введите название.")
 
-        # Кнопка "Отмена" использует сохранённый ключ из сессии
-        if "cancel_key" in st.session_state:
-            print(f"Используется сохранённый ключ для кнопки 'Отмена': {st.session_state.cancel_key}")
-            col_cancel, _ = st.columns([1, 1])  # Размещаем кнопку в отдельной колонке
+            col_cancel, _ = st.columns([1, 1])
             with col_cancel:
-                if st.button("✖️ Отмена", key=st.session_state.cancel_key):
-                    print(f"Кнопка 'Отмена' нажата с ключом: {st.session_state.cancel_key}")
-                    # Проверяем, что edit_index и edit_product существуют перед удалением
-                    if "edit_index" in st.session_state:
-                        del st.session_state.edit_index
-                    if "edit_product" in st.session_state:
-                        del st.session_state.edit_product
-                    if "cancel_key" in st.session_state:
-                        del st.session_state.cancel_key
-                    st.rerun()
-        else:
-            # Если ключ отсутствует, генерируем новый и сохраняем его
-            st.session_state.cancel_key = f"cancel_edit_{st.session_state.edit_index}"
-            print(f"Сгенерирован новый ключ для кнопки 'Отмена', так как предыдущий не найден: {st.session_state.cancel_key}")
-            col_cancel, _ = st.columns([1, 1])  # Размещаем кнопку в отдельной колонке
-            with col_cancel:
-                if st.button("✖️ Отмена", key=st.session_state.cancel_key):
-                    print(f"Кнопка 'Отмена' нажата с ключом: {st.session_state.cancel_key}")
-                    # Проверяем, что edit_index и edit_product существуют перед удалением
+                if st.button("✖️ Отмена", key=f"cancel_edit_{st.session_state.edit_index}"):
                     if "edit_index" in st.session_state:
                         del st.session_state.edit_index
                     if "edit_product" in st.session_state:
@@ -849,102 +813,85 @@ def run_margin_service():
                         del st.session_state.cancel_key
                     st.rerun()
 
-    # НОВOЕ: Блок "Архив расчетов" внизу страницы под экспандером "Список товаров" с улучшениями
+    # НОВОЕ: Блок "Архив расчетов"
     with st.expander("📜 Архив расчетов", expanded=False):
-        conn = connect_to_sheets()  # Подключаемся к Google Sheets
+        conn = connect_to_sheets()
         try:
             sheet = conn.open_by_key(spreadsheet_id)
         except gspread.exceptions.SpreadsheetNotFound:
             st.error("Google Таблица не найдена. Убедитесь, что spreadsheet_id корректен и сервисный аккаунт имеет доступ.")
             return
 
-        # Загружаем историю расчётов из листа "History"
         history_sheet = sheet.worksheet("History")
-        all_history = history_sheet.get_all_values()[1:]  # Получаем все записи (кроме заголовка)
+        all_history = history_sheet.get_all_values()[1:]
 
-        # Фильтруем записи, которым не больше месяца
         one_month_ago = datetime.datetime.now() - datetime.timedelta(days=60)
         filtered_history = [
             row for row in all_history
             if datetime.datetime.strptime(row[1], "%Y-%m-%d %H:%M:%S") > one_month_ago
         ]
-        print(f"Количество записей после фильтрации по дате (менее месяца): {len(filtered_history)}")  # Отладка
+        print(f"Количество записей после фильтрации по дате (менее месяца): {len(filtered_history)}")
 
-        # Сортируем записи по дате (CalculationDate) в порядке убывания (новые сверху)
         sorted_history = sorted(filtered_history, key=lambda x: datetime.datetime.strptime(x[1], "%Y-%m-%d %H:%M:%S"), reverse=True)
-        print(f"Количество отсортированных записей: {len(sorted_history)}")  # Отладка
+        print(f"Количество отсортированных записей: {len(sorted_history)}")
 
-        # Ограничиваем до 300 записей
         limited_history = sorted_history[:300]
-        print(f"Ограничено до 300 записей: {len(limited_history)}")  # Отладка
+        print(f"Ограничено до 300 записей: {len(limited_history)}")
 
-        # Поиск по client_name и client_company
         search_query = st.text_input("Поиск по ФИО или компании", "")
         if search_query:
             searched_history = [
                 row for row in limited_history
-                if search_query.lower() in row[2].lower() or search_query.lower() in row[3].lower()  # client_name (столбец C), client_company (столбец D)
+                if search_query.lower() in row[2].lower() or search_query.lower() in row[3].lower()
             ]
-            print(f"Найдено записей после поиска '{search_query}': {len(searched_history)}")  # Отладка
+            print(f"Найдено записей после поиска '{search_query}': {len(searched_history)}")
         else:
             searched_history = limited_history
 
         if searched_history:
-            deal_ids = [row[0] for row in searched_history if row and row[0].isdigit()]  # deal_id (столбец A), фильтруем только числовые значения
+            deal_ids = [row[0] for row in searched_history if row and row[0].isdigit()]
             if not deal_ids:
                 st.warning("Нет валидных deal_id в архиве расчетов.")
             else:
-                # Обновляем format_func, чтобы отображать ФИО, Название компании и дату в формате "ДД.ММ.ГГ",
-                # с пустыми полями, если ФИО или Название компании отсутствуют
                 def format_deal(deal_id):
                     for row in searched_history:
                         if row[0] == str(deal_id):
-                            # Извлекаем ФИО клиента и название компании из данных
-                            client_name = row[2].strip() if len(row) > 2 and row[2] and row[2].lower() not in ["не указано", "завершён"] else ""  # ФИО (столбец 3 в History)
-                            client_company = row[3].strip() if len(row) > 3 and row[3] and row[3].lower() not in ["не указано", "завершён"] else ""  # Название компании (столбец 4 в History)
-                            # Проверяем CalculationDate (столбец 2 в History) и форматируем дату в "ДД.ММ.ГГ"
+                            client_name = row[2].strip() if len(row) > 2 and row[2] and row[2].lower() not in ["не указано", "завершён"] else ""
+                            client_company = row[3].strip() if len(row) > 3 and row[3] and row[3].lower() not in ["не указано", "завершён"] else ""
                             try:
-                                date_str = row[1]  # Дата (столбец 2 в History)
+                                date_str = row[1]
                                 if date_str.lower() in ["завершён", "не указано"]:
                                     formatted_date = ""
                                 else:
                                     date_obj = datetime.datetime.strptime(date_str, "%Y-%m-%d %H:%M:%S")
-                                    formatted_date = date_obj.strftime("%d.%m.%y")  # Формат "ДД.ММ.ГГ"
+                                    formatted_date = date_obj.strftime("%d.%m.%y")
                             except (ValueError, IndexError):
                                 formatted_date = ""
-                            # Формируем строку: "ФИО, КОМПАНИЯ, ДАТА" с пустыми полями, если данные отсутствуют
                             return f"{client_name}, {client_company}, {formatted_date}".rstrip(", ")
                     return f"Расчёт #{deal_id} (Не найдено)"
 
                 selected_deal = st.selectbox("Выберите прошлый расчёт", deal_ids, format_func=format_deal)
                 if st.button("Восстановить архив"):
-                    try:
-                        # Отладка: выведем, что возвращает load_calculation
-                        print(f"Попытка восстановить расчёт с deal_id: {selected_deal}")
-                        client_data_restored, deal_data_restored, products_restored = load_calculation(spreadsheet_id, int(selected_deal))
-                        if client_data_restored:
-                            client_name, client_company, client_bin, client_phone, client_address, client_contract = client_data_restored
-                            total_logistics, kickback = deal_data_restored
+                    print(f"Попытка восстановить расчёт с deal_id: {selected_deal}")
+                    client_data_restored, deal_data_restored, products_restored = load_calculation(spreadsheet_id, int(selected_deal))
+                    if client_data_restored:
+                        client_name, client_company, client_bin, client_phone, client_address, client_contract = client_data_restored
+                        total_logistics, kickback = deal_data_restored
+                        print(f"Восстановленные продукты: {products_restored}")
+                        st.session_state.client_name = client_name
+                        st.session_state.client_company = client_company
+                        st.session_state.client_bin = client_bin
+                        st.session_state.client_phone = client_phone
+                        st.session_state.client_address = client_address
+                        st.session_state.client_contract = client_contract
+                        st.session_state.total_logistics = int(total_logistics) if total_logistics else 0
+                        st.session_state.kickback = int(kickback) if kickback else 0
+                        st.session_state.products = products_restored if products_restored else []
+                        st.success("Расчёт восстановлен!")
+                        st.rerun()
+                    else:
+                        st.error("Расчёт с указанным ID не найден.")
 
-                            # Отладка: выведем восстановленные продукты
-                            print(f"Восстановленные продукты: {products_restored}")
-
-                            st.session_state.client_name = client_name
-                            st.session_state.client_company = client_company
-                            st.session_state.client_bin = client_bin
-                            st.session_state.client_phone = client_phone
-                            st.session_state.client_address = client_address
-                            st.session_state.client_contract = client_contract
-                            st.session_state.total_logistics = int(total_logistics) if total_logistics else 0
-                            st.session_state.kickback = int(kickback) if kickback else 0
-                            st.session_state.products = products_restored if products_restored else []
-                            st.success("Расчёт восстановлен!")
-                            st.rerun()
-                        else:
-                            st.error("Расчёт с указанным ID не найден.")
-                    except Exception as e:
-                        st.error(f"Ошибка при восстановлении расчёта: {e}")
-                        print(f"Ошибка в восстановлении: {e}")
         else:
             st.info("История расчётов пуста.")
 
@@ -954,7 +901,6 @@ def run_margin_service():
             st.warning("⚠️ Список товаров пуст. Добавьте хотя бы один товар.")
         else:
             df = pd.DataFrame(st.session_state.products)
-            # Рассчитываем мин. цену поставщика
             df["Мин. цена поставщика"] = df[
                 [
                     "Цена поставщика 1",
@@ -964,19 +910,16 @@ def run_margin_service():
                 ]
             ].replace(0, float("inf")).min(axis=1).replace(float("inf"), 0)
 
-            # Цена для клиента, выручка, себестоимость, прибыль (маржа)
             df["Цена для клиента"] = df["Мин. цена поставщика"] * (1 + df["Наценка (%)"] / 100)
             df["Выручка"] = df["Цена для клиента"] * df["Количество"]
             df["Себестоимость"] = df["Мин. цена поставщика"] * df["Количество"]
             df["Прибыль"] = df["Выручка"] - df["Себестоимость"]
             df["Маржинальность (%)"] = df["Прибыль"] / df["Выручка"] * 100
 
-            # Расходы
             tax_delivery = total_logistics * 0.15
             tax_kickback = kickback * 0.32
-            tax_nds = df["Прибыль"].sum() * 12 / 112  # Примерный расчет НДС
+            tax_nds = df["Прибыль"].sum() * 12 / 112
             net_margin = df["Прибыль"].sum() - total_logistics - kickback - tax_delivery - tax_kickback - tax_nds
-
             manager_bonus = net_margin * 0.2
 
             st.subheader("📊 Итоговый расчёт")
@@ -989,10 +932,7 @@ def run_margin_service():
                 st.metric("🏆 Бонус менеджера (20%)", f"{int(manager_bonus):,} ₸")
             with col3:
                 total_revenue = df["Выручка"].sum()
-                if math.isclose(total_revenue, 0, abs_tol=1e-9):
-                    marz_percent = 0
-                else:
-                    marz_percent = net_margin / total_revenue * 100
+                marz_percent = net_margin / total_revenue * 100 if not math.isclose(total_revenue, 0, abs_tol=1e-9) else 0
                 st.metric("📈 Маржинальность (%)", f"{max(0, marz_percent):.2f} %")
 
             st.write("### 🛑 Расходы")
@@ -1002,7 +942,6 @@ def run_margin_service():
             st.text(f"💸 Налог на обнал (32%) (откат): {int(tax_kickback):,} ₸")
             st.text(f"📊 Налог НДС от маржи (12%): {int(tax_nds):,} ₸")
 
-            # Формируем имя файла на основе ФИО, Названия компании и Даты
             current_date = datetime.datetime.now().strftime("%Y-%m-%d")
             if client_name and client_name.strip() and client_name.lower() != "не указано":
                 file_name_base = client_name.strip()
@@ -1010,12 +949,10 @@ def run_margin_service():
                     file_name_base += f", {client_company.strip()}"
                 file_name_base += f", {current_date}"
             else:
-                file_name_base = current_date  # Только дата, если ФИО или Название компании отсутствуют
+                file_name_base = current_date
 
-            # Сохранение результатов в Excel
             output = io.BytesIO()
             with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
-                # Лист 1: данные клиента
                 client_data = pd.DataFrame({
                     "Поле": ["ФИО клиента", "Название компании", "БИН клиента", 
                              "Телефон клиента", "Адрес доставки", "Договор (№)"],
@@ -1024,17 +961,14 @@ def run_margin_service():
                 })
                 client_data.to_excel(writer, index=False, sheet_name="Данные клиента")
 
-                # Лист 2: данные сделки
                 deal_data = pd.DataFrame({
                     "Поле": ["Общая стоимость логистики", "Откат клиенту"],
                     "Значение (₸)": [total_logistics, kickback],
                 })
                 deal_data.to_excel(writer, index=False, sheet_name="Данные сделки")
 
-                # Лист 3: товары
                 df.to_excel(writer, index=False, sheet_name="Список товаров")
 
-                # Лист 4: расчет итогов
                 final_data = pd.DataFrame({
                     "Показатель": [
                         "Выручка",
@@ -1070,8 +1004,9 @@ def run_margin_service():
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             )
 
-            # Генерация PDF
-            unique_invoice_number = get_next_invoice_number(prefix="INV")
+            # Генерация PDF с уникальным номером счёта
+            conn = connect_to_sheets()  # Подключаемся для получения номера
+            unique_invoice_number = get_next_invoice_number(spreadsheet_id, conn)
             pdf_path = generate_invoice_gos(
                 invoice_number=unique_invoice_number,
                 invoice_date="placeholder",
@@ -1103,7 +1038,6 @@ def run_margin_service():
                     mime="application/pdf",
                 )
 
-            # НОВОЕ: Сохранение данных в Google Sheets (для архива расчётов)
             client_data = {
                 'name': client_name,
                 'company': client_company,
@@ -1134,7 +1068,7 @@ with tab_logistics:
     run_logistics_service()
 
 with tab_suppliers:
-    run_supplier_search()  # Вызываем функцию из supplier_search.py
+    run_supplier_search()
 
 # --- В самом конце файла вставляем JS, отключающий автозаполнение ---
 st.markdown("""
