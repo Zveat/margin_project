@@ -212,13 +212,13 @@ def run_supplier_search():
 
                 print(f"Обработка поставщика: {company}, {city}, {website}, {phone}, {comment}, Прайс: {price_info}")
 
-                # HTML-карточка для аккуратного отображения поставщика с жирными заголовками
+                # HTML-карточка для аккуратного отображения поставщика с исправленной кнопкой
                 st.markdown(
                     f"""
                     <div class="supplier-card">
                         <div class="company-name">{company}</div>
                         <div class="supplier-info"><strong>🏙 Города:</strong> {city}</div>
-                        <div class="supplier-info"><strong>🌐 Сайт:</strong> {'Не указан' if not website else f'<a href="#" onclick="window.open(\'{website}\', \'_blank\'); return false;"><button class="website-btn">Посетить сайт</button></a>'}</div>
+                        <div class="supplier-info"><strong>🌐 Сайт:</strong> {'Не указан' if not website else f'<a href="{website}" target="_blank"><button class="website-btn">Посетить сайт</button></a>'}</div>
                         <div class="supplier-info"><strong>💰 Прайс на сайте:</strong> {price_info}</div>
                         <div class="supplier-info"><strong>📞 Телефон:</strong> {phone}</div>
                         <div class="comment-info"><strong>💬 Комментарий:</strong> {comment}</div>
