@@ -95,7 +95,7 @@ def run_supplier_search():
             margin-bottom: 5px;
         }
         .supplier-info {
-            font-size: 14px;
+            font-size: 16px;
             color: #333;
             margin: 3px 0;
         }
