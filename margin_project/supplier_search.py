@@ -219,7 +219,7 @@ def run_supplier_search():
                         <div class="company-name">{company}</div>
                         <div class="supplier-info"><strong>🏙 Города:</strong> {city}</div>
                         <div class="supplier-info"><strong>🌐 Сайт:</strong> {'Не указан' if not website else f'<a href="#" onclick="window.open(\'{website}\', \'_blank\'); return false;"><button class="website-btn">Посетить сайт</button></a>'}</div>
-                        <div class="price-info"><strong>💰 Прайс на сайте:</strong> {price_info}</div>
+                        <div class="supplier-info"><strong>💰 Прайс на сайте:</strong> {price_info}</div>
                         <div class="supplier-info"><strong>📞 Телефон:</strong> {phone}</div>
                         <div class="comment-info"><strong>💬 Комментарий:</strong> {comment}</div>
                     </div>
