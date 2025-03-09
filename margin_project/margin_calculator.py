@@ -380,11 +380,11 @@ def generate_invoice_gos(
     start_y = pdf.get_y()
     w1, w2, w3 = 70, 65, 50
     line_height = 5
-    txt1 = "Бенефициар:\nТОО «OOK-STORE»\nБИН: 170740032780"
+    txt1 = "Бенефициар:\nТОО «Вайт Групп»\nБИН: 180840004745"
     pdf.multi_cell(w1, line_height, txt1, border=1, align="L")
     col1_end = pdf.get_y()
     pdf.set_xy(start_x + w1, start_y)
-    txt2 = "ИИК\nKZ11722S000024087169\n\n"
+    txt2 = "ИИК\nKZ06601A861052816001\n\n"
     pdf.multi_cell(w2, line_height, txt2, border=1, align="C")
     col2_end = pdf.get_y()
     pdf.set_xy(start_x + w1 + w2, start_y)
@@ -397,11 +397,11 @@ def generate_invoice_gos(
     # Вторая строка
     start_x2 = pdf.get_x()
     start_y2 = pdf.get_y()
-    txt4 = "Банк бенефициара:\nАО «Kaspi Bank»"
+    txt4 = "Банк бенефициара:\nАО «Народный Банк Казахстана»"
     pdf.multi_cell(w1, line_height, txt4, border=1, align="L")
     col1_end2 = pdf.get_y()
     pdf.set_xy(start_x2 + w1, start_y2)
-    txt5 = "БИК\nCASPKZKA"
+    txt5 = "БИК\nHSBKKZKX"
     pdf.multi_cell(w2, line_height, txt5, border=1, align="C")
     col2_end2 = pdf.get_y()
     pdf.set_xy(start_x2 + w1 + w2, start_y2)
@@ -503,7 +503,7 @@ def generate_invoice_gos(
     )
     pdf.ln(5)
     pdf.set_font("DejaVu", "", 9)
-    pdf.cell(30, 5, "Исполнитель", ln=False)
+    pdf.cell(30, 5, "Исполнитель Пулик З.В.", ln=False)
     pdf.cell(60, 5, "_______", ln=True)
     y_sign = pdf.get_y()
     pdf.ln(5)
@@ -1095,12 +1095,12 @@ def run_margin_service():
             pdf_path = generate_invoice_gos(
                 invoice_number=unique_invoice_number,
                 invoice_date="placeholder",
-                supplier_name="ТОО OOK-STORE",
-                supplier_bin="170740032780",
+                supplier_name="ТОО Вайт Групп",
+                supplier_bin="180840004745",
                 supplier_address="г. Алматы, ул. Березовского 19",
-                supplier_bank_name="Kaspi Bank",
-                supplier_iik="KZ11722S000024087169",
-                supplier_bik="CASPKZKA",
+                supplier_bank_name="АО Народный Банк Казахстана",
+                supplier_iik="KZ06601A861052816001",
+                supplier_bik="HSBKKZKX",
                 client_name=client_name,
                 client_company=client_company,
                 client_bin=client_bin,
