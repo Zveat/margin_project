@@ -1,8 +1,3 @@
-
-
-
-# margin_calculator.py
-
 import streamlit as st
 import os
 import base64
@@ -275,32 +270,54 @@ def format_date_russian(date_obj):
         formatted = formatted.replace(eng, rus)
     return formatted
 
-def get_next_invoice_number(prefix="INV", format_str="{:05d}"):
+# НОВАЯ ФУНКЦИЯ: Генерация номера счёта с использованием Google Sheets
+def get_next_invoice_number(spreadsheet_id, conn=None):
     """
-    Генерирует следующий уникальный номер счёта (invoice).
-    Хранится в файле 'last_invoice.txt' (можно заменить на базу данных или другое хранилище).
+    Генерирует следующий уникальный номер счёта, используя Google Sheets для хранения счётчика.
+    Формат: INV[Год][Номер] (например, INV2025001).
     """
-    storage_file = "last_invoice.txt"
-    current_year = datetime.datetime.now().year
+    if conn is None:
+        conn = connect_to_sheets()
 
     try:
-        with open(storage_file, "r") as f:
-            data = f.read().splitlines()
-            saved_year = int(data[0])
-            saved_number = int(data[1])
-    except Exception:
-        saved_year = current_year
-        saved_number = 0
+        # Открываем лист InvoiceCounter (создаём, если не существует)
+        sheet = conn.open_by_key(spreadsheet_id)
+        try:
+            counter_sheet = sheet.worksheet("InvoiceCounter")
+        except gspread.exceptions.WorksheetNotFound:
+            # Создаём новый лист, если его нет
+            counter_sheet = sheet.add_worksheet(title="InvoiceCounter", rows=2, cols=2)
+            counter_sheet.update([["Year", "LastNumber"], [str(datetime.datetime.now().year), "0"]])
 
-    if current_year != saved_year:
-        saved_number = 0
+        # Получаем текущие данные
+        data = counter_sheet.get_all_values()
+        if not data or len(data) < 2:
+            current_year = str(datetime.datetime.now().year)
+            last_number = 0
+            counter_sheet.update([["Year", "LastNumber"], [current_year, str(last_number)]])
+        else:
+            current_year = data[1][0]  # Исправлено: читаем год из второй строки (данные), а не из заголовка
+            last_number = int(data[1][1])
 
-    saved_number += 1
+        # Проверяем, сменился ли год
+        new_year = str(datetime.datetime.now().year)
+        if new_year != current_year:
+            last_number = 0
+            counter_sheet.update_cell(2, 1, new_year)  # Обновляем год во второй строке
+            counter_sheet.update_cell(2, 2, str(last_number))
 
-    with open(storage_file, "w") as f:
-        f.write(f"{current_year}\n{saved_number}\n")
+        # Увеличиваем номер
+        last_number += 1
+        counter_sheet.update_cell(2, 2, str(last_number))
 
-    return f"{prefix}{current_year}{format_str.format(saved_number)}"
+        # Форматируем номер
+        return f"INV{new_year}{last_number:05d}"
+
+    except Exception as e:
+        st.error(f"Ошибка при генерации номера счёта: {e}")
+        print(f"Ошибка в get_next_invoice_number: {e}")
+        # Резервный вариант: возвращаем уникальный номер с timestamp
+        return f"INV{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}-{uuid.uuid4().hex[:6]}"
 
 def generate_invoice_gos(
     invoice_number,
@@ -1072,8 +1089,9 @@ def run_margin_service():
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             )
 
-            # Генерация PDF
-            unique_invoice_number = get_next_invoice_number(prefix="INV")
+            # Генерация PDF с уникальным номером счёта
+            conn = connect_to_sheets()  # Подключаемся для получения номера
+            unique_invoice_number = get_next_invoice_number(spreadsheet_id, conn)
             pdf_path = generate_invoice_gos(
                 invoice_number=unique_invoice_number,
                 invoice_date="placeholder",
@@ -1150,4 +1168,3 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 """, unsafe_allow_html=True)
-
