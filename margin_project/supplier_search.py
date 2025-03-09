@@ -4,13 +4,34 @@ from google_sheets_db import connect_to_sheets
 import streamlit as st
 import time
 
+@st.cache_data
+def load_suppliers():
+    start_time = time.time()
+    conn = connect_to_sheets()
+    print(f"Подключение к Google Sheets заняло {time.time() - start_time:.2f} секунд")
+    try:
+        start_time = time.time()
+        sheet = conn.open_by_key("1Z4-Moti7RVqyBQY5v4tcCwFQS3noOD84w9Q2liv9rI4")
+        print(f"Открытие таблицы заняло {time.time() - start_time:.2f} секунд")
+        
+        start_time = time.time()
+        suppliers_sheet = sheet.worksheet("Suppliers")
+        print(f"Доступ к листу 'Suppliers' занял {time.time() - start_time:.2f} секунд")
+        
+        start_time = time.time()
+        all_suppliers = suppliers_sheet.get_all_values()[1:]  # Пропускаем заголовок
+        load_time = time.time() - start_time
+        print(f"Загрузка данных заняла {load_time:.2f} секунд")
+        print(f"Всего записей из листа 'Suppliers': {len(all_suppliers)}")
+        return all_suppliers
+    except Exception as e:
+        st.error(f"Ошибка подключения к Google Sheets: {e}")
+        print(f"Ошибка подключения: {e}")
+        return []
+
 def run_supplier_search():
-    """
-    Функция для поиска поставщиков с использованием столбца G (наличие прайс-листа).
-    """
     st.subheader("🔍 Введите название товара")
 
-    # CSS для стилизации
     st.markdown(
         """
         <style>
@@ -47,34 +68,11 @@ def run_supplier_search():
         unsafe_allow_html=True
     )
 
-    # Подключение к Google Sheets
-    start_time = time.time()
-    conn = connect_to_sheets()
-    print(f"Подключение к Google Sheets заняло {time.time() - start_time:.2f} секунд")
-    try:
-        start_time = time.time()
-        sheet = conn.open_by_key("1Z4-Moti7RVqyBQY5v4tcCwFQS3noOD84w9Q2liv9rI4")
-        print(f"Открытие таблицы заняло {time.time() - start_time:.2f} секунд")
-        
-        start_time = time.time()
-        suppliers_sheet = sheet.worksheet("Suppliers")
-        print(f"Доступ к листу 'Suppliers' занял {time.time() - start_time:.2f} секунд")
-        
-        start_time = time.time()
-        all_suppliers = suppliers_sheet.get_all_values()[1:]  # Пропускаем заголовок
-        load_time = time.time() - start_time
-        print(f"Загрузка данных заняла {load_time:.2f} секунд")
-        print(f"Всего записей из листа 'Suppliers': {len(all_suppliers)}")
-    except Exception as e:
-        st.error(f"Ошибка подключения к Google Sheets: {e}")
-        print(f"Ошибка подключения: {e}")
-        st.stop()
+    all_suppliers = load_suppliers()
 
-    # Ввод поискового запроса
     search_query = st.text_input(label="Поиск товара", placeholder="например: труба", key="search_input")
 
     if search_query:
-        # Фильтрация поставщиков по поисковому запросу
         start_time = time.time()
         filtered_suppliers = []
         for row in all_suppliers:
@@ -99,7 +97,6 @@ def run_supplier_search():
                 website = supplier[2].strip() if supplier[2] else None
                 phone = supplier[3].strip() if supplier[3] else "Не указан"
                 comment = supplier[4].strip() if supplier[4] else "Не указан"
-                # Обработка столбца G (наличие прайс-листа)
                 has_price_list = supplier[6].strip() if len(supplier) > 6 and supplier[6] else "Не указано"
                 if "✅" in has_price_list:
                     has_price_list = "Да"
