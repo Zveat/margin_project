@@ -503,7 +503,7 @@ def generate_invoice_gos(
     )
     pdf.ln(5)
     pdf.set_font("DejaVu", "", 9)
-    pdf.cell(30, 5, "Исполнитель: Пулик З.В.", ln=False)
+    pdf.cell(30, 5, "Исполнитель: Пулик З.В", ln=False)
     pdf.cell(60, 5, "_______", ln=True)
     y_sign = pdf.get_y()
     pdf.ln(5)
