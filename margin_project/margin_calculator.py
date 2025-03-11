@@ -1146,7 +1146,7 @@ def run_margin_service():
 ###############################################################################
 #                     ОСНОВНОЙ БЛОК: ВКЛАДКИ (TABS)
 ###############################################################################
-tab_margin, tab_logistics, tab_suppliers = st.tabs(["**Расчет маржинальности**", "**Расчет логистики**", "**Поиск поставщиков**"])
+tab_margin, tab_logistics, tab_suppliers, tab_weight_calculator = st.tabs(["**Расчет маржинальности**", "**Расчет логистики**", "**Поиск поставщиков**", "**Калькулятор веса металла**"])
 
 with tab_margin:
     run_margin_service()
@@ -1156,6 +1156,10 @@ with tab_logistics:
 
 with tab_suppliers:
     run_supplier_search()  # Вызываем функцию из supplier_search.py
+
+with tab_weight_calculator:
+    st.write("Калькулятор веса металлопроката от 23met.ru:")
+    st.components.v1.iframe("https://23met.ru/weight", height=600, scrolling=True, width=800)
 
 # --- В самом конце файла вставляем JS, отключающий автозаполнение ---
 st.markdown("""
