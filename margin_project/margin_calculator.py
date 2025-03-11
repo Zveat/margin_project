@@ -126,7 +126,53 @@ except locale.Error:
 ###############################################################################
 #                         БЛОК 1: КОД ЛОГИСТИЧЕСКОГО КАЛЬКУЛЯТОРА
 ###############################################################################
-# Данные для городских перевозок
+def run_logistics_service():
+    # Дополнительные стили (CSS) логистического калькулятора
+    st.markdown(
+        """
+        <style>
+        /* Задаём для .block-container желаемую ширину и отступ слева 
+           (можете подправить стили под себя) */
+        .block-container {
+            max-width: 750px !important; /* Желаемая ширина */
+            margin-left: 20px !important; /* Отступ слева */
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        body {
+            background-color: #f1c40f;
+        }
+        /* Стили для полей ввода */
+        div[data-testid="stNumberInput"] input,
+        div[data-testid="stTextInput"] input,
+        div[data-testid="stSelectbox"] select {
+             border: 1px solid #ccc !important;
+             border-radius: 5px !important;
+             padding: 8px !important;
+             font-size: 14px !important;
+        }
+        /* Стили для кнопок */
+        div.stButton > button {
+             background-color: #656dff;
+             color: #FFFFFF;
+             border: none;
+             border-radius: 4px;
+             padding: 2px 8px;
+             font-size: 6px;
+             cursor: pointer;
+             transition: background-color 0.3s ease;
+        }
+        div.stButton > button:hover {
+             background-color: #94db00;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+
+    # Данные для городских перевозок
     city_data = [
         {"Вид транспорта": "Легковая машина",    "Вес груза": 40,   "Длинна груза": 2,  "Стоимость доставки": "4000-8000"},
         {"Вид транспорта": "Газель",             "Вес груза": 300,  "Длинна груза": 3,  "Стоимость доставки": "4000-12000"},
