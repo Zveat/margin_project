@@ -715,7 +715,7 @@ def run_margin_service():
                 with col2:
                     st.write(f"**Цена поставщика (мин – макс):** {int(min_supplier_price):,} – {int(max_supplier_price):,} ₸")
                     st.write(f"**Цена для клиента (за ед.):** {int(price_for_client):,} ₸")
-                    duct_weight = product.get("Вес (кг)", 0)  # Защита от отсутствия ключа
+                    product_weight = product.get("Вес (кг)", 0)  # Защита от отсутствия ключа
                     st.write(f"**Вес:** {product_weight if product_weight > 0 else 'Не указан'} кг")
                 
                 # Кнопки "Редактировать" и "Удалить" с видимым текстом без _X, но с оригинальным текстом в key
