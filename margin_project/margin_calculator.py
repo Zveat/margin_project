@@ -42,7 +42,7 @@ credentials = {
 authenticator = Authenticate(
     credentials,
     cookie_name="margin_calculator",
-    key="random_key",
+    key="random_key1",
     cookie_expiry_days=30
 )
 
