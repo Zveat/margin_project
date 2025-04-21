@@ -614,7 +614,7 @@ def run_margin_service():
             unit = st.selectbox("Ед. измерения", ["шт", "м", "кг", "км", "бухта", "рулон", "м²", "тонна"], 
                                 key="unit", label_visibility="collapsed")
             st.markdown("Количество")
-            quantity = st.number_input("Количество", min_value=1, value=1, key="quantity", label_visibility="collapsed")
+            quantity = st.number_input("Количество", min_value=0.001, value=1.0, step=0.001, format="%.3f", key="quantity", label_visibility="collapsed")
             st.markdown("Вес (кг)")
             weight = st.number_input("Вес (кг)", min_value=0, value=0, format="%d", key="weight", label_visibility="collapsed")
 
@@ -762,7 +762,7 @@ def run_margin_service():
                 unit = st.selectbox("Ед. измерения", ["шт", "м", "кг", "км", "бухта", "рулон", "м²", "тонна"], 
                                     index=["шт", "м", "кг", "км", "бухта", "рулон", "м²", "тонна"].index(st.session_state.edit_product["Ед_измерения"]),
                                     key=f"edit_unit_{st.session_state.edit_index}")
-                quantity = st.number_input("Количество", min_value=1, value=int(st.session_state.edit_product["Количество"]), key=f"edit_quantity_{st.session_state.edit_index}")
+                quantity = st.number_input("Количество", min_value=0.001, value=float(st.session_state.edit_product["Количество"]), step=0.001, format="%.3f", key=f"edit_quantity_{st.session_state.edit_index}")
                 weight = st.number_input("Вес (кг)", min_value=0, value=int(st.session_state.edit_product["Вес (кг)"]), format="%d", key=f"edit_weight_{st.session_state.edit_index}")
 
             with col_right:
